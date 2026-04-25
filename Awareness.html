@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HackProof | Awareness</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+
+/* ===== ROOT ===== */
+:root {
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --text: #0f172a;
+  --subtext: #64748b;
+  --border: #e5e7eb;
+  --accent: #22c55e;
+}
+
+/* ===== GLOBAL ===== */
+body {
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ===== NAVBAR ===== */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 40px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+
+.logo {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.nav-links a {
+  margin: 0 12px;
+  text-decoration: none;
+  color: var(--subtext);
+  font-size: 14px;
+}
+
+.nav-links a:hover {
+  color: var(--text);
+}
+
+/* ===== DARK BUTTON ===== */
+.dark-btn {
+  padding: 6px 12px;
+  border: none;
+  background: var(--accent);
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* ===== HEADER ===== */
+.page-header {
+  padding: 50px 60px 30px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(to right, #ffffff, #f8fafc);
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 32px;
+  color: var(--accent);
+}
+
+.page-header h1::after {
+  content: "";
+  display: block;
+  width: 60px;
+  height: 3px;
+  background: var(--accent);
+  margin-top: 8px;
+}
+
+.page-header p {
+  margin-top: 10px;
+  color: var(--subtext);
+  font-size: 14px;
+}
+
+/* ===== LAYOUT ===== */
+.wrapper {
+  display: flex;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+  width: 240px;
+  background: #020617;
+  color: white;
+  padding: 20px;
+  min-height: 100vh;
+}
+
+.sidebar a {
+  display: block;
+  padding: 10px;
+  color: #94a3b8;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.sidebar a:hover {
+  background: #1e293b;
+  color: white;
+}
+
+/* ===== CONTENT ===== */
+.content {
+  flex: 1;
+  padding: 40px 60px;
+  max-width: 1000px;
+}
+
+/* ===== SECTION ===== */
+.section {
+  margin-bottom: 50px;
+}
+
+.section h2 {
+  color: var(--accent);
+  font-size: 20px;
+  margin-bottom: 15px;
+}
+
+/* ===== LIST ===== */
+.list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 10px;
+}
+
+.list div {
+  padding: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+/* ===== BUTTON ===== */
+.btn {
+  display: inline-block;
+  margin-top: 15px;
+  font-size: 13px;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.btn:hover {
+  text-decoration: underline;
+}
+
+/* ===== DARK MODE ===== */
+.dark {
+  --bg: #020617;
+  --card: #0f172a;
+  --text: #e2e8f0;
+  --subtext: #94a3b8;
+  --border: #1e293b;
+}
+
+.dark .navbar {
+  background: #020617;
+}
+
+.dark .page-header {
+  background: #020617;
+}
+
+.dark .sidebar {
+  background: #020617;
+}
+
+.dark .list div {
+  background: #0f172a;
+}
+
+/* ===== MOBILE ===== */
+@media (max-width:768px){
+  .wrapper {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+  }
+
+  .content {
+    padding: 20px;
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="logo"> HackProof</div>
+
+  <div class="nav-links">
+    <a href="index.html">Notes</a>
+    <a href="roadmap.html">Roadmap</a>
+    <a href="practice-lab.html">Labs</a>
+    <a href="awareness.html">Awareness</a>
+    <a href="tools.html">Tools</a>
+    <a href="news.html">News</a>
+    <a href="quiz.html">Quiz</a>
+  </div>
+
+  <button onclick="toggleDarkMode()" class="dark-btn">Dark</button>
+</nav>
+
+<!-- HEADER -->
+<div class="page-header">
+  <h1>Cybersecurity Awareness</h1>
+  <p>Understand domains, operations, threats, and security practices in one place.</p>
+</div>
+
+<div class="wrapper">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <a href="#domains">Domains</a>
+  <a href="#operations">Security Operations</a>
+  <a href="#technical">Technical Awareness</a>
+  <a href="#attacks">Common Attacks</a>
+  <a href="#frameworks">Frameworks</a>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+<div class="section" id="domains">
+<h2>Cybersecurity Domains</h2>
+<div class="list">
+<div>Network Security</div>
+<div>Web Security</div>
+<div>Application Security</div>
+<div>Cloud Security</div>
+<div>Endpoint Security</div>
+<div>Mobile Security</div>
+<div>IoT Security</div>
+<div>Identity & Access Management</div>
+<div>Cryptography</div>
+<div>Digital Forensics</div>
+<div>Malware Analysis</div>
+<div>Threat Intelligence</div>
+<div>Security Operations (SOC)</div>
+<div>Governance Risk Compliance</div>
+<div>DevSecOps</div>
+</div>
+</div>
+
+<div class="section" id="operations">
+<h2>Security Operations</h2>
+<div class="list">
+<div>SIEM Monitoring</div>
+<div>Threat Hunting</div>
+<div>Incident Response</div>
+<div>Digital Forensics</div>
+<div>Vulnerability Assessment</div>
+<div>Penetration Testing</div>
+<div>Red Team</div>
+<div>Blue Team</div>
+<div>EDR/XDR</div>
+<div>NDR</div>
+</div>
+<a href="cybersecurity-activities.html" class="btn">View Full Activities →</a>
+</div>
+
+<div class="section" id="technical">
+<h2>Technical Awareness</h2>
+<div class="list">
+<div>Phishing</div>
+<div>Identity Security</div>
+<div>Endpoint Security</div>
+<div>Cloud Security</div>
+<div>API Security</div>
+<div>Threat Intelligence</div>
+<div>Backup & Recovery</div>
+</div>
+<a href="technical-awareness.html" class="btn">Explore Full Awareness →</a>
+</div>
+
+<div class="section" id="attacks">
+<h2>Common Cyber Attacks</h2>
+<div class="list">
+<div>Phishing</div>
+<div>Ransomware</div>
+<div>SQL Injection</div>
+<div>XSS</div>
+<div>DoS/DDoS</div>
+<div>Brute Force</div>
+</div>
+</div>
+
+<div class="section" id="frameworks">
+<h2>Security Frameworks</h2>
+<div class="list">
+<div>ISO 27001</div>
+<div>NIST</div>
+<div>MITRE ATT&CK</div>
+<div>OWASP Top 10</div>
+</div>
+</div>
+
+</div>
+</div>
+
+<script>
+function toggleDarkMode() {
+  document.body.classList.toggle("dark");
+}
+</script>
+
+</body>
+</html>

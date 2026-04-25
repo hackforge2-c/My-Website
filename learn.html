@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Daily Learn | HackForge</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<style>
+/* ─── VARIABLES ──────────────────────────────────────────── */
+:root {
+  --bg:          #000000;
+  --bg-panel:    #080d16;
+  --panel:       #0d1422;
+  --panel-light: #131c2e;
+  --border:      rgba(196,255,0,0.15);
+  --border-dim:  rgba(196,255,0,0.07);
+  --text:        #dde6f0;
+  --muted:       #7a8fa8;
+  --accent:      #c4ff00;
+  --accent-dim:  rgba(196,255,0,0.08);
+  --accent-glow: rgba(196,255,0,0.2);
+  --danger:      #ff4d4d;
+  --warning:     #f59e0b;
+  --cyan:        #00e5ff;
+  --cyan-dim:    rgba(0,229,255,0.1);
+  --purple:      #8b5cf6;
+  --sidebar-w:   270px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  line-height: 1.75;
+}
+
+/* ─── ANIMATED GRID ──────────────────────────────────────── */
+.bg-grid {
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(196,255,0,0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(196,255,0,0.022) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none; z-index: 0;
+  animation: gridDrift 24s linear infinite;
+}
+@keyframes gridDrift { from{transform:translate(0,0)} to{transform:translate(48px,48px)} }
+
+.bg-vignette {
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse at 25% 15%, rgba(196,255,0,0.05) 0%, transparent 55%),
+    radial-gradient(ellipse at 75% 85%, rgba(0,229,255,0.03) 0%, transparent 55%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ─── SIDEBAR ────────────────────────────────────────────── */
+.sidebar {
+  position: fixed; left:0; top:0;
+  width: var(--sidebar-w); height: 100vh;
+  background: linear-gradient(180deg, #02050e 0%, #000000 100%);
+  border-right: 1px solid var(--border);
+  z-index: 200;
+  display: flex; flex-direction: column;
+  box-shadow: 4px 0 32px rgba(196,255,0,0.05);
+  overflow: hidden;
+}
+
+.logo-wrap {
+  padding: 18px 16px 16px;
+  border-bottom: 1px solid var(--border-dim);
+  background: linear-gradient(180deg, rgba(196,255,0,0.05) 0%, transparent 100%);
+  text-align: center;
+}
+.logo-img {
+  width: 170px; height: auto;
+  filter: drop-shadow(0 0 18px rgba(196,255,0,0.45));
+  transition: filter 0.3s, transform 0.3s;
+  display: block; margin: 0 auto;
+}
+.logo-img:hover { filter: drop-shadow(0 0 30px rgba(196,255,0,0.7)); transform: scale(1.04); }
+.logo-sub {
+  font-size: 0.65rem; color: var(--muted);
+  letter-spacing: 2px; text-transform: uppercase;
+  margin-top: 8px; font-family: 'JetBrains Mono', monospace;
+}
+
+/* streak badge in sidebar */
+.streak-badge {
+  margin: 14px 14px 0;
+  background: rgba(196,255,0,0.05);
+  border: 1px solid rgba(196,255,0,0.2);
+  border-radius: 10px;
+  padding: 12px 14px;
+  text-align: center;
+}
+.streak-day {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.3rem; font-weight: 700;
+  color: var(--accent);
+  text-shadow: 0 0 12px rgba(196,255,0,0.4);
+}
+.streak-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem; letter-spacing: 1.5px;
+  color: var(--muted); text-transform: uppercase; margin-top: 3px;
+}
+
+.toc-label {
+  padding: 16px 22px 8px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.6rem; letter-spacing: 2.5px;
+  text-transform: uppercase; color: var(--accent); opacity: 0.6;
+}
+
+.toc-scroll {
+  flex: 1; overflow-y: auto; padding: 0 12px 16px;
+  scrollbar-width: thin; scrollbar-color: rgba(196,255,0,0.3) transparent;
+}
+.toc-scroll::-webkit-scrollbar { width: 4px; }
+.toc-scroll::-webkit-scrollbar-thumb { background: rgba(196,255,0,0.25); border-radius: 2px; }
+
+.toc-link {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; margin: 2px 0; border-radius: 7px;
+  color: var(--muted); text-decoration: none;
+  font-size: 0.82rem; font-weight: 500;
+  transition: all 0.22s; border-left: 2px solid transparent;
+}
+.toc-link .toc-num { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; flex-shrink: 0; width: 20px; }
+.toc-link:hover { background: var(--accent-dim); color: var(--accent); border-left-color: var(--accent); transform: translateX(3px); }
+.toc-link.active { background: rgba(196,255,0,0.12); color: var(--accent); border-left-color: var(--accent); }
+
+.sidebar-nav {
+  padding: 14px 12px; border-top: 1px solid var(--border-dim);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.sidebar-nav a {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; border-radius: 7px; color: var(--muted);
+  text-decoration: none; font-size: 0.82rem; font-weight: 500; transition: all 0.2s;
+}
+.sidebar-nav a:hover { background: var(--accent-dim); color: var(--accent); }
+.sidebar-nav a.active { color: var(--accent); background: var(--accent-dim); }
+
+/* ─── MAIN ───────────────────────────────────────────────── */
+.main { margin-left: var(--sidebar-w); min-height: 100vh; position: relative; z-index: 1; }
+
+/* ─── TOPBAR ─────────────────────────────────────────────── */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(0,0,0,0.88); backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--border);
+  padding: 13px 48px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.topbar-left { display: flex; align-items: center; gap: 14px; }
+.breadcrumb {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+  color: var(--muted); display: flex; align-items: center; gap: 6px;
+}
+.breadcrumb span { color: var(--accent); opacity: 0.6; }
+.breadcrumb strong { color: var(--text); }
+.topbar-badge {
+  background: var(--accent-dim); border: 1px solid var(--border);
+  color: var(--accent); padding: 4px 10px; border-radius: 5px;
+  font-size: 0.72rem; font-family: 'JetBrains Mono', monospace;
+  display: flex; align-items: center; gap: 5px;
+}
+.topbar-badge .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent); box-shadow: 0 0 6px var(--accent);
+  animation: blink 2s infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.date-chip {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+  color: var(--muted); background: var(--panel);
+  border: 1px solid var(--border-dim);
+  padding: 5px 12px; border-radius: 6px;
+}
+
+/* ─── READ INDICATOR ─────────────────────────────────────── */
+.read-indicator {
+  position: fixed; top: 0; left: var(--sidebar-w); right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--cyan));
+  transform-origin: left; transform: scaleX(0); z-index: 300; transition: transform 0.1s;
+}
+
+/* ─── CONTENT ────────────────────────────────────────────── */
+.content { padding: 44px 52px 80px; max-width: 1060px; }
+
+/* ─── HERO ───────────────────────────────────────────────── */
+.page-hero {
+  margin-bottom: 40px; padding: 40px 48px;
+  background: linear-gradient(135deg, rgba(196,255,0,0.06) 0%, rgba(0,229,255,0.04) 100%);
+  border: 1px solid var(--border); border-radius: 16px;
+  position: relative; overflow: hidden;
+}
+.page-hero::before {
+  content: '🛡️';
+  position: absolute; right: 40px; top: 50%; transform: translateY(-50%);
+  font-size: 7rem; opacity: 0.05; pointer-events: none; user-select: none;
+}
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--accent-dim); border: 1px solid var(--border);
+  color: var(--accent); padding: 4px 12px; border-radius: 5px;
+  font-size: 0.72rem; font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 1px; text-transform: uppercase; margin-bottom: 16px;
+}
+.hero-tag .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px var(--accent); animation: blink 2s infinite; }
+.page-hero h1 {
+  font-family: 'Orbitron', sans-serif; font-size: 2rem; font-weight: 700;
+  background: linear-gradient(135deg, #ffffff 30%, var(--accent));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; margin-bottom: 10px; line-height: 1.2;
+}
+.page-hero p { color: var(--muted); font-size: 0.95rem; max-width: 560px; line-height: 1.7; }
+.hero-meta { display: flex; gap: 20px; margin-top: 18px; flex-wrap: wrap; }
+.hero-stat { display: flex; align-items: center; gap: 7px; font-size: 0.8rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+.hero-stat .dot { width: 7px; height: 7px; border-radius: 50%; }
+
+/* ─── STATS BAR ──────────────────────────────────────────── */
+.stats-bar {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 16px; margin-bottom: 36px;
+}
+
+.stat-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-dim);
+  border-radius: 12px; padding: 22px 24px;
+  display: flex; align-items: center; gap: 16px;
+  transition: all 0.25s; position: relative; overflow: hidden;
+}
+.stat-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  opacity: 0; transition: opacity 0.3s;
+}
+.stat-card:hover { transform: translateY(-3px); }
+.stat-card:hover::before { opacity: 1; }
+
+.stat-card.green::before  { background: linear-gradient(90deg, transparent, var(--accent), transparent); }
+.stat-card.cyan::before   { background: linear-gradient(90deg, transparent, var(--cyan), transparent); }
+.stat-card.purple::before { background: linear-gradient(90deg, transparent, var(--purple), transparent); }
+.stat-card:hover.green  { box-shadow: 0 8px 24px rgba(196,255,0,0.08); }
+.stat-card:hover.cyan   { box-shadow: 0 8px 24px rgba(0,229,255,0.08); }
+.stat-card:hover.purple { box-shadow: 0 8px 24px rgba(139,92,246,0.08); }
+
+.stat-icon-box {
+  width: 44px; height: 44px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem; flex-shrink: 0;
+}
+.stat-icon-box.green  { background: rgba(196,255,0,0.06); border: 1px solid rgba(196,255,0,0.15); }
+.stat-icon-box.cyan   { background: rgba(0,229,255,0.06);  border: 1px solid rgba(0,229,255,0.15); }
+.stat-icon-box.purple { background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.15); }
+
+.stat-val {
+  font-family: 'Orbitron', sans-serif; font-size: 1.6rem; font-weight: 700; line-height: 1;
+}
+.stat-val.green  { color: var(--accent); text-shadow: 0 0 12px rgba(196,255,0,0.3); }
+.stat-val.cyan   { color: var(--cyan);   text-shadow: 0 0 12px rgba(0,229,255,0.3); }
+.stat-val.purple { color: var(--purple); text-shadow: 0 0 12px rgba(139,92,246,0.3); }
+.stat-lbl {
+  font-size: 0.75rem; color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.5px; margin-top: 5px; text-transform: uppercase;
+}
+
+/* ─── MAIN GRID ──────────────────────────────────────────── */
+.main-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-bottom: 36px;
+}
+
+/* ─── INFO CARD ──────────────────────────────────────────── */
+.info-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-dim);
+  border-radius: 16px; padding: 32px;
+  position: relative; overflow: hidden;
+  transition: all 0.3s;
+  display: flex; flex-direction: column;
+}
+.info-card::before {
+  content: ''; position: absolute; top: 0; left: 0;
+  width: 3px; height: 100%;
+  border-radius: 16px 0 0 16px; opacity: 0; transition: opacity 0.3s;
+}
+.info-card.vuln::before  { background: linear-gradient(180deg, var(--danger), transparent); }
+.info-card.tool::before  { background: linear-gradient(180deg, var(--cyan), transparent); }
+.info-card:hover { transform: translateY(-5px); border-color: rgba(196,255,0,0.2); box-shadow: 0 12px 36px rgba(0,0,0,0.5); }
+.info-card:hover::before { opacity: 1; }
+
+/* card head */
+.card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px; padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-dim);
+}
+.card-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  display: flex; align-items: center; gap: 7px;
+}
+.card-label.vuln { color: var(--danger); }
+.card-label.tool { color: var(--cyan); }
+.card-label .dot { width: 6px; height: 6px; border-radius: 50%; animation: blink 2s infinite; }
+.card-label.vuln .dot { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
+.card-label.tool .dot { background: var(--cyan);   box-shadow: 0 0 6px var(--cyan); }
+
+/* risk badge */
+.risk-badge {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;
+  padding: 4px 10px; border-radius: 5px; font-weight: 600;
+  letter-spacing: 0.5px; text-transform: uppercase;
+}
+.risk-badge.high   { background: rgba(255,77,77,0.1); border: 1px solid rgba(255,77,77,0.25); color: var(--danger); }
+.risk-badge.medium { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); color: var(--warning); }
+.risk-badge.low    { background: rgba(196,255,0,0.08); border: 1px solid rgba(196,255,0,0.2); color: var(--accent); }
+.risk-badge.info   { background: var(--cyan-dim); border: 1px solid rgba(0,229,255,0.2); color: var(--cyan); }
+
+/* card body */
+.card-title {
+  font-family: 'Orbitron', sans-serif; font-size: 1.15rem; font-weight: 600;
+  color: #fff; margin-bottom: 14px; line-height: 1.3; letter-spacing: 0.3px;
+}
+
+.card-desc-box {
+  background: rgba(196,255,0,0.03);
+  border: 1px solid var(--border-dim);
+  border-left: 3px solid rgba(196,255,0,0.3);
+  border-radius: 8px; padding: 14px 16px;
+  margin-bottom: 16px; flex: 1;
+}
+.card-desc-box.danger-left { border-left-color: rgba(255,77,77,0.4); }
+.card-desc-box.cyan-left   { border-left-color: rgba(0,229,255,0.4); }
+
+.card-desc {
+  font-size: 0.9rem; color: var(--muted); line-height: 1.7;
+}
+
+.card-meta {
+  font-size: 0.85rem; color: var(--muted); margin-bottom: 6px;
+}
+.card-meta strong { color: var(--text); font-weight: 600; }
+.card-meta .highlight { color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; }
+
+/* action buttons */
+.card-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+
+.btn-primary {
+  flex: 1;
+  padding: 11px 20px;
+  background: linear-gradient(135deg, var(--accent), #7fd600);
+  color: #000; border: none; border-radius: 8px;
+  font-weight: 700; font-size: 0.85rem; cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.25s;
+  box-shadow: 0 0 16px rgba(196,255,0,0.2);
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(196,255,0,0.4); }
+
+.btn-secondary {
+  padding: 11px 16px;
+  background: var(--panel); border: 1px solid var(--border-dim);
+  color: var(--muted); border-radius: 8px;
+  font-weight: 600; font-size: 0.85rem; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; transition: all 0.25s;
+  display: flex; align-items: center; gap: 6px;
+}
+.btn-secondary:hover { border-color: var(--border); color: var(--text); background: var(--panel-light); }
+
+/* ─── QUICK TIPS ─────────────────────────────────────────── */
+.tips-section { margin-bottom: 36px; }
+.section-head {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 18px; padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-dim);
+}
+.section-title {
+  font-family: 'Orbitron', sans-serif; font-size: 0.85rem;
+  font-weight: 600; color: var(--text); letter-spacing: 0.8px;
+  display: flex; align-items: center; gap: 10px;
+}
+.section-title::before { content: ''; width: 14px; height: 2px; background: var(--accent); border-radius: 1px; }
+
+.tips-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+}
+.tip-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-dim);
+  border-radius: 12px; padding: 20px 18px;
+  transition: all 0.25s;
+}
+.tip-card:hover { border-color: var(--border); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+.tip-icon { font-size: 1.5rem; margin-bottom: 10px; display: block; }
+.tip-title { font-size: 0.88rem; font-weight: 700; color: var(--text); margin-bottom: 6px; font-family: 'DM Sans', sans-serif; }
+.tip-text  { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
+
+/* ─── LOADING SHIMMER ────────────────────────────────────── */
+.shimmer {
+  background: linear-gradient(90deg, var(--panel) 25%, rgba(196,255,0,0.04) 50%, var(--panel) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 6px; display: inline-block;
+}
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+.shimmer-title { height: 20px; width: 75%; margin-bottom: 14px; }
+.shimmer-text  { height: 12px; width: 100%; margin-bottom: 8px; }
+.shimmer-text2 { height: 12px; width: 80%; }
+
+/* ─── MODAL ──────────────────────────────────────────────── */
+.modal {
+  display: none; position: fixed; z-index: 1000;
+  inset: 0; background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.25s ease;
+  align-items: center; justify-content: center;
+}
+.modal.open { display: flex; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+.modal-content {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 16px; padding: 40px;
+  width: 90%; max-width: 620px;
+  position: relative; box-shadow: 0 24px 60px rgba(0,0,0,0.7);
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+
+.modal-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 20px; padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-dim); gap: 16px;
+}
+.modal-title {
+  font-family: 'Orbitron', sans-serif; font-size: 1.1rem;
+  font-weight: 600; color: #fff; line-height: 1.3;
+}
+.modal-close {
+  width: 32px; height: 32px; border-radius: 7px;
+  border: 1px solid var(--border-dim);
+  background: var(--panel); color: var(--muted);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; flex-shrink: 0;
+  transition: all 0.2s;
+}
+.modal-close:hover { border-color: var(--danger); color: var(--danger); }
+
+.modal-body p {
+  font-size: 0.92rem; color: var(--muted); line-height: 1.75;
+  margin-bottom: 12px;
+}
+.modal-body p strong { color: var(--text); }
+
+.modal-footer {
+  display: flex; gap: 10px; margin-top: 24px;
+  padding-top: 18px; border-top: 1px solid var(--border-dim);
+}
+.modal-link-btn {
+  flex: 1; padding: 11px 20px;
+  background: linear-gradient(135deg, var(--accent), #7fd600);
+  color: #000; border: none; border-radius: 8px;
+  font-weight: 700; font-size: 0.85rem; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; transition: all 0.25s;
+  box-shadow: 0 0 16px rgba(196,255,0,0.2);
+}
+.modal-link-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(196,255,0,0.4); }
+.modal-close-btn {
+  padding: 11px 20px; background: var(--panel);
+  border: 1px solid var(--border-dim); color: var(--muted);
+  border-radius: 8px; font-weight: 600; font-size: 0.85rem;
+  cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s;
+}
+.modal-close-btn:hover { border-color: var(--border); color: var(--text); }
+
+/* ─── FOOTER ─────────────────────────────────────────────── */
+footer {
+  text-align: center; padding: 24px 52px;
+  border-top: 1px solid var(--border-dim);
+  font-size: 0.8rem; color: var(--muted);
+  font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px;
+}
+footer a { color: var(--cyan); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+/* ─── MOBILE ─────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  :root { --sidebar-w: 0px; }
+  .sidebar { display: none; }
+  .content { padding: 24px 20px 60px; }
+  .topbar { padding: 12px 20px; }
+  .main-grid { grid-template-columns: 1fr; }
+  .stats-bar { grid-template-columns: 1fr; }
+  .tips-grid  { grid-template-columns: 1fr; }
+  .page-hero { padding: 24px 22px; }
+  .page-hero h1 { font-size: 1.4rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-vignette"></div>
+<div class="read-indicator" id="readIndicator"></div>
+
+<!-- ══════════════════ SIDEBAR ════════════════════════════ -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="logo.png" alt="HackForge Logo" class="logo-img">
+    <div class="logo-sub">Cybersecurity Learning</div>
+  </div>
+
+  <!-- streak widget -->
+  <div class="streak-badge">
+    <div class="streak-day" id="sidebarDay">Day 1</div>
+    <div class="streak-label">🔥 Learning Streak</div>
+  </div>
+
+  <div class="toc-label">Today's Feed</div>
+
+  <div class="toc-scroll">
+    <a class="toc-link active" href="#vuln">   <span class="toc-num">🔓</span>Vulnerability of the Day</a>
+    <a class="toc-link"        href="#tool">   <span class="toc-num">🛠️</span>Tool of the Day</a>
+    <a class="toc-link"        href="#tips">   <span class="toc-num">💡</span>Security Quick Tips</a>
+  </div>
+
+  <div class="sidebar-nav">
+    <a href="index.html">📓 Notes</a>
+    <a href="roadmap.html">🗺️ Roadmap</a>
+    <a href="practice-lab.html">⚗️ Labs</a>
+    <a href="cyber-news.html">📡 Cyber News</a>
+    <a href="learn.html" class="active">🎓 Daily Learn</a>
+  </div>
+</aside>
+
+<!-- ══════════════════ MAIN ═══════════════════════════════ -->
+<main class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="breadcrumb">
+        <span>HackForge</span> / <strong>Daily Learning Hub</strong>
+      </div>
+      <div class="topbar-badge"><div class="dot"></div>Live &amp; Updated Daily</div>
+    </div>
+    <div class="topbar-right">
+      <div class="date-chip" id="todayDate">—</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- HERO -->
+    <div class="page-hero">
+      <div class="hero-tag"><div class="dot"></div>Daily Update</div>
+      <h1>Cybersecurity Learning Hub</h1>
+      <p>Master Security Concepts · One Day at a Time. Fresh vulnerability and tool spotlight every day.</p>
+      <div class="hero-meta">
+        <div class="hero-stat">
+          <div class="dot" style="background:var(--accent);box-shadow:0 0 6px var(--accent);"></div>
+          Vulnerability of the Day
+        </div>
+        <div class="hero-stat">
+          <div class="dot" style="background:var(--cyan);box-shadow:0 0 6px var(--cyan);"></div>
+          Tool of the Day
+        </div>
+        <div class="hero-stat">
+          <div class="dot" style="background:var(--purple);box-shadow:0 0 6px var(--purple);"></div>
+          Live &amp; Updated Daily
+        </div>
+      </div>
+    </div>
+
+    <!-- STATS BAR -->
+    <div class="stats-bar">
+      <div class="stat-card green">
+        <div class="stat-icon-box green">🔓</div>
+        <div>
+          <div class="stat-val green" id="statVulns">--</div>
+          <div class="stat-lbl">Vulnerabilities</div>
+        </div>
+      </div>
+      <div class="stat-card cyan">
+        <div class="stat-icon-box cyan">🛠️</div>
+        <div>
+          <div class="stat-val cyan" id="statTools">--</div>
+          <div class="stat-lbl">Security Tools</div>
+        </div>
+      </div>
+      <div class="stat-card purple">
+        <div class="stat-icon-box purple">🔥</div>
+        <div>
+          <div class="stat-val purple" id="statDay">Day 1</div>
+          <div class="stat-lbl">Learning Streak</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN GRID -->
+    <div class="main-grid">
+
+      <!-- ── VULNERABILITY CARD ── -->
+      <div class="info-card vuln" id="vuln">
+        <div class="card-head">
+          <div class="card-label vuln"><div class="dot"></div>Vulnerability of the Day</div>
+          <span class="risk-badge info" id="vulnBadge">Loading...</span>
+        </div>
+
+        <!-- loading shimmer -->
+        <div id="vulnLoading">
+          <div class="shimmer shimmer-title"></div>
+          <div class="shimmer shimmer-text"></div>
+          <div class="shimmer shimmer-text2"></div>
+        </div>
+
+        <!-- actual content (hidden until loaded) -->
+        <div id="vulnContent" style="display:none; flex:1; display:none; flex-direction:column;">
+          <div class="card-title" id="vulnName"></div>
+          <div class="card-desc-box danger-left">
+            <div class="card-desc" id="vulnDesc"></div>
+          </div>
+          <div class="card-meta">
+            <strong>Risk Level:</strong>
+            <span class="highlight" id="vulnRisk"></span>
+          </div>
+        </div>
+
+        <div class="card-actions" id="vulnActions" style="display:none;">
+          <button class="btn-primary" id="vulnLinkBtn">
+            🔗 Learn More →
+          </button>
+          <button class="btn-secondary" id="vulnInfoBtn">
+            ℹ️ Details
+          </button>
+        </div>
+      </div>
+
+      <!-- ── TOOL CARD ── -->
+      <div class="info-card tool" id="tool">
+        <div class="card-head">
+          <div class="card-label tool"><div class="dot"></div>Tool of the Day</div>
+          <span class="risk-badge info">Security Tool</span>
+        </div>
+
+        <!-- loading shimmer -->
+        <div id="toolLoading">
+          <div class="shimmer shimmer-title"></div>
+          <div class="shimmer shimmer-text"></div>
+          <div class="shimmer shimmer-text2"></div>
+        </div>
+
+        <!-- actual content -->
+        <div id="toolContent" style="display:none; flex:1; flex-direction:column;">
+          <div class="card-title" id="toolName"></div>
+          <div class="card-desc-box cyan-left">
+            <div class="card-desc" id="toolUse"></div>
+          </div>
+          <div class="card-meta">
+            <strong>Type:</strong>
+            <span class="highlight" id="toolType"></span>
+          </div>
+        </div>
+
+        <div class="card-actions" id="toolActions" style="display:none;">
+          <button class="btn-primary" id="toolLinkBtn">
+            🔗 Explore Tool →
+          </button>
+          <button class="btn-secondary" id="toolInfoBtn">
+            ℹ️ Details
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /main-grid -->
+
+    <!-- ── QUICK TIPS ── -->
+    <div class="tips-section" id="tips">
+      <div class="section-head">
+        <div class="section-title">Security Quick Tips</div>
+      </div>
+      <div class="tips-grid">
+        <div class="tip-card">
+          <span class="tip-icon">🔐</span>
+          <div class="tip-title">Use Strong Passwords</div>
+          <div class="tip-text">Use a password manager and generate unique 16+ character passwords for every account. Never reuse passwords.</div>
+        </div>
+        <div class="tip-card">
+          <span class="tip-icon">🛡️</span>
+          <div class="tip-title">Enable MFA Everywhere</div>
+          <div class="tip-text">Multi-Factor Authentication blocks 99.9% of automated attacks even if your password is compromised.</div>
+        </div>
+        <div class="tip-card">
+          <span class="tip-icon">🔄</span>
+          <div class="tip-title">Update Regularly</div>
+          <div class="tip-text">Keep OS, browsers and apps updated. Most breaches exploit known vulnerabilities that patches already fix.</div>
+        </div>
+        <div class="tip-card">
+          <span class="tip-icon">🎣</span>
+          <div class="tip-title">Spot Phishing</div>
+          <div class="tip-text">Hover links before clicking. Check the sender domain carefully. Urgency and fear are red flags — slow down.</div>
+        </div>
+        <div class="tip-card">
+          <span class="tip-icon">🔒</span>
+          <div class="tip-title">Encrypt Your Data</div>
+          <div class="tip-text">Use HTTPS everywhere, enable full-disk encryption on your devices, and use end-to-end encrypted messaging.</div>
+        </div>
+        <div class="tip-card">
+          <span class="tip-icon">🧩</span>
+          <div class="tip-title">Least Privilege</div>
+          <div class="tip-text">Only give applications and users the minimum permissions they need. Never run as admin unless necessary.</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <footer>
+    © 2026 HackForge · Daily cybersecurity knowledge · Built by <a href="mailto:ligerharry44@gmail.com">Liger44</a>
+  </footer>
+
+</main>
+
+<!-- ══════════════════ MODAL ══════════════════════════════ -->
+<div id="infoModal" class="modal" onclick="closeModalOnOutsideClick(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <div class="modal-title" id="modalTitle">Information</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p id="modalDesc"></p>
+      <p id="modalPrev"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-link-btn" id="modalLinkBtn">🔗 Open Official Page →</button>
+      <button class="modal-close-btn" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── FIREBASE ── */
+const firebaseConfig = {
+  apiKey: "AIzaSyCOEbqMZifKAVoKlZDHmcslXduBUxxb1xU",
+  authDomain: "hackproof-feb59.firebaseapp.com",
+  projectId: "hackproof-feb59",
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+let currentVuln = null;
+let currentTool = null;
+
+/* ── HELPERS ── */
+function showElement(id)  { const el = document.getElementById(id); if(el){ el.style.display='flex'; } }
+function hideElement(id)  { const el = document.getElementById(id); if(el){ el.style.display='none'; } }
+
+/* ── VULNERABILITY OF THE DAY ── */
+async function loadDailyVulnerability() {
+  try {
+    const snapshot = await db.collection("vulnerabilities").get();
+    const vulnerabilities = snapshot.docs.map(doc => doc.data());
+    document.getElementById("statVulns").innerText = vulnerabilities.length;
+
+    const dayNumber = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+    currentVuln = vulnerabilities[dayNumber % vulnerabilities.length];
+
+    document.getElementById("vulnName").innerText = currentVuln.name;
+    document.getElementById("vulnRisk").innerText = currentVuln.risk;
+    document.getElementById("vulnDesc").innerText = currentVuln.description;
+
+    /* risk badge colour */
+    const badge = document.getElementById("vulnBadge");
+    badge.innerText = currentVuln.risk;
+    badge.className = 'risk-badge';
+    const r = currentVuln.risk.toLowerCase();
+    if (r.includes('high') || r.includes('critical')) badge.classList.add('high');
+    else if (r.includes('medium'))                     badge.classList.add('medium');
+    else                                               badge.classList.add('low');
+
+    /* show content, hide shimmer */
+    hideElement('vulnLoading');
+    showElement('vulnContent');
+    showElement('vulnActions');
+
+    /* ── FIXED: Learn More → redirects to actual link ── */
+    document.getElementById("vulnLinkBtn").onclick = function() {
+      const url = currentVuln.link || currentVuln.url || currentVuln.reference;
+      if (url) {
+        window.open(url, "_blank", "noopener,noreferrer");
+      } else {
+        /* fallback — search NVD */
+        window.open("https://nvd.nist.gov/search/results?query=" + encodeURIComponent(currentVuln.name), "_blank", "noopener,noreferrer");
+      }
+    };
+
+    /* Info/Details button → opens modal */
+    document.getElementById("vulnInfoBtn").onclick = function() {
+      openModal('vuln');
+    };
+
+  } catch (error) {
+    console.error("Error loading vulnerability:", error);
+    hideElement('vulnLoading');
+    document.getElementById("vulnName").innerText = "Error loading data";
+    document.getElementById("vulnDesc").innerText = "Please check your connection and try again.";
+    showElement('vulnContent');
+  }
+}
+
+/* ── TOOL OF THE DAY ── */
+async function loadToolOfDay() {
+  try {
+    const snapshot = await db.collection("tools").get();
+    const tools = snapshot.docs.map(doc => doc.data());
+    document.getElementById("statTools").innerText = tools.length;
+
+    const dayNumber = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+    currentTool = tools[dayNumber % tools.length];
+
+    document.getElementById("toolName").innerText = currentTool.name;
+    document.getElementById("toolType").innerText = currentTool.type;
+    document.getElementById("toolUse").innerText  = currentTool.use;
+
+    hideElement('toolLoading');
+    showElement('toolContent');
+    showElement('toolActions');
+
+    /* ── FIXED: Explore Tool → redirects to actual tool link ── */
+    document.getElementById("toolLinkBtn").onclick = function() {
+      const url = currentTool.link || currentTool.url || currentTool.website;
+      if (url) {
+        window.open(url, "_blank", "noopener,noreferrer");
+      } else {
+        /* fallback — Google search */
+        window.open("https://www.google.com/search?q=" + encodeURIComponent(currentTool.name + " cybersecurity tool"), "_blank", "noopener,noreferrer");
+      }
+    };
+
+    /* Info/Details button → opens modal */
+    document.getElementById("toolInfoBtn").onclick = function() {
+      openModal('tool');
+    };
+
+  } catch (error) {
+    console.error("Error loading tool:", error);
+    hideElement('toolLoading');
+    document.getElementById("toolName").innerText = "Error loading data";
+    document.getElementById("toolUse").innerText  = "Please check your connection and try again.";
+    showElement('toolContent');
+  }
+}
+
+/* ── MODAL ── */
+function openModal(type) {
+  const modal = document.getElementById("infoModal");
+  modal.classList.add('open');
+
+  if (type === 'vuln' && currentVuln) {
+    document.getElementById("modalTitle").innerText = currentVuln.name;
+    document.getElementById("modalDesc").innerText  = currentVuln.description;
+    document.getElementById("modalPrev").innerHTML  = currentVuln.prevention
+      ? "<strong>Prevention:</strong> " + currentVuln.prevention
+      : "";
+    document.getElementById("modalLinkBtn").onclick = function() {
+      const url = currentVuln.link || currentVuln.url || currentVuln.reference;
+      window.open(url || "https://nvd.nist.gov/search/results?query=" + encodeURIComponent(currentVuln.name), "_blank", "noopener,noreferrer");
+    };
+  } else if (type === 'tool' && currentTool) {
+    document.getElementById("modalTitle").innerText = currentTool.name;
+    document.getElementById("modalDesc").innerText  = currentTool.description || currentTool.use;
+    document.getElementById("modalPrev").innerHTML  = "<strong>Use Case:</strong> " + currentTool.use;
+    document.getElementById("modalLinkBtn").onclick = function() {
+      const url = currentTool.link || currentTool.url || currentTool.website;
+      window.open(url || "https://www.google.com/search?q=" + encodeURIComponent(currentTool.name + " tool"), "_blank", "noopener,noreferrer");
+    };
+  }
+}
+
+function closeModal() {
+  document.getElementById("infoModal").classList.remove('open');
+}
+function closeModalOnOutsideClick(e) {
+  if (e.target.id === "infoModal") closeModal();
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+/* ── STREAK + DATE ── */
+const startDate  = new Date('2026-04-23');
+const todayDate  = new Date();
+const daysSince  = Math.floor((todayDate - startDate) / (1000 * 60 * 60 * 24));
+const dayLabel   = "Day " + (daysSince + 1);
+
+document.getElementById("statDay").innerText    = dayLabel;
+document.getElementById("sidebarDay").innerText = dayLabel;
+document.getElementById("todayDate").innerText  = todayDate.toLocaleDateString('en-US', { weekday:'short', year:'numeric', month:'short', day:'numeric' });
+
+/* ── READ PROGRESS ── */
+const indicator = document.getElementById('readIndicator');
+window.addEventListener('scroll', () => {
+  const el = document.documentElement;
+  indicator.style.transform = `scaleX(${el.scrollTop / (el.scrollHeight - el.clientHeight)})`;
+});
+
+/* ── INIT ── */
+loadDailyVulnerability();
+loadToolOfDay();
+</script>
+
+</body>
+</html>

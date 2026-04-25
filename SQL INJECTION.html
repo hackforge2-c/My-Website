@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SQL Injection Module | HackProof</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg: #020617;
+  --panel: #020617;
+  --border: #1e293b;
+  --text: #e5e7eb;
+  --muted: #94a3b8;
+  --green: #22c55e;
+  --blue: #38bdf8;
+  --red: #ef4444;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(34,197,94,0.08), transparent),
+    radial-gradient(1000px 500px at 90% 10%, rgba(56,189,248,0.08), transparent),
+    linear-gradient(180deg, #020617, #000);
+}
+
+/* HEADER */
+header {
+  text-align: center;
+  padding: 60px 20px 40px;
+  border-bottom: 1px solid var(--border);
+}
+
+header h1 {
+  font-size: 2.5rem;
+  color: var(--blue);
+  margin-bottom: 10px;
+}
+
+header p {
+  color: var(--muted);
+}
+
+/* NAV */
+.top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 28px;
+  border-bottom: 1px solid #1e293b;
+  background: rgba(0,0,0,0.5);
+}
+
+/* CONTAINER */
+.container {
+  max-width: 1000px;
+  margin: auto;
+  padding: 60px 20px;
+}
+
+/* SECTION CARD */
+.section {
+  margin-bottom: 50px;
+  padding: 35px;
+  border: 1px solid #1e293b;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #020617, #000);
+  box-shadow: 0 0 40px rgba(0,0,0,0.5);
+}
+
+/* TITLES */
+.section h2 {
+  color: var(--blue);
+  margin-bottom: 15px;
+}
+
+.section h3 {
+  color: #a5f3fc;
+  margin-top: 20px;
+}
+
+/* TEXT */
+p {
+  color: #d1d5db;
+  line-height: 1.8;
+}
+
+ul {
+  margin-left: 25px;
+}
+
+/* CODE BLOCK */
+pre {
+  background: #000;
+  border: 1px solid #1e293b;
+  padding: 15px;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+code {
+  color: #a5f3fc;
+}
+
+/* IMAGE */
+img {
+  max-width: 70%;
+  display: block;
+  margin: 25px auto;
+  border-radius: 8px;
+  border: 1px solid #1e293b;
+}
+
+/* NOTE */
+.note {
+  margin-top: 25px;
+  padding: 20px;
+  border-left: 4px solid #22c55e;
+  background: #020617;
+  color: #bbf7d0;
+}
+
+/* WARNING */
+.warning {
+  margin-top: 30px;
+  padding: 20px;
+  border-left: 4px solid #ef4444;
+  background: #020617;
+  color: #fecaca;
+}
+
+/* VIVA SECTION */
+#vivaSection {
+  margin-top: 100px;
+  border: 2px dashed #22c55e;
+  background: linear-gradient(180deg,#020617,#000);
+  border-radius: 14px;
+  padding: 40px;
+}
+
+/* FOOTER */
+footer {
+  text-align: center;
+  padding: 40px;
+  border-top: 1px solid #1e293b;
+  color: #64748b;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>SQL Injection Learning Module</h1>
+  <p>Database exploitation concepts and defensive security understanding</p>
+</header>
+
+<nav class="top-nav">
+  <div>
+    <strong style="color:#22c55e;">HackProof Notes</strong>
+    <a href="practice-lab.html">Labs</a>
+  </div>
+  <div>
+    <a href="login.html">Login</a>
+  </div>
+</nav>
+
+<div class="container">
+<!-- PAGE 1 -->
+<div class="section">
+  <h2>What Is SQL Injection</h2>
+  <p>
+    SQL Injection (SQLi) is a cyberattack technique where a hacker inserts malicious SQL code
+    into an input field (like a login form or search box) to manipulate or access a database illegally.
+  </p>
+
+  <p>In this section we are going to take a look at ….</p>
+  <ul>
+    <li>Database Attack Techniques for Database.</li>
+    <li>Database Attack Tools in Kali Linux O.S</li>
+  </ul>
+
+  <h3>Structure of the database:</h3>
+  <img src="https://i.imgur.com/5w4VZ7N.png" alt="Database Structure">
+  <p>
+    Reference video:
+    <a href="https://screenrec.com/share/h6GVUDBxoe" target="_blank">https://screenrec.com/share/h6GVUDBxoe</a>
+  </p>
+</div>
+
+<!-- PAGE 2 -->
+<div class="section">
+  <h2>Database Attack Information</h2>
+  <ul>
+    <li>Gather Sensitive Information from Database</li>
+    <li>Information like Username, Password, E-mail, Address can be gathered.</li>
+    <li>Database Assessment tools are available in kali Linux O.S. (like SQL map, JSQL).</li>
+  </ul>
+</div>
+
+<!-- PAGE 3 -->
+<div class="section">
+  <h2>Website Database Hacking Using SQLmap Tool</h2>
+
+  <h3>What is SQL Map</h3>
+  <ul>
+    <li>SQL Map is a command-line tool</li>
+    <li>It is used to automate SQL injection testing</li>
+    <li>It helps in identifying databases, tables, columns, and data</li>
+  </ul>
+
+  <h3>SQL Map – Step-by-Step</h3>
+
+  <h3>1. Initial Preparation</h3>
+  <ul>
+    <li>Open Google</li>
+    <li>Open any website</li>
+    <li>Do not perform on live websites</li>
+    <li>Only test on:</li>
+    <ul>
+      <li>Your own website</li>
+      <li>Test or practice websites</li>
+    </ul>
+  </ul>
+
+  <h3>2. Finding the Login Page</h3>
+  <ul>
+    <li>Open the website</li>
+    <li>Go to the sign-in / login page</li>
+    <li>Identify where:</li>
+    <ul>
+      <li>Username field exists</li>
+      <li>Password field exists</li>
+    </ul>
+    <li>Copy the URL of the login or signup page</li>
+  </ul>
+
+  <h3>3. Identifying Source Links</h3>
+  <ul>
+    <li>Open a new Google page</li>
+    <li>Use search technique with:</li>
+    <ul>
+      <li>Site:website URL/ php?id=</li>
+    </ul>
+  </ul>
+
+  <h3>4. Open the terminal</h3>
+  <p>Aim is to find – Database – table – columns and data.</p>
+
+  <pre><code>Sqlmap -u websitelink --dbs
+Sqlmap -u websitelink -D databasename --tables
+Sqlmap -u websitelink -D databasename -T tablename --columns
+Sqlmap -u websitelink -D databasename -T tablename -C columnname --dump</code></pre>
+
+  <h3>5. Using Retrieved Credentials</h3>
+  <ul>
+    <li>Go back to the admin or login page</li>
+    <li>Enter retrieved username</li>
+    <li>Enter retrieved password</li>
+    <li>Login is successful</li>
+    <li>User dashboard or credentials become visible</li>
+  </ul>
+
+  <p>
+    Reference video:
+    <a href="https://screenrec.com/share/oxL4adsrOX" target="_blank">https://screenrec.com/share/oxL4adsrOX</a>
+  </p>
+</div>
+
+<!-- PAGE 4 -->
+<div class="section">
+  <h2>Website Database Hacking Without Using Any Tool</h2>
+
+  <p>Hacking a database without any tool first 3 steps are same as hacking using tool only.</p>
+
+  <h3>How to Check Vulnerability</h3>
+  <pre><code>websiteurl.php?uid=1'</code></pre>
+
+  <p>Example:</p>
+  <pre><code>http://testphp.vulnweb.com/artists.php?artist=1'</code></pre>
+
+  <h3>Finding Number of Columns (Trail and Error)</h3>
+  <pre><code>websiteurl.php?uid=1 order by 5 --</code></pre>
+
+  <p>
+    Important note: If page does not change then use different integers like 3, 4, 6, 7 etc.
+  </p>
+
+  <p>
+    Reference video:
+    <a href="https://screenrec.com/share/rlZRVFyLWE" target="_blank">https://screenrec.com/share/rlZRVFyLWE</a>
+  </p>
+</div>
+
+<!-- PAGE 5 -->
+<div class="section">
+  <h2>Create Dictionary Using Crunch Commands</h2>
+
+  <h3>What is Crunch</h3>
+  <p>
+    Crunch is a wordlist generation tool that comes pre-installed in Kali Linux.
+    It’s commonly used in penetration testing to create custom password lists for tools like
+    aircrack-ng, hydra, john, etc.
+  </p>
+
+  <h3>Usage or syntax</h3>
+  <pre><code>crunch &lt;min&gt; &lt;max&gt;</code></pre>
+
+  <h3>Examples</h3>
+  <pre><code>crunch 3 8 liger -o /root/Desktop/liger.txt
+crunch 5 8 liger@$ -o /root/Desktop/liger.txt</code></pre>
+
+  <p>
+    where -o : output<br>
+    /root/Desktop/liger.txt : where the output is saved
+  </p>
+
+  <div class="warning">
+    ⚠️ Practice SQL Injection techniques only on systems you own or have explicit permission to test.
+    Unauthorized testing is illegal.
+  </div>
+</div>
+
+<!-- FINAL VIVA SECTION -->
+<div class="section" id="vivaSection" style="
+  margin-top:100px;
+  border:2px dashed #22c55e;
+  background:linear-gradient(180deg,#020617,#020617);
+">
+  <h2 style="
+    text-align:center;
+    color:#22c55e;
+    font-size:1.9rem;
+    margin-bottom:10px;
+    text-shadow:0 0 10px rgba(34,197,94,0.6);
+  ">🎓 Final Viva Assessment</h2>
+
+  <p style="
+    text-align:center;
+    color:#94a3b8;
+    max-width:750px;
+    margin:0 auto 30px;
+    font-size:0.95rem;
+  ">
+    This assessment is locked until you scroll and read the entire module.
+    Once unlocked, you will have <strong>5 minutes</strong> to complete the viva.
+    Minimum passing score: <strong>80%</strong>.
+  </p>
+
+  <p id="vivaStatus" style="text-align:center; color:#ef4444; font-weight:600;">
+    🔒 Assessment Locked – Please read the full content
+  </p>
+
+  <p id="timer" style="text-align:center; font-size:1.1rem; margin-top:15px; color:#22d3ee; display:none;">
+    ⏳ Time Left: 05:00
+  </p>
+
+  <form id="quizForm" style="max-width:850px; margin:40px auto; display:none;">
+
+    <div style="margin-bottom:30px;">
+      <p><strong>1. What is SQL Injection?</strong></p>
+      <label><input type="radio" name="q1" value="0"> A network attack</label><br>
+      <label><input type="radio" name="q1" value="1"> Injecting malicious SQL into input fields</label><br>
+      <label><input type="radio" name="q1" value="0"> A password cracking method</label>
+    </div>
+
+    <div style="margin-bottom:30px;">
+      <p><strong>2. Which tool is commonly used to automate SQL Injection testing?</strong></p>
+      <label><input type="radio" name="q2" value="1"> SQLmap</label><br>
+      <label><input type="radio" name="q2" value="0"> Hydra</label><br>
+      <label><input type="radio" name="q2" value="0"> Nmap</label>
+    </div>
+
+    <div style="margin-bottom:30px;">
+      <p><strong>3. What does the <code>--dbs</code> option in SQLmap do?</strong></p>
+      <label><input type="radio" name="q3" value="1"> Lists databases</label><br>
+      <label><input type="radio" name="q3" value="0"> Dumps passwords</label><br>
+      <label><input type="radio" name="q3" value="0"> Finds open ports</label>
+    </div>
+
+    <div style="margin-bottom:30px;">
+      <p><strong>4. Which payload is commonly used to test SQL Injection vulnerability?</strong></p>
+      <label><input type="radio" name="q4" value="1"> 1'</label><br>
+      <label><input type="radio" name="q4" value="0"> &lt;script&gt;</label><br>
+      <label><input type="radio" name="q4" value="0"> ../../etc/passwd</label>
+    </div>
+
+    <div style="margin-bottom:40px;">
+      <p><strong>5. Is it legal to test SQL Injection on live websites without permission?</strong></p>
+      <label><input type="radio" name="q5" value="0"> Yes</label><br>
+      <label><input type="radio" name="q5" value="1"> No</label>
+    </div>
+
+    <div style="text-align:center;">
+      <button type="button" id="submitBtn" onclick="submitViva()" style="
+        padding:14px 30px;
+        background:#22c55e;
+        color:#020617;
+        border:none;
+        border-radius:8px;
+        font-weight:700;
+        cursor:pointer;
+        box-shadow:0 0 18px rgba(34,197,94,0.5);
+      ">Submit Viva</button>
+
+      <p id="quizResult" style="margin-top:25px; font-weight:600;"></p>
+      <p id="attempts" style="margin-top:10px; color:#94a3b8;"></p>
+
+      <a id="certBtn" href="certificate.html" style="
+        display:none;
+        margin-top:20px;
+        padding:14px 26px;
+        background:#22c55e;
+        color:#020617;
+        font-weight:700;
+        border-radius:8px;
+        text-decoration:none;
+        box-shadow:0 0 20px rgba(34,197,94,0.6);
+      ">🎓 Generate Certificate</a>
+    </div>
+
+  </form>
+</div>
+
+<script>
+/* LOCK UNTIL SCROLL */
+window.addEventListener('scroll', () => {
+  if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 50) {
+    document.getElementById('vivaStatus').innerText = '🔓 Assessment Unlocked';
+    document.getElementById('vivaStatus').style.color = '#22c55e';
+    document.getElementById('quizForm').style.display = 'block';
+    startTimer();
+  }
+});
+
+/* TIMER */
+let time = 300; // 5 minutes
+let timerInterval;
+function startTimer() {
+  if (timerInterval) return;
+  document.getElementById('timer').style.display = 'block';
+  timerInterval = setInterval(() => {
+    let m = Math.floor(time / 60);
+    let s = time % 60;
+    document.getElementById('timer').innerText = `⏳ Time Left: ${m}:${s.toString().padStart(2,'0')}`;
+    if (--time < 0) {
+      clearInterval(timerInterval);
+      submitViva();
+    }
+  }, 1000);
+}
+
+/* DISABLE COPY IN VIVA */
+document.getElementById('vivaSection').addEventListener('contextmenu', e => e.preventDefault());
+document.getElementById('vivaSection').addEventListener('copy', e => e.preventDefault());
+
+<footer>
+  © 2026 HackProof Notes<br>
+  Created and maintained by
+  <span style="color:#22d3ee; font-weight:600;">Liger44</span><br><br>
+
+  <div class="footer-socials">
+    <a href="https://github.com/ligerharry44-netizen" target="_blank">GitHub</a>
+    <span>•</span>
+    <a href="https://www.linkedin.com/in/ligerharry44" target="_blank">LinkedIn</a>
+    <span>•</span>
+    <a href="mailto:ligerharry44@gmail.com">Email</a>
+  </div>
+
+  <p style="font-size:0.75rem; opacity:0.7; margin-top:12px;">
+    Built for ethical cyber security learning only.
+  </p>
+</footer>
+</body>
+</html>

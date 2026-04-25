@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HackForge | Phase 05</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+    --bg: #020617;
+    --card: rgba(15, 23, 42, 0.8);
+
+    --primary: #ef4444; /* red theme */
+    --secondary: #38bdf8;
+    --danger: #ef4444;
+
+    --border: rgba(239,68,68,0.2);
+    --text: #f8fafc;
+    --text-muted: #94a3b8;
+}
+
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: radial-gradient(circle at top, #1f2937, #020617);
+    color: var(--text);
+}
+
+/* NAV */
+.nav-bar {
+    display:flex;
+    justify-content:space-between;
+    padding:1.2rem 2.5rem;
+    background:rgba(2,6,23,0.95);
+    border-bottom:1px solid var(--border);
+}
+
+.exit-btn {
+    text-decoration:none;
+    color:var(--secondary);
+    padding:6px 12px;
+    border:1px solid var(--secondary);
+    border-radius:6px;
+}
+
+.phase-title {
+    color:var(--primary);
+}
+
+.score-box {
+    font-family:'Fira Code';
+    color:var(--secondary);
+}
+
+/* LEARNING */
+.learning-banner {
+    max-width:900px;
+    margin:2rem auto;
+    background:linear-gradient(135deg, rgba(239,68,68,0.1), rgba(56,189,248,0.05));
+    border:1px solid var(--border);
+    padding:20px;
+    border-radius:10px;
+}
+
+/* CARDS */
+.container {
+    max-width:900px;
+    margin:2rem auto;
+}
+
+.glass-card {
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:2rem;
+    margin-bottom:2rem;
+    position:relative;
+}
+
+.locked {
+    opacity:0.3;
+    pointer-events:none;
+}
+
+.lock-overlay {
+    position:absolute;
+    width:100%;
+    height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(0,0,0,0.5);
+}
+
+/* INPUT */
+.input-group {
+    display:flex;
+    gap:10px;
+    margin-top:1rem;
+}
+
+.input-field {
+    flex:1;
+    background:black;
+    border:1px solid var(--border);
+    color:var(--primary);
+    padding:10px;
+}
+
+/* BUTTON */
+.btn {
+    padding:10px 20px;
+    border:none;
+    cursor:pointer;
+}
+
+.btn-primary {
+    background:var(--primary);
+}
+
+.btn-hint {
+    margin-top:10px;
+    border:1px solid var(--secondary);
+    background:transparent;
+    color:var(--secondary);
+}
+
+/* AI HINT */
+.ai-box {
+    display:none;
+    margin-top:10px;
+    padding:12px;
+    border-left:3px solid var(--secondary);
+    background:rgba(56,189,248,0.05);
+}
+
+/* BADGE */
+.badge {
+    display:inline-block;
+    padding:4px 12px;
+    border:1px solid currentColor;
+    font-size:0.7rem;
+    margin-bottom:10px;
+}
+</style>
+</head>
+
+<body>
+
+<nav class="nav-bar">
+<a href="main.html" class="exit-btn">← Exit Lab</a>
+<h2 class="phase-title">PHASE_05 → FILE EXPOSURE</h2>
+<div id="scoreDisplay" class="score-box">SCORE: 0</div>
+</nav>
+
+<div class="learning-banner">
+<h3>LAB OBJECTIVES</h3>
+<ul>
+<li>Discover exposed backup files</li>
+<li>Analyze configuration leaks</li>
+<li>Explore hidden directories</li>
+<li>Extract sensitive information</li>
+</ul>
+</div>
+
+<div class="container">
+
+<!-- TOP -->
+<div class="glass-card" style="text-align:center;">
+<h3>BACKUP SYSTEM LEAK</h3>
+
+<p style="color:#94a3b8; max-width:600px; margin:auto;">
+The server backup system may have exposed sensitive files.
+Investigate accessible paths and retrieve hidden data.
+</p>
+
+<a href="target.html" target="_blank">
+<button class="btn btn-primary">OPEN TARGET</button>
+</a>
+</div>
+
+<!-- EASY -->
+<div id="card1" class="glass-card">
+<span class="badge" style="color: var(--primary);">EASY</span>
+
+<h2>Backup Archive</h2>
+
+<div class="input-group">
+<input id="f1" class="input-field">
+<button onclick="check(1,'HP{file_easy}',10,'card2')" class="btn btn-primary">Submit</button>
+</div>
+
+<button onclick="aiHint(1)" class="btn btn-hint">AI Hint</button>
+<div id="hint1" class="ai-box"></div>
+</div>
+
+<!-- MEDIUM -->
+<div id="card2" class="glass-card locked">
+<div id="lock2" class="lock-overlay">LOCKED</div>
+
+<span class="badge" style="color:#fbbf24;">MEDIUM</span>
+
+<h2>Configuration Leak</h2>
+
+<div class="input-group">
+<input id="f2" class="input-field">
+<button onclick="check(2,'HP{file_medium}',20,'card3')" class="btn btn-primary">Submit</button>
+</div>
+
+<button onclick="aiHint(2)" class="btn btn-hint">AI Hint</button>
+<div id="hint2" class="ai-box"></div>
+</div>
+
+<!-- HARD -->
+<div id="card3" class="glass-card locked">
+<div id="lock3" class="lock-overlay">LOCKED</div>
+
+<span class="badge" style="color: var(--danger);">HARD</span>
+
+<h2>Hidden Directory</h2>
+
+<div class="input-group">
+<input id="f3" class="input-field">
+<button onclick="check(3,'HP{file_hard}',30,null)" class="btn btn-primary">Submit</button>
+</div>
+
+<button onclick="aiHint(3)" class="btn btn-hint">AI Hint</button>
+<div id="hint3" class="ai-box"></div>
+</div>
+
+</div>
+
+<script>
+
+/* AI HINT SYSTEM */
+let stage = {};
+
+function aiHint(level){
+    if(!stage[level]) stage[level]=1;
+
+    const hints = {
+        1:[
+            "Backup files are often exposed.",
+            "Try common archive names.",
+            "Look for /backup.zip"
+        ],
+        2:[
+            "Configuration files store sensitive data.",
+            "Look for config files.",
+            "Try /config.txt"
+        ],
+        3:[
+            "Hidden directories may exist.",
+            "Try common directory names.",
+            "Look for /hidden/"
+        ]
+    };
+
+    const box = document.getElementById("hint"+level);
+    box.style.display="block";
+    box.innerText = hints[level][stage[level]-1] || hints[level][2];
+
+    stage[level]++;
+}
+
+/* CORE */
+function check(l,c,pts,next){
+    const i=document.getElementById("f"+l).value.trim();
+
+    if(i===c){
+        localStorage.setItem("p5",l+1);
+
+        let s=parseInt(localStorage.getItem("score")||0)+pts;
+        localStorage.setItem("score",s);
+
+        updateScore();
+
+        if(next) unlock(next,"lock"+(l+1));
+    }
+}
+
+function unlock(c,l){
+    document.getElementById(c).classList.remove("locked");
+    document.getElementById(l).style.display="none";
+}
+
+function updateScore(){
+    document.getElementById("scoreDisplay").innerText =
+    "SCORE: "+(localStorage.getItem("score")||0);
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+    let p=parseInt(localStorage.getItem("p5"))||1;
+    if(p>=2) unlock("card2","lock2");
+    if(p>=3) unlock("card3","lock3");
+    updateScore();
+});
+</script>
+
+</body>
+</html>

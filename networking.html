@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HackForge | Networking Fundamentals</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ─── VARIABLES ──────────────────────────────────────────── */
+:root {
+  --bg:          #000000;
+  --bg-panel:    #080d16;
+  --panel:       #0d1422;
+  --panel-light: #131c2e;
+  --border:      rgba(196,255,0,0.15);
+  --border-dim:  rgba(196,255,0,0.07);
+  --text:        #dde6f0;
+  --muted:       #7a8fa8;
+  --accent:      #c4ff00;
+  --accent-glow: rgba(196,255,0,0.18);
+  --accent-dim:  rgba(196,255,0,0.08);
+  --danger:      #ff4d4d;
+  --warning:     #f59e0b;
+  --cyan:        #00e5ff;
+  --cyan-dim:    rgba(0,229,255,0.12);
+  --purple:      #8b5cf6;
+  --sidebar-w:   270px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  line-height: 1.75;
+  scroll-behavior: smooth;
+}
+
+/* ─── BACKGROUND ─────────────────────────────────────────── */
+.bg-grid {
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(196,255,0,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(196,255,0,0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none; z-index: 0;
+  animation: gridDrift 24s linear infinite;
+}
+@keyframes gridDrift { from{transform:translate(0,0)} to{transform:translate(48px,48px)} }
+
+.bg-vignette {
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 30% 20%, rgba(196,255,0,0.04) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 80%, rgba(0,229,255,0.03) 0%, transparent 60%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ─── SIDEBAR ────────────────────────────────────────────── */
+.sidebar {
+  position: fixed; left:0; top:0;
+  width: var(--sidebar-w); height: 100vh;
+  background: linear-gradient(180deg, #02050e 0%, #000000 100%);
+  border-right: 1px solid var(--border);
+  z-index: 200;
+  display: flex; flex-direction: column;
+  box-shadow: 4px 0 32px rgba(196,255,0,0.06);
+  overflow: hidden;
+}
+
+.logo-wrap {
+  padding: 18px 16px 16px;
+  border-bottom: 1px solid var(--border-dim);
+  background: linear-gradient(180deg, rgba(196,255,0,0.05) 0%, transparent 100%);
+  text-align: center;
+}
+.logo-img {
+  width: 170px; height: auto;
+  filter: drop-shadow(0 0 18px rgba(196,255,0,0.45));
+  transition: filter 0.3s, transform 0.3s;
+  display: block; margin: 0 auto;
+}
+.logo-img:hover { filter: drop-shadow(0 0 30px rgba(196,255,0,0.7)); transform: scale(1.04); }
+.logo-sub {
+  font-size: 0.65rem; color: var(--muted);
+  letter-spacing: 2px; text-transform: uppercase;
+  margin-top: 8px; font-family: 'JetBrains Mono', monospace;
+}
+
+.toc-label {
+  padding: 18px 22px 8px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.6rem; letter-spacing: 2.5px;
+  text-transform: uppercase; color: var(--accent); opacity: 0.6;
+}
+
+.toc-scroll {
+  flex: 1; overflow-y: auto; padding: 0 12px 20px;
+  scrollbar-width: thin; scrollbar-color: rgba(196,255,0,0.3) transparent;
+}
+.toc-scroll::-webkit-scrollbar { width: 4px; }
+.toc-scroll::-webkit-scrollbar-thumb { background: rgba(196,255,0,0.25); border-radius: 2px; }
+
+.toc-link {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; margin: 2px 0; border-radius: 7px;
+  color: var(--muted); text-decoration: none;
+  font-size: 0.82rem; font-weight: 500;
+  transition: all 0.22s; border-left: 2px solid transparent; line-height: 1.3;
+}
+.toc-link .toc-num {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;
+  color: rgba(196,255,0,0.35); flex-shrink: 0; width: 18px;
+}
+.toc-link:hover { background: var(--accent-dim); color: var(--accent); border-left-color: var(--accent); transform: translateX(3px); }
+.toc-link.active { background: rgba(196,255,0,0.12); color: var(--accent); border-left-color: var(--accent); }
+
+.sidebar-nav {
+  padding: 14px 12px; border-top: 1px solid var(--border-dim);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.sidebar-nav a {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; border-radius: 7px; color: var(--muted);
+  text-decoration: none; font-size: 0.82rem; font-weight: 500; transition: all 0.2s;
+}
+.sidebar-nav a:hover { background: var(--accent-dim); color: var(--accent); }
+.sidebar-nav a.active { color: var(--accent); background: var(--accent-dim); }
+
+/* ─── MAIN ───────────────────────────────────────────────── */
+.main { margin-left: var(--sidebar-w); min-height: 100vh; position: relative; z-index: 1; }
+
+/* ─── TOPBAR ─────────────────────────────────────────────── */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(0,0,0,0.85); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 48px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.topbar-left { display: flex; align-items: center; gap: 14px; }
+.breadcrumb {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+  color: var(--muted); display: flex; align-items: center; gap: 6px;
+}
+.breadcrumb span { color: var(--accent); opacity: 0.6; }
+.breadcrumb strong { color: var(--text); }
+.topbar-badge {
+  background: var(--accent-dim); border: 1px solid var(--border);
+  color: var(--accent); padding: 4px 10px; border-radius: 5px;
+  font-size: 0.72rem; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px;
+}
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.progress-pill {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--panel); border: 1px solid var(--border-dim);
+  border-radius: 30px; padding: 6px 14px; font-size: 0.78rem; color: var(--muted);
+}
+.progress-pill-bar { width: 80px; height: 5px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+.progress-pill-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #7fd600); border-radius: 3px; width: 25%; box-shadow: 0 0 8px rgba(196,255,0,0.5); }
+.mark-btn {
+  background: linear-gradient(135deg, var(--accent), #7fd600); color: #000;
+  border: none; padding: 9px 18px; border-radius: 7px;
+  font-weight: 700; font-size: 0.8rem; cursor: pointer;
+  font-family: 'Orbitron', sans-serif; transition: all 0.25s;
+  box-shadow: 0 0 16px rgba(196,255,0,0.25); letter-spacing: 0.3px;
+}
+.mark-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 24px rgba(196,255,0,0.45); }
+
+/* ─── READ INDICATOR ─────────────────────────────────────── */
+.read-indicator {
+  position: fixed; top: 0; left: var(--sidebar-w); right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--cyan));
+  transform-origin: left; transform: scaleX(0); z-index: 300; transition: transform 0.1s;
+}
+
+/* ─── CONTENT ────────────────────────────────────────────── */
+.content { padding: 48px 52px 80px; max-width: 920px; }
+
+/* ─── HERO ───────────────────────────────────────────────── */
+.page-hero {
+  margin-bottom: 48px; padding: 40px 44px;
+  background: linear-gradient(135deg, rgba(196,255,0,0.06) 0%, rgba(0,229,255,0.04) 100%);
+  border: 1px solid var(--border); border-radius: 14px;
+  position: relative; overflow: hidden;
+}
+.page-hero::before {
+  content: 'NET'; position: absolute; right: 24px; top: 50%; transform: translateY(-50%);
+  font-family: 'Orbitron', sans-serif; font-size: 5.5rem; font-weight: 900;
+  color: rgba(196,255,0,0.04); line-height: 1; pointer-events: none; user-select: none;
+}
+.hero-tag {
+  display: inline-block; background: var(--accent-dim); border: 1px solid var(--border);
+  color: var(--accent); padding: 4px 12px; border-radius: 5px;
+  font-size: 0.72rem; font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 1px; text-transform: uppercase; margin-bottom: 16px;
+}
+.page-hero h1 {
+  font-family: 'Orbitron', sans-serif; font-size: 2.2rem; font-weight: 700;
+  background: linear-gradient(135deg, #ffffff 30%, var(--accent));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; margin-bottom: 12px; line-height: 1.2;
+}
+.page-hero p { color: var(--muted); font-size: 0.97rem; max-width: 620px; line-height: 1.7; }
+.hero-meta { display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap; }
+.hero-stat { display: flex; align-items: center; gap: 7px; font-size: 0.8rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+.hero-stat .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+
+/* ─── TOPIC SECTION ──────────────────────────────────────── */
+.topic-section {
+  margin-bottom: 44px; padding: 36px 40px;
+  background: var(--bg-panel); border: 1px solid var(--border-dim);
+  border-radius: 14px; position: relative; transition: border-color 0.3s;
+  animation: fadeUp 0.4s ease both;
+}
+.topic-section:hover { border-color: rgba(196,255,0,0.2); }
+.topic-section::before {
+  content: ''; position: absolute; top: 0; left: 0;
+  width: 3px; height: 100%;
+  background: linear-gradient(180deg, var(--accent), transparent);
+  border-radius: 14px 0 0 14px; opacity: 0; transition: opacity 0.3s;
+}
+.topic-section:hover::before { opacity: 1; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+.topic-section:nth-child(1){animation-delay:0.05s}
+.topic-section:nth-child(2){animation-delay:0.10s}
+.topic-section:nth-child(3){animation-delay:0.15s}
+.topic-section:nth-child(4){animation-delay:0.20s}
+.topic-section:nth-child(5){animation-delay:0.25s}
+
+/* Section heading */
+.s-head {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 22px; padding-bottom: 16px; border-bottom: 1px solid var(--border-dim);
+}
+.s-num { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--accent); opacity: 0.55; flex-shrink: 0; }
+.topic-section h2 { font-family: 'Orbitron', sans-serif; font-size: 1.05rem; font-weight: 600; color: #fff; letter-spacing: 0.5px; }
+
+.s-badge { margin-left: auto; padding: 3px 9px; border-radius: 5px; font-size: 0.68rem; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+.s-badge-green  { background: var(--accent-dim); border: 1px solid var(--border); color: var(--accent); }
+.s-badge-red    { background: rgba(255,77,77,0.1); border: 1px solid rgba(255,77,77,0.25); color: var(--danger); }
+.s-badge-purple { background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.25); color: var(--purple); }
+.s-badge-warn   { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); color: var(--warning); }
+.s-badge-cyan   { background: var(--cyan-dim); border: 1px solid rgba(0,229,255,0.2); color: var(--cyan); }
+
+/* Content text */
+.topic-section p { color: var(--muted); font-size: 0.93rem; margin-bottom: 10px; line-height: 1.78; }
+.topic-section h3 {
+  font-size: 0.98rem; font-weight: 600; color: var(--text);
+  margin: 20px 0 8px; display: flex; align-items: center; gap: 8px;
+}
+.topic-section h3::before { content: ''; width: 14px; height: 2px; background: var(--accent); border-radius: 1px; flex-shrink: 0; }
+.topic-section h4 { font-size: 0.88rem; font-weight: 600; color: var(--accent); margin: 14px 0 6px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.3px; }
+.topic-section h5 { font-size: 0.82rem; font-weight: 600; color: var(--muted); margin: 10px 0 6px; }
+.topic-section strong { color: var(--text); }
+
+.topic-title {
+  font-size: 1rem; font-weight: 600; margin: 22px 0 10px;
+  color: var(--accent); display: flex; align-items: center; gap: 10px;
+}
+.topic-title::before { content: ''; width: 4px; height: 18px; background: var(--accent); border-radius: 2px; flex-shrink: 0; }
+
+.topic-section ul, .topic-section ol {
+  margin: 8px 0 12px 20px; color: var(--muted); font-size: 0.9rem;
+}
+.topic-section li { margin: 6px 0; padding-left: 4px; line-height: 1.65; }
+.topic-section li strong { color: var(--text); }
+
+/* ─── INFO / WARNING BOXES ───────────────────────────────── */
+.info-box {
+  background: rgba(196,255,0,0.05); border-left: 3px solid var(--accent);
+  padding: 14px 18px; margin: 14px 0; border-radius: 8px;
+  color: var(--muted); font-size: 0.88rem; line-height: 1.65;
+}
+.info-box strong { color: var(--text); }
+.warning-box {
+  background: rgba(245,158,11,0.06); border-left: 3px solid var(--warning);
+  padding: 14px 18px; margin: 14px 0; border-radius: 8px;
+  color: var(--muted); font-size: 0.88rem; line-height: 1.65;
+}
+.warning-box strong { color: var(--text); }
+
+/* ─── CODE / PRE ─────────────────────────────────────────── */
+pre, code {
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(196,255,0,0.06); border: 1px solid var(--border-dim);
+  color: var(--accent); border-radius: 6px;
+}
+code { padding: 2px 7px; font-size: 0.82em; }
+pre {
+  padding: 12px 16px; margin: 10px 0; font-size: 0.82rem;
+  overflow-x: auto; line-height: 1.7; white-space: pre-wrap; word-break: break-all;
+}
+
+/* ─── TABLE ──────────────────────────────────────────────── */
+.topic-section table {
+  width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.88rem;
+}
+.topic-section thead tr, .topic-section tr:first-child {
+  background: rgba(196,255,0,0.07); border-bottom: 1px solid var(--border);
+}
+.topic-section th {
+  padding: 11px 14px; text-align: left;
+  font-family: 'Orbitron', sans-serif; font-size: 0.65rem;
+  font-weight: 600; color: var(--accent); letter-spacing: 0.8px; text-transform: uppercase;
+}
+.topic-section td {
+  padding: 10px 14px; border-bottom: 1px solid var(--border-dim);
+  color: var(--muted); vertical-align: top;
+}
+.topic-section td:first-child { color: var(--text); font-weight: 500; }
+.topic-section tr:hover td { background: rgba(196,255,0,0.03); }
+
+/* divider */
+hr { border: none; border-top: 1px solid var(--border-dim); margin: 20px 0; }
+
+/* ─── REFERENCE ──────────────────────────────────────────── */
+.ref-card {
+  display: flex; align-items: center; gap: 16px;
+  padding: 18px 22px; background: var(--bg-panel);
+  border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px; transition: all 0.25s;
+}
+.ref-card:hover { transform: translateX(5px); box-shadow: 0 4px 20px rgba(0,0,0,0.4); border-color: rgba(196,255,0,0.25); }
+.ref-icon { font-size: 2rem; }
+.ref-body { flex: 1; }
+.ref-name { font-weight: 600; color: var(--text); font-size: 0.95rem; margin-bottom: 3px; }
+.ref-sub { font-size: 0.8rem; color: var(--muted); }
+.ref-dl {
+  background: var(--accent); color: #000; border: none;
+  padding: 8px 16px; border-radius: 7px; font-weight: 700;
+  font-size: 0.8rem; cursor: pointer; text-decoration: none;
+  font-family: 'Orbitron', sans-serif; transition: all 0.2s;
+  display: inline-block; white-space: nowrap;
+  box-shadow: 0 0 12px rgba(196,255,0,0.25);
+}
+.ref-dl:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(196,255,0,0.4); }
+
+/* ─── COMPLETE BUTTON ─────────────────────────────────────── */
+.complete-wrap { text-align: center; padding: 40px 0 20px; }
+.complete-btn {
+  background: linear-gradient(135deg, var(--accent), #7fd600); color: #000;
+  border: none; padding: 14px 36px; border-radius: 10px;
+  font-weight: 700; font-size: 0.92rem; cursor: pointer;
+  font-family: 'Orbitron', sans-serif; letter-spacing: 0.5px; transition: all 0.3s;
+  box-shadow: 0 0 24px rgba(196,255,0,0.3);
+}
+.complete-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 32px rgba(196,255,0,0.5); }
+.complete-btn.done { background: linear-gradient(135deg, #22c55e, #16a34a); }
+
+/* ─── FOOTER ─────────────────────────────────────────────── */
+footer {
+  text-align: center; padding: 24px 52px;
+  border-top: 1px solid var(--border-dim);
+  font-size: 0.8rem; color: var(--muted);
+  font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px;
+}
+footer a { color: var(--cyan); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+/* ─── IMAGES ─────────────────────────────────────────────── */
+.img-block {
+  margin: 20px 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border-dim);
+  background: #02040a;
+}
+.img-block img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 10px;
+  opacity: 0.92;
+  transition: opacity 0.3s;
+}
+.img-block img:hover { opacity: 1; }
+.img-caption {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-align: center;
+  padding: 8px 12px;
+  letter-spacing: 0.5px;
+  border-top: 1px solid var(--border-dim);
+  background: rgba(196,255,0,0.03);
+}
+
+/* ─── MOBILE ─────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  :root { --sidebar-w: 0px; }
+  .sidebar { display: none; }
+  .content { padding: 24px 20px 60px; }
+  .topbar { padding: 12px 20px; }
+  .page-hero h1 { font-size: 1.5rem; }
+  .topic-section { padding: 20px; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-vignette"></div>
+<div class="read-indicator" id="readIndicator"></div>
+
+<!-- ═══════════════════ SIDEBAR ══════════════════════════════ -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="logo.png" alt="HackForge Logo" class="logo-img">
+    <div class="logo-sub">Cybersecurity Learning</div>
+  </div>
+
+  <div class="toc-label">On this page</div>
+
+  <div class="toc-scroll">
+    <a class="toc-link" href="#intro">       <span class="toc-num">01</span>Networking Intro</a>
+    <a class="toc-link" href="#types">       <span class="toc-num">02</span>Types of Networks</a>
+    <a class="toc-link" href="#metrics">     <span class="toc-num">03</span>Key Performance Metrics</a>
+    <a class="toc-link" href="#topology">    <span class="toc-num">04</span>Network Topology</a>
+    <a class="toc-link" href="#models">      <span class="toc-num">05</span>Network Models</a>
+    <a class="toc-link" href="#osi">         <span class="toc-num">06</span>OSI Model</a>
+    <a class="toc-link" href="#tcpip">       <span class="toc-num">07</span>TCP/IP Model</a>
+    <a class="toc-link" href="#devices">     <span class="toc-num">08</span>Network Devices</a>
+    <a class="toc-link" href="#vpn">         <span class="toc-num">09</span>VPN</a>
+    <a class="toc-link" href="#firewall">    <span class="toc-num">10</span>Firewall</a>
+    <a class="toc-link" href="#ids-ips">     <span class="toc-num">11</span>IDS &amp; IPS</a>
+    <a class="toc-link" href="#ip">          <span class="toc-num">12</span>IP Addressing</a>
+    <a class="toc-link" href="#ipv4v6">      <span class="toc-num">13</span>IPv4 vs IPv6</a>
+    <a class="toc-link" href="#pubpriv">     <span class="toc-num">14</span>Public vs Private IP</a>
+    <a class="toc-link" href="#static">      <span class="toc-num">15</span>Static vs Dynamic IP</a>
+    <a class="toc-link" href="#subnetting">  <span class="toc-num">16</span>Subnetting &amp; CIDR</a>
+    <a class="toc-link" href="#gateway">     <span class="toc-num">17</span>Default Gateway</a>
+    <a class="toc-link" href="#ports">       <span class="toc-num">18</span>Ports &amp; Protocols</a>
+    <a class="toc-link" href="#secproto">    <span class="toc-num">19</span>Secure vs Insecure Protocols</a>
+    <a class="toc-link" href="#attacks">     <span class="toc-num">20</span>Network Attacks</a>
+  </div>
+
+  <div class="sidebar-nav">
+    <a href="index.html">📓 Notes</a>
+    <a href="roadmap.html">🗺️ Roadmap</a>
+    <a href="practice-lab.html">⚗️ Labs</a>
+  </div>
+</aside>
+
+<!-- ═══════════════════ MAIN ═════════════════════════════════ -->
+<main class="main">
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="breadcrumb">
+        <span>HackForge</span> / <span>Notes</span> / <strong>Networking Fundamentals</strong>
+      </div>
+      <div class="topbar-badge">MODULE 02</div>
+    </div>
+    <div class="topbar-right">
+      <div class="progress-pill">
+        <span>Progress</span>
+        <div class="progress-pill-bar"><div class="progress-pill-fill"></div></div>
+        <span>25%</span>
+      </div>
+      <button class="mark-btn" id="markBtn" onclick="completeModule('networking')">✓ Mark Complete</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- HERO -->
+    <div class="page-hero">
+      <div class="hero-tag">Core Module</div>
+      <h1>🌐 Networking Fundamentals</h1>
+      <p>Learn how data travels across networks, how devices communicate, and how security is applied in real-world systems.</p>
+      <div class="hero-meta">
+        <div class="hero-stat"><div class="dot"></div>20 Topics</div>
+        <div class="hero-stat"><div class="dot" style="background:var(--cyan);box-shadow:0 0 6px var(--cyan);"></div>~60 min read</div>
+        <div class="hero-stat"><div class="dot" style="background:#f59e0b;box-shadow:0 0 6px #f59e0b;"></div>Foundational</div>
+      </div>
+    </div>
+
+    <!-- ── 01 Intro ── -->
+    <div class="topic-section" id="intro">
+      <div class="s-head"><span class="s-num">01</span><h2>Networking Fundamentals</h2><span class="s-badge s-badge-green">Intro</span></div>
+      <h3>What happens in networking:</h3>
+      <ul>
+        <li>Data is broken into small packets</li>
+        <li>Each packet contains:
+          <ul><li>Source address (your IP)</li><li>Destination address (server IP)</li></ul>
+        </li>
+        <li>Data travels through:
+          <ul><li>Router</li><li>Switch</li><li>Internet (many networks)</li></ul>
+        </li>
+        <li>Reaches destination and reassembles</li>
+      </ul>
+      <div class="img-block">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/UDP_encapsulation.svg/800px-UDP_encapsulation.svg.png" alt="Network packet structure" loading="lazy">
+        <div class="img-caption">📦 How data is broken into packets and encapsulated for transmission</div>
+      </div>
+    </div>
+
+    <!-- ── 02 Types of Networks ── -->
+    <div class="topic-section" id="types">
+      <div class="s-head"><span class="s-num">02</span><h2>Types of Networks</h2></div>
+      <h3 class="topic-title">1. LAN (Local Area Network)</h3>
+      <ul><li>Small area (home, office, college)</li><li>High speed</li><li>Low latency</li><li>Example: Home WiFi, College lab</li></ul>
+      <h3 class="topic-title">2. WAN (Wide Area Network)</h3>
+      <ul><li>Covers large area (countries/continents)</li><li>Internet is the biggest WAN</li><li>Example: Google servers worldwide</li></ul>
+      <h3 class="topic-title">3. MAN (Metropolitan Area Network)</h3>
+      <ul><li>Covers a city</li><li>Example: City-wide ISP</li></ul>
+      <h3 class="topic-title">4. PAN (Personal Area Network)</h3>
+      <ul><li>Very small range</li><li>Example: Bluetooth, Mobile hotspot</li></ul>
+      <div class="img-block">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Data_Networks_classification_by_spatial_scope.svg/800px-Data_Networks_classification_by_spatial_scope.svg.png" alt="LAN WAN MAN PAN comparison" loading="lazy">
+        <div class="img-caption">🌐 PAN → LAN → MAN → WAN — network types by geographic scope</div>
+      </div>
+    </div>
+
+    <!-- ── 03 Performance Metrics ── -->
+    <div class="topic-section" id="metrics">
+      <div class="s-head"><span class="s-num">03</span><h2>Key Performance Metrics</h2></div>
+      <h3 class="topic-title">Bandwidth</h3>
+      <ul><li>Maximum data that can be sent</li><li>Measured in Mbps/Gbps</li><li>Example: 100 Mbps connection</li></ul>
+      <h3 class="topic-title">Latency</h3>
+      <ul><li>Time taken for data to travel</li><li>Measured in ms</li><li>Example: Gaming lag</li></ul>
+      <h3 class="topic-title">Throughput</h3>
+      <ul><li>Actual speed you get</li><li>Always less than bandwidth</li><li>Example: 100 Mbps → 70 Mbps</li></ul>
+      <h3 class="topic-title">Jitter</h3>
+      <ul><li>Variation in delay</li><li>Example: Video call lag</li></ul>
+    </div>
+
+    <!-- ── 04 Topology ── -->
+    <div class="topic-section" id="topology">
+      <div class="s-head"><span class="s-num">04</span><h2>Network Topology</h2></div>
+      <h3 class="topic-title">1. Star Topology</h3>
+      <ul><li>All devices connect to central device</li><li>Pros: Easy to manage, troubleshoot</li><li>Cons: If central device fails → network fails</li></ul>
+      <h3 class="topic-title">2. Mesh Topology</h3>
+      <ul><li>Every device connects to every other device</li><li>Pros: Very reliable, no single failure</li><li>Cons: Expensive, complex</li></ul>
+      <h3 class="topic-title">3. Bus Topology</h3>
+      <ul><li>All devices share one cable</li><li>Pros: Cheap</li><li>Cons: Cable failure → full network down</li></ul>
+      <h3 class="topic-title">4. Ring Topology</h3>
+      <ul><li>Devices connected in circle</li><li>Pros: Data flows in one direction</li><li>Cons: One failure affects all</li></ul>
+      <div class="img-block">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/NetworkTopologies.svg/800px-NetworkTopologies.svg.png" alt="Network topologies diagram" loading="lazy">
+        <div class="img-caption">🔗 Star, Mesh, Bus and Ring topologies side by side</div>
+      </div>
+    </div>
+
+    <!-- ── 05 Network Models ── -->
+    <div class="topic-section" id="models">
+      <div class="s-head"><span class="s-num">05</span><h2>Network Models</h2></div>
+      <h3 class="topic-title">1. Client-Server Model</h3>
+      <ul>
+        <li>Client requests service</li><li>Server provides service</li><li>Centralized communication</li>
+        <li>Examples: Websites, Email, Banking apps</li>
+        <li>Security risks: <ul><li>DDoS</li><li>SQL Injection</li><li>Unauthorized access</li></ul></li>
+        <li>If server fails → entire system affected</li>
+      </ul>
+      <h3 class="topic-title">2. Peer-to-Peer (P2P)</h3>
+      <ul><li>No central server</li><li>Each device acts as client + server</li><li>Decentralized communication</li><li>Examples: BitTorrent, LAN sharing, Blockchain</li></ul>
+    </div>
+
+    <!-- ── 06 OSI Model ── -->
+    <div class="topic-section" id="osi">
+      <div class="s-head"><span class="s-num">06</span><h2>OSI Model</h2><span class="s-badge s-badge-purple">7 Layers</span></div>
+      <p>The OSI Model is a 7-layer conceptual framework that explains how data moves from one device to another over a network.</p>
+      <p>It was standardized by the International Organization for Standardization (ISO) to help vendors and engineers design, build, and troubleshoot network systems in a consistent way.</p>
+      <div class="img-block">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/OSI_Model_v1.svg/600px-OSI_Model_v1.svg.png" alt="OSI Model 7 layers diagram" loading="lazy">
+        <div class="img-caption">🧱 OSI Model — all 7 layers from Physical to Application</div>
+      </div>
+      <h4>OSI Layers (Layer 7 → Layer 1):</h4>
+      <h4>Layer 1 – Physical Layer:</h4>
+      <p>Transfers raw bits (0s and 1s) over physical media.</p>
+      <p><strong>Data Unit:</strong> Bits</p>
+      <p><strong>Transmission Media</strong></p>
+      <ul>
+        <li>Wired: <ul><li>Coaxial Cable</li><li>Fiber Optic Cable</li></ul></li>
+        <li>Wireless: <ul><li>Wi-Fi (Radio Waves)</li><li>Bluetooth</li><li>Infrared</li></ul></li>
+      </ul>
+      <p>Physical layer transmits raw bits over physical media.</p>
+      <h4>Layer 2 – Data Link Layer:</h4>
+      <p>Handles framing, MAC addressing, and error detection.</p>
+      <p><strong>Data Unit:</strong> Frames</p>
+      <p><strong>Protocols / Standards:</strong></p>
+      <ul><li>Ethernet</li><li>ARP</li><li>PPP</li></ul>
+      <p><strong>Devices:</strong></p>
+      <ul><li>Switches</li><li>Network Interface Card (NIC)</li></ul>
+      <p>Data Link layer provides framing, MAC addressing, and error detection.</p>
+      <h4>Layer 3 – Network Layer:</h4>
+      <p>Handles logical addressing and routing between networks.</p>
+      <p><strong>Data Unit:</strong> Packets</p>
+      <p><strong>Protocols:</strong></p>
+      <ul><li>IP (IPv4 / IPv6)</li><li>ICMP</li><li>Routing protocols (OSPF, RIP, BGP)</li></ul>
+      <p><strong>Devices:</strong></p>
+      <ul><li>Routers</li><li>Layer 3 switches</li></ul>
+      <p>Network layer is responsible for logical addressing and routing.</p>
+      <h4>Layer 4 – Transport Layer:</h4>
+      <p>Provides end-to-end communication, flow control, segmentation, and error handling.</p>
+      <p><strong>Data Unit:</strong> Segments</p>
+      <p><strong>Protocols:</strong></p>
+      <ul><li>TCP (Reliable, ordered, error-checked)</li><li>UDP (Fast, unreliable)</li></ul>
+      <p>Transport layer provides reliable or unreliable data delivery using TCP or UDP.</p>
+      <h4>Layer 5 – Session Layer:</h4>
+      <ul><li>Session setup &amp; teardown</li><li>Checkpointing</li><li>Session recovery</li></ul>
+      <p>Session layer establishes, manages, and terminates communication sessions.</p>
+      <h4>Layer 6 – Presentation Layer:</h4>
+      <ul><li>Data translation (ASCII ↔ Binary)</li><li>Encryption / Decryption</li><li>Compression</li></ul>
+      <p><strong>Protocols / Formats:</strong></p>
+      <ul><li>SSL / TLS</li><li>JPEG, PNG</li><li>MP3, MP4</li></ul>
+      <p>Presentation layer ensures data is properly formatted, encrypted, and compressed.</p>
+      <h4>Layer 7 – Application Layer:</h4>
+      <ul><li>HTTP / HTTPS</li><li>FTP</li><li>SMTP</li><li>DNS</li><li>SNMP</li></ul>
+      <p>Example:</p>
+      <ul><li>Opening a website in a browser</li><li>Sending an email</li></ul>
+      <p>Application layer provides network services directly to end-user applications.</p>
+    </div>
+
+    <!-- ── 07 TCP/IP ── -->
+    <div class="topic-section" id="tcpip">
+      <div class="s-head"><span class="s-num">07</span><h2>TCP/IP Model</h2><span class="s-badge s-badge-cyan">4 Layers</span></div>
+      <p>The TCP/IP (Transmission Control Protocol / Internet Protocol) model is a practical and implementable communication model that defines how data is actually transmitted across networks, and it is the foundation of the Internet.</p>
+      <div class="img-block">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/UDP_encapsulation.svg/800px-UDP_encapsulation.svg.png" alt="TCP/IP model layers" loading="lazy">
+        <div class="img-caption">🔄 TCP/IP — the real-world 4-layer model powering the Internet</div>
+      </div>
+      <p><strong>TCP/IP HAS 4 LAYERS:</strong></p>
+      <ul><li>Application</li><li>Transport</li><li>Internet</li><li>Network Access</li></ul>
+      <h4>1. Application Layer (TCP/IP):</h4>
+      <p>Provides services to user applications like web browsing, email, and file transfer.</p>
+      <p><strong>Protocols:</strong></p>
+      <ul><li>HTTP / HTTPS</li><li>FTP</li><li>SMTP</li><li>POP3 / IMAP</li><li>DNS</li><li>SNMP</li></ul>
+      <p>Application layer provides network services directly to end-user applications.</p>
+      <h4>2. Transport Layer (TCP/IP):</h4>
+      <p>Provides end-to-end communication, flow control, segmentation, and error handling.</p>
+      <p><strong>Data Unit:</strong> Segment</p>
+      <p><strong>Protocols:</strong></p>
+      <ul><li>TCP – Reliable, ordered, error-checked</li><li>UDP – Fast, connectionless, no guarantee</li></ul>
+      <p>Transport layer ensures reliable or fast data delivery using TCP or UDP.</p>
+      <h4>3. Internet Layer (TCP/IP):</h4>
+      <p>Handles logical addressing and routing of packets.</p>
+      <p><strong>Data Unit:</strong> Packet</p>
+      <p><strong>Protocols:</strong></p>
+      <ul><li>IP (IPv4 / IPv6)</li><li>ICMP</li><li>IPsec</li></ul>
+      <p>Internet layer handles logical addressing and routing using IP.</p>
+      <h4>4. Network Access Layer (TCP/IP):</h4>
+      <p>Defines how data is physically transmitted, including framing, MAC addressing, and signals.</p>
+      <p><strong>Data Units:</strong> Frame → Bits</p>
+      <p><strong>Technologies / Media:</strong></p>
+      <ul><li>Ethernet</li><li>ARP</li><li>Wi-Fi</li><li>Cables (UTP, Fiber)</li><li>MAC Address</li></ul>
+      <p>Network Access layer handles physical transmission and MAC addressing.</p>
+    </div>
+
+    <!-- ── 08 Network Devices ── -->
+    <div class="topic-section" id="devices">
+      <div class="s-head"><span class="s-num">08</span><h2>Network Devices</h2></div>
+      <div class="img-block">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Adsl_connections.jpg/800px-Adsl_connections.jpg" alt="Network devices" loading="lazy">
+        <div class="img-caption">🖧 Real-world network setup — router, switch, modem connected together</div>
+      </div>
+      <h3 class="topic-title">1. Router</h3>
+      <p>A router connects one network to another network, for example your home network to the internet. It decides where the data should go using IP addresses. A router is like a traffic police that directs data to the correct network.</p>
+      <p><strong>Cybersecurity Risk:</strong></p>
+      <ul><li>Default username and password can be exploited</li><li>DNS settings can be changed for phishing attacks</li><li>Open ports allow attackers to enter the network</li><li>Remote management can give full control to attacker</li><li>Outdated firmware can be exploited</li></ul>
+      <p><strong>Security Tips:</strong></p>
+      <ul><li>Change default password</li><li>Disable remote access</li><li>Update firmware</li><li>Enable firewall</li><li>Close unused ports</li></ul>
+      <hr>
+
+      <h3 class="topic-title">2. Switch</h3>
+      <p>A switch connects devices within the same network like computers, printers, and servers. It sends data only to the correct device using MAC address. A switch is like a post office that delivers letters to the correct person.</p>
+      <p><strong>Cybersecurity Risk:</strong></p>
+      <ul><li>MAC flooding attack</li><li>VLAN hopping</li><li>ARP spoofing</li><li>Packet sniffing</li><li>Man-in-the-Middle attack</li></ul>
+      <p><strong>Security Tips:</strong></p>
+      <ul><li>Enable port security</li><li>Disable unused ports</li><li>Use VLANs</li><li>Enable DHCP snooping</li><li>Enable Dynamic ARP Inspection</li></ul>
+      <hr>
+
+      <h3 class="topic-title">3. Hub</h3>
+      <p>A hub is a basic network device that sends data to all devices in the network. It does not check destination address. It is like a teacher announcing something to the whole class instead of telling one student.</p>
+      <p><strong>Cybersecurity Risk:</strong></p>
+      <ul><li>Easy packet sniffing</li><li>No security</li><li>Easy Man-in-the-Middle attacks</li></ul>
+      <hr>
+
+      <h3 class="topic-title">4. Modem</h3>
+      <p>A modem connects your network to the Internet Service Provider (ISP). It converts digital signals to analog and analog to digital. Modem means Modulator + Demodulator.</p>
+      <p><strong>Cybersecurity Risk:</strong></p>
+      <ul><li>Default password exploitation</li><li>Remote access attacks</li><li>DNS hijacking</li><li>Firmware vulnerabilities</li></ul>
+      <p><strong>Security Tips:</strong></p>
+      <ul><li>Change modem password</li><li>Disable remote access</li><li>Update firmware</li></ul>
+      <hr>
+
+      <h3 class="topic-title">5. Access Point</h3>
+      <p>An access point provides Wi-Fi connection to devices and connects them to the wired network. It is like a Wi-Fi signal tower.</p>
+      <p><strong>Cybersecurity Risk:</strong></p>
+      <ul><li>Rogue Access Point</li><li>Evil Twin Attack</li><li>Wi-Fi password cracking</li><li>Packet sniffing</li><li>MITM attacks</li></ul>
+      <p><strong>Security Tips:</strong></p>
+      <ul><li>Use WPA2 or WPA3 encryption</li><li>Use strong Wi-Fi password</li><li>Disable WPS</li><li>Use network segmentation</li></ul>
+      <hr>
+
+      <h3 class="topic-title">6. IDS and IPS</h3>
+      <p>IDS (Intrusion Detection System) detects attacks and alerts the administrator. IPS (Intrusion Prevention System) detects and blocks attacks automatically.</p>
+      <table>
+        <thead><tr><th>IDS</th><th>IPS</th></tr></thead>
+        <tbody>
+          <tr><td>Detects attacks</td><td>Detects and blocks attacks</td></tr>
+          <tr><td>Passive</td><td>Active</td></tr>
+          <tr><td>Alerts administrator</td><td>Stops the attack</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── 09 VPN ── -->
+    <div class="topic-section" id="vpn">
+      <div class="s-head"><span class="s-num">09</span><h2>VPN</h2><span class="s-badge s-badge-cyan">Security</span></div>
+      <p>A VPN is a secure communication technology that creates an encrypted tunnel over a public network (like the Internet) to securely transmit data between users and networks.</p>
+      <p>A VPN is a secure tunnel on the Internet that keeps your data private and hidden.</p>
+      <div class="img-block">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/VPN_overview-en.svg/800px-VPN_overview-en.svg.png" alt="VPN tunnel diagram" loading="lazy">
+        <div class="img-caption">🔒 VPN creates an encrypted tunnel between your device and the internet</div>
+      </div>
+      <h4>What VPN Does</h4>
+      <ul><li>Encrypts data</li><li>Hides IP address</li><li>Secures communication over public networks</li><li>Provides remote access</li></ul>
+      <h4>VPN Protocol Examples</h4>
+      <ul><li>IPsec</li><li>SSL / TLS</li><li>L2TP</li><li>OpenVPN</li><li>WireGuard</li></ul>
+      <p>A VPN securely encrypts data and provides private communication over public networks.</p>
+    </div>
+
+    <!-- ── 10 Firewall ── -->
+    <div class="topic-section" id="firewall">
+      <div class="s-head"><span class="s-num">10</span><h2>Firewall</h2><span class="s-badge s-badge-green">Defence</span></div>
+      <p>A Firewall is a network security device or software that monitors, filters, and controls incoming and outgoing network traffic based on predefined security rules.</p>
+      <p>Firewall can also show configuration details and system logs.</p>
+      <div class="img-block">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Firewall.png/800px-Firewall.png" alt="Firewall between trusted and untrusted network" loading="lazy">
+        <div class="img-caption">🛡️ Firewall sits between your internal network and the internet — blocking malicious traffic</div>
+      </div>
+      <h4>What Firewall Does:</h4>
+      <ul><li>Allows trusted traffic</li><li>Blocks malicious traffic</li><li>Enforces security policies</li><li>Protects internal network</li></ul>
+      <h4>How Firewall Works:</h4>
+      <p>Traffic → Firewall Rules → Allow / Block</p>
+      <h4>Firewalls are used by both network and security teams:</h4>
+      <p><strong>Network Team:</strong></p>
+      <ul><li>Troubleshoots connectivity and network issues</li><li>Checks allowed/blocked traffic</li><li>They Will trouble shoot the issues within the internet.</li></ul>
+      <p><strong>Security Team:</strong></p>
+      <ul><li>Monitors traffic for threats and attacks</li><li>Analyzes logs, alerts, and incidents.</li><li>We can monitor the traffic across the organization network.</li></ul>
+      <h4>TYPES OF FIREWALLS:</h4>
+      <p><strong>Host-Based Firewall</strong></p>
+      <ul><li>Installed on individual devices (like laptops, servers, desktops).</li><li>Controls incoming &amp; outgoing packets for that single host.</li><li>Useful for protecting devices inside the network (where a network firewall can't see everything).</li><li>Example: Windows Defender Firewall.</li></ul>
+      <p><strong>Network-Based Firewall</strong></p>
+      <ul><li>Installed at the network boundary (router, dedicated firewall device).</li><li>Filters all traffic entering or leaving the entire network.</li><li>Protects multiple devices inside the internal network.</li><li>Example: Cisco ASA, Palo Alto Networks firewall.</li></ul>
+      <p><strong>Simple Formula:</strong></p>
+      <ul><li>Host-based firewall = Guard standing at each house's door.</li><li>Network-based firewall = Guard standing at the main gate of the whole colony.</li></ul>
+      <h4>Firewall Types</h4>
+      <table>
+        <thead><tr><th>Type</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td>Packet Filtering</td><td>Checks IP &amp; port</td></tr>
+          <tr><td>Stateful Firewall</td><td>Tracks sessions</td></tr>
+          <tr><td>Proxy Firewall</td><td>Acts as middleman</td></tr>
+          <tr><td>Next-Gen Firewall (NGFW)</td><td>Deep inspection, IDS/IPS</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── 11 IDS/IPS ── -->
+    <div class="topic-section" id="ids-ips">
+      <div class="s-head"><span class="s-num">11</span><h2>IDS and IPS</h2><span class="s-badge s-badge-warn">Detection</span></div>
+      <h4>IDS - Intrusion Detection System</h4>
+      <p>IDS monitors network traffic and detects suspicious or malicious activity, then raises alerts.</p>
+      <h4>Key Points:</h4>
+      <ul><li>Works like a security camera.</li><li>Only detects and alerts when it sees suspicious or malicious activity and also detects the vernurability and gives an alert.</li><li>It does not block the attack — just reports it.</li></ul>
+      <p><strong>Example:</strong></p>
+      <p>Multiple wrong login attempts → Alert sent to admin</p>
+      <p><strong>Formula:</strong> IDS = Detects &amp; Reports</p>
+      <h4>IPS – Intrusion Prevention System:</h4>
+      <p>IPS detects malicious activity and takes action to stop it.</p>
+      <h4>Key Points:</h4>
+      <ul><li>Works like a security guard.</li><li>Not only detects but also takes action (blocks, drops, or stops the malicious traffic).</li><li>Prevents the attack from reaching the system.</li></ul>
+      <p><strong>Example:</strong></p>
+      <p>Multiple wrong logins → IP blocked automatically</p>
+      <p><strong>Formula:</strong> IPS = Detects &amp; Blocks</p>
+      <h4>Types of Detection in IDS:</h4>
+      <p><strong>Signature-Based Detection:</strong></p>
+      <ul><li>They are already known activities OR known patterns within the internet.</li><li>Compares traffic against a internet or database of known attack patterns (signatures).</li><li>Good at detecting known threats, but cannot detect new/unknown attacks.</li><li>Example: Detecting a virus because its signature is already in the database.</li></ul>
+      <p><strong>Anomaly-Based Detection:</strong></p>
+      <ul><li>They are not known or this patterns are not in the internet.</li><li>Builds a baseline of normal behavior (traffic, user actions, etc.) and raises alerts when something unusual happens.</li><li>Can detect new, unknown, or zero-day attacks.</li><li>But may sometimes raise false alarms (false positives).</li></ul>
+    </div>
+
+    <!-- ── 12 IP Addressing ── -->
+    <div class="topic-section" id="ip">
+      <div class="s-head"><span class="s-num">12</span><h2>IP Addressing</h2></div>
+      <h4>Internet Protocol (IP) Address:</h4>
+      <p>An IP address is a unique numerical identifier assigned to a device on a network to enable communication.</p>
+      <p>An IP address uniquely identifies a device on a network.</p>
+      <h4>Types of IP Addresses:</h4>
+      <p><strong>Private IP Address:</strong></p>
+      <ul><li>Used inside a local or private network.</li><li>Not routable on the Internet.</li><li>Not globally unique.</li><li>Can be reused in different private networks.</li></ul>
+      <h4>Private IP Address Ranges:</h4>
+      <table>
+        <thead><tr><th>Class</th><th>Range</th></tr></thead>
+        <tbody>
+          <tr><td>Class A</td><td>10.0.0.0 – 10.255.255.255</td></tr>
+          <tr><td>Class B</td><td>172.16.0.0 – 172.31.255.255</td></tr>
+          <tr><td>Class C</td><td>192.168.0.0 – 192.168.255.255</td></tr>
+        </tbody>
+      </table>
+      <p>Classful addressing exists historically, but CIDR is used today.</p>
+      <p><strong>Check Your Private IP Address:</strong></p>
+      <ul><li>Windows → ipconfig</li><li>Linux / macOS → ifconfig or ip addr</li></ul>
+      <p><strong>Public IP Address:</strong></p>
+      <ul><li>Used on the Internet.</li><li>Globally unique.</li><li>Assigned by an Internet Service Provider (ISP).</li><li>Identifies your network to the outside world.</li></ul>
+      <p><strong>Check Your Public IP Address:</strong></p>
+      <p>Search in browser: whatismyip.com or what is my IP</p>
+    </div>
+
+    <!-- ── 13 IPv4 vs IPv6 ── -->
+    <div class="topic-section" id="ipv4v6">
+      <div class="s-head"><span class="s-num">13</span><h2>IPv4 vs IPv6</h2></div>
+      <h4>IPv4 (Internet Protocol Version 4)</h4>
+      <p>IPv4 is the most commonly used IP addressing system.</p>
+      <div class="img-block">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Ipv4_address.svg/800px-Ipv4_address.svg.png" alt="IPv4 address structure" loading="lazy">
+        <div class="img-caption">🔢 IPv4 address — 32-bit, four octets separated by dots (e.g. 192.168.1.1)</div>
+      </div>
+      <h4>Structure</h4>
+      <p>IPv4 is 32-bit and written in 4 numbers separated by dots.</p>
+      <pre>192.168.1.1</pre>
+      <p>Each number ranges from 0 to 255.</p>
+      <p>IPv4 address has two parts:</p>
+      <ul><li>Network part</li><li>Host part</li></ul>
+      <pre>192.168.1.10
+Network = 192.168.1
+Host = 10</pre>
+      <h4>Problem with IPv4</h4>
+      <p>IPv4 supports about 4.3 billion addresses, and due to many devices (phones, laptops, IoT), IPv4 addresses are running out.</p>
+      <h3>IPv6 (Internet Protocol Version 6)</h3>
+      <p>IPv6 was created to solve IPv4 address shortage.</p>
+      <p>IPv6 is 128-bit and written in hexadecimal.</p>
+      <pre>2001:0db8:85a3:0000:0000:8a2e:0370:7334</pre>
+      <p>IPv6 allows almost unlimited IP addresses.</p>
+      <h4>Advantages of IPv6</h4>
+      <ul><li>More addresses</li><li>Better security</li><li>No NAT required</li><li>Better routing</li><li>More efficient</li></ul>
+      <h4>IPv4 vs IPv6 Table</h4>
+      <table>
+        <thead><tr><th>Feature</th><th>IPv4</th><th>IPv6</th></tr></thead>
+        <tbody>
+          <tr><td>Size</td><td>32 bit</td><td>128 bit</td></tr>
+          <tr><td>Format</td><td>Decimal</td><td>Hexadecimal</td></tr>
+          <tr><td>Address count</td><td>Limited</td><td>Almost unlimited</td></tr>
+          <tr><td>NAT</td><td>Required</td><td>Not required</td></tr>
+          <tr><td>Example</td><td>192.168.1.1</td><td>2001:db8::1</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── 14 Public vs Private ── -->
+    <div class="topic-section" id="pubpriv">
+      <div class="s-head"><span class="s-num">14</span><h2>Public vs Private IP Addresses</h2></div>
+      <h4>Public IP Address</h4>
+      <p>A public IP is used on the internet and is assigned by your ISP. This IP is visible to the internet.</p>
+      <pre>8.8.8.8</pre>
+      <h4>Private IP Address</h4>
+      <p>Private IP addresses are used inside local networks (home, office, college). They are not accessible from the internet directly.</p>
+      <h4>Private IP Ranges</h4>
+      <table>
+        <thead><tr><th>Class</th><th>Range</th></tr></thead>
+        <tbody>
+          <tr><td>Class A</td><td>10.0.0.0 – 10.255.255.255</td></tr>
+          <tr><td>Class B</td><td>172.16.0.0 – 172.31.255.255</td></tr>
+          <tr><td>Class C</td><td>192.168.0.0 – 192.168.255.255</td></tr>
+        </tbody>
+      </table>
+      <h4>Example Home Network</h4>
+      <table>
+        <thead><tr><th>Device</th><th>IP Address</th></tr></thead>
+        <tbody>
+          <tr><td>Router</td><td>192.168.1.1</td></tr>
+          <tr><td>Laptop</td><td>192.168.1.10</td></tr>
+          <tr><td>Phone</td><td>192.168.1.11</td></tr>
+          <tr><td>Printer</td><td>192.168.1.20</td></tr>
+        </tbody>
+      </table>
+      <p>Router uses NAT (Network Address Translation) to convert private IP → public IP.</p>
+    </div>
+
+    <!-- ── 15 Static vs Dynamic ── -->
+    <div class="topic-section" id="static">
+      <div class="s-head"><span class="s-num">15</span><h2>Static vs Dynamic IP Address</h2></div>
+      <h4>Static IP Address</h4>
+      <p>Static IP address does not change.</p>
+      <p>Used for:</p>
+      <ul><li>Servers</li><li>Websites</li><li>Printers</li><li>Network devices</li><li>CCTV systems</li></ul>
+      <pre>Server = 192.168.1.100</pre>
+      <h4>Dynamic IP Address</h4>
+      <p>Dynamic IP address changes automatically and is assigned by DHCP (Dynamic Host Configuration Protocol).</p>
+      <p>Used for:</p>
+      <ul><li>Laptops</li><li>Phones</li><li>Home networks</li><li>Office users</li></ul>
+      <h4>Difference Table</h4>
+      <table>
+        <thead><tr><th>Static IP</th><th>Dynamic IP</th></tr></thead>
+        <tbody>
+          <tr><td>Fixed</td><td>Changes</td></tr>
+          <tr><td>Manual setup</td><td>Automatic</td></tr>
+          <tr><td>Used for servers</td><td>Used for clients</td></tr>
+          <tr><td>More control</td><td>Easy to manage</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── 16 Subnetting ── -->
+    <div class="topic-section" id="subnetting">
+      <div class="s-head"><span class="s-num">16</span><h2>Subnetting and CIDR Notation</h2></div>
+      <h4>What is Subnetting?</h4>
+      <p>Subnetting means dividing one large network into smaller networks.</p>
+      <div class="img-block">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Subnetting_Concept.svg/800px-Subnetting_Concept.svg.png" alt="Subnetting diagram" loading="lazy">
+        <div class="img-caption">🔀 Subnetting — splitting one large network into smaller manageable sub-networks</div>
+      </div>
+      <h4>Why Subnetting?</h4>
+      <ul><li>Better network management</li><li>Improve security</li><li>Reduce network traffic</li><li>Improve performance</li><li>Network segmentation</li></ul>
+      <h3>Subnet Mask</h3>
+      <p>Subnet mask tells which part is network and which part is host.</p>
+      <pre>IP Address = 192.168.1.10
+Subnet Mask = 255.255.255.0</pre>
+      <h3>CIDR Notation</h3>
+      <p>CIDR notation is written like:</p>
+      <pre>192.168.1.0/24</pre>
+      <p>/24 means first 24 bits are network bits.</p>
+      <h5>Common CIDR Values</h5>
+      <table>
+        <thead><tr><th>CIDR</th><th>Subnet Mask</th><th>Hosts</th></tr></thead>
+        <tbody>
+          <tr><td>/8</td><td>255.0.0.0</td><td>16 million</td></tr>
+          <tr><td>/16</td><td>255.255.0.0</td><td>65,000</td></tr>
+          <tr><td>/24</td><td>255.255.255.0</td><td>254</td></tr>
+          <tr><td>/25</td><td>255.255.255.128</td><td>126</td></tr>
+          <tr><td>/26</td><td>255.255.255.192</td><td>62</td></tr>
+        </tbody>
+      </table>
+      <p><strong>Most common network:</strong></p>
+      <pre>192.168.1.0/24</pre>
+    </div>
+
+    <!-- ── 17 Default Gateway ── -->
+    <div class="topic-section" id="gateway">
+      <div class="s-head"><span class="s-num">17</span><h2>Default Gateway</h2></div>
+      <h4>What is Default Gateway?</h4>
+      <p>Default gateway is the router IP address that devices use to communicate with other networks or the internet.</p>
+      <div class="img-block">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Gateway_in_a_LAN.png/800px-Gateway_in_a_LAN.png" alt="Default gateway in a LAN" loading="lazy">
+        <div class="img-caption">🚪 Default gateway — the router acts as the exit door from your local network to the internet</div>
+      </div>
+      <h4>Example</h4>
+      <table>
+        <thead><tr><th>Device</th><th>IP</th></tr></thead>
+        <tbody>
+          <tr><td>Laptop</td><td>192.168.1.10</td></tr>
+          <tr><td>Phone</td><td>192.168.1.11</td></tr>
+          <tr><td>Router</td><td>192.168.1.1</td></tr>
+        </tbody>
+      </table>
+      <p><strong>Default Gateway = 192.168.1.1</strong></p>
+      <h4>How it works</h4>
+      <ol><li>Laptop sends data to router</li><li>Router sends data to internet</li><li>Internet sends response to router</li><li>Router sends back to laptop</li></ol>
+      <p>So router acts as gateway to outside network.</p>
+    </div>
+
+    <!-- ── 18 Ports & Protocols ── -->
+    <div class="topic-section" id="ports">
+      <div class="s-head"><span class="s-num">18</span><h2>Ports &amp; Protocols</h2><span class="s-badge s-badge-purple">Reference</span></div>
+      <h3 class="topic-title">PORT</h3>
+      <p>A port is a logical numerical identifier used to identify a protocol or service running on a device.</p>
+      <h4>Types of Port Numbers:</h4>
+      <table>
+        <thead><tr><th>Port Range</th><th>Name</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td>0–1023</td><td>Well-known ports</td><td>Standard services</td></tr>
+          <tr><td>1024–49151</td><td>Registered ports</td><td>Applications</td></tr>
+          <tr><td>49152–65535</td><td>Dynamic ports</td><td>Temporary use</td></tr>
+        </tbody>
+      </table>
+      <h4>Most Important Ports &amp; Protocols:</h4>
+      <table>
+        <thead><tr><th>Protocol</th><th>Port</th><th>Transport</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td>HTTP</td><td>80</td><td>TCP</td><td>Web traffic</td></tr>
+          <tr><td>HTTPS</td><td>443</td><td>TCP</td><td>Secure web</td></tr>
+          <tr><td>FTP</td><td>21</td><td>TCP</td><td>File transfer</td></tr>
+          <tr><td>SSH</td><td>22</td><td>TCP</td><td>Secure remote login</td></tr>
+          <tr><td>Telnet</td><td>23</td><td>TCP</td><td>Remote login (insecure)</td></tr>
+          <tr><td>SMTP</td><td>25</td><td>TCP</td><td>Send email</td></tr>
+          <tr><td>DNS</td><td>53</td><td>TCP/UDP</td><td>Name resolution</td></tr>
+          <tr><td>POP3</td><td>110</td><td>TCP</td><td>Receive email</td></tr>
+          <tr><td>IMAP</td><td>143</td><td>TCP</td><td>Receive email</td></tr>
+          <tr><td>SNMP</td><td>161</td><td>UDP</td><td>Network monitoring</td></tr>
+          <tr><td>TFTP</td><td>69</td><td>UDP</td><td>Lightweight file transfer</td></tr>
+        </tbody>
+      </table>
+      <hr>
+      <h3 class="topic-title">PROTOCOLS</h3>
+      <p>A protocol is a set of rules and standards that defines how data is formatted, transmitted, received, and interpreted between network devices.</p>
+      <p>A protocol defines the rules for communication between network devices.</p>
+      <h4>Common Internet Protocols:</h4>
+      <table>
+        <thead><tr><th>Protocol</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td>HTTP / HTTPS</td><td>Web communication</td></tr>
+          <tr><td>FTP / SFTP</td><td>File transfer</td></tr>
+          <tr><td>SMTP / IMAP / POP3</td><td>Email communication</td></tr>
+          <tr><td>DNS</td><td>Converts domain names to IP addresses</td></tr>
+          <tr><td>TCP / UDP / IP</td><td>Core data delivery</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── 19 Secure vs Insecure Protocols ── -->
+    <div class="topic-section" id="secproto">
+      <div class="s-head"><span class="s-num">19</span><h2>Secure vs Insecure Protocols</h2><span class="s-badge s-badge-red">Security</span></div>
+      <h4>What are Secure Protocols?</h4>
+      <p>Secure protocols encrypt data before sending, so attackers cannot read the data.</p>
+      <p>They provide:</p>
+      <ul><li>Encryption</li><li>Authentication</li><li>Data integrity</li><li>Confidentiality</li></ul>
+      <h3>What are Insecure Protocols?</h3>
+      <p>Insecure protocols send data in plain text, so attackers can capture data using packet sniffing.</p>
+      <p>Attackers can see:</p>
+      <ul><li>Username</li><li>Password</li><li>Emails</li><li>Data</li></ul>
+      <h3>Important Secure vs Insecure Protocol Table</h3>
+      <table>
+        <thead><tr><th>Insecure Protocol</th><th>Secure Version</th><th>Port</th></tr></thead>
+        <tbody>
+          <tr><td>HTTP</td><td>HTTPS</td><td>80 / 443</td></tr>
+          <tr><td>FTP</td><td>SFTP / FTPS</td><td>21 / 22</td></tr>
+          <tr><td>Telnet</td><td>SSH</td><td>23 / 22</td></tr>
+          <tr><td>SMTP</td><td>SMTPS</td><td>25 / 465</td></tr>
+          <tr><td>POP3</td><td>POP3S</td><td>110 / 995</td></tr>
+          <tr><td>IMAP</td><td>IMAPS</td><td>143 / 993</td></tr>
+          <tr><td>DNS</td><td>DNS over HTTPS</td><td>53</td></tr>
+        </tbody>
+      </table>
+      <h3>Examples</h3>
+      <h4>HTTP vs HTTPS</h4>
+      <p>HTTP → Not encrypted → attacker can read data<br>HTTPS → Encrypted → secure communication</p>
+      <h4>Telnet vs SSH</h4>
+      <p>Telnet → Plain text passwords<br>SSH → Encrypted login</p>
+      <h4>FTP vs SFTP</h4>
+      <p>FTP → Insecure file transfer<br>SFTP → Secure file transfer</p>
+    </div>
+
+    <!-- ── 20 Network Attacks ── -->
+    <div class="topic-section" id="attacks">
+      <div class="s-head"><span class="s-num">20</span><h2>Common Network Attacks</h2><span class="s-badge s-badge-red">High Priority</span></div>
+
+      <h3 class="topic-title">1. Man-In-The-Middle (MITM) Attack</h3>
+      <h4>What is MITM?</h4>
+      <p>Man-In-The-Middle attack happens when a hacker secretly stands between two communicating systems and intercepts the communication without their knowledge.</p>
+      <div class="img-block">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Man_in_the_middle_attack.svg/800px-Man_in_the_middle_attack.svg.png" alt="MITM attack diagram" loading="lazy">
+        <div class="img-caption">⚠️ MITM — attacker secretly intercepts traffic between victim and server</div>
+      </div>
+      <p>You → talking to Bank Website<br>Hacker → standing in the middle<br>You think you are talking to bank<br>Bank thinks it is talking to you<br>But hacker is reading/modifying everything</p>
+      <h4>Real Life Example</h4>
+      <p>When you connect to public Wi-Fi in a coffee shop, an attacker can intercept your traffic and steal:</p>
+      <ul><li>Passwords</li><li>Emails</li><li>Credit card details</li></ul>
+      <h4>How attack works (steps)</h4>
+      <ol><li>Attacker connects to same network</li><li>Attacker intercepts traffic</li><li>Attacker captures or modifies data</li><li>User and server don't know attacker exists</li></ol>
+      <h4>Prevention</h4>
+      <ul><li>Use HTTPS websites</li><li>Use VPN</li><li>Avoid public Wi-Fi</li><li>Use certificate-based authentication</li></ul>
+      <hr>
+
+      <h3 class="topic-title">2. Denial of Service (DoS) Attack</h3>
+      <h4>What is DoS?</h4>
+      <p>Denial of Service attack means attacker makes a website or server unavailable by sending too many requests.</p>
+      <p>The server becomes overloaded and crashes.</p>
+      <h3>Goal of DoS</h3>
+      <ul><li>Crash website</li><li>Stop service</li><li>Financial loss</li><li>Reputation damage</li></ul>
+      <h3>Prevention</h3>
+      <ul><li>Firewall</li><li>Rate limiting</li><li>Load balancer</li><li>IDS/IPS</li></ul>
+      <hr>
+
+      <h3 class="topic-title">3. Distributed Denial of Service (DDoS)</h3>
+      <h4>What is DDoS?</h4>
+      <p>DDoS is same as DoS but attack comes from many computers instead of one.</p>
+      <p>These computers are called botnet (infected systems controlled by attacker).</p>
+      <div class="img-block">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Ddos-attack-ex.png/800px-Ddos-attack-ex.png" alt="DDoS botnet attack diagram" loading="lazy">
+        <div class="img-caption">💥 DDoS — thousands of infected machines (botnet) flood a single target server</div>
+      </div>
+      <h3>Difference between DoS and DDoS</h3>
+      <table>
+        <thead><tr><th>DoS</th><th>DDoS</th></tr></thead>
+        <tbody>
+          <tr><td>One system attacks</td><td>Many systems attack</td></tr>
+          <tr><td>Easy to stop</td><td>Hard to stop</td></tr>
+          <tr><td>Less traffic</td><td>Massive traffic</td></tr>
+        </tbody>
+      </table>
+      <h3>Prevention</h3>
+      <ul><li>Traffic filtering</li><li>CDN</li><li>Anti-DDoS protection</li><li>Load balancing</li></ul>
+      <hr>
+
+      <h3 class="topic-title">4. Packet Sniffing</h3>
+      <h4>What is Packet Sniffing?</h4>
+      <p>Packet sniffing means capturing network packets traveling through a network.</p>
+      <div class="img-block">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Wireshark_screenshot.png/800px-Wireshark_screenshot.png" alt="Wireshark packet sniffing tool" loading="lazy">
+        <div class="img-caption">🦈 Wireshark — the most popular packet sniffing tool used by attackers and defenders</div>
+      </div>
+      <p>Packets contain:</p>
+      <ul><li>Username</li><li>Password</li><li>Emails</li><li>Files</li><li>Network data</li></ul>
+      <p>If data is not encrypted, attacker can read everything.</p>
+      <h3>Tools used</h3>
+      <ul><li>Wireshark</li><li>tcpdump</li><li>Ettercap</li></ul>
+      <h3>Prevention</h3>
+      <ul><li>Use encryption</li><li>Use HTTPS</li><li>Use VPN</li><li>Use secure protocols (SSH instead of Telnet)</li></ul>
+      <hr>
+
+      <h3 class="topic-title">5. IP Spoofing</h3>
+      <h4>What is IP Spoofing?</h4>
+      <p>IP Spoofing means attacker changes their IP address to look like a trusted system.</p>
+      <p>Server thinks:<br>Request coming from trusted system<br>But actually attacker sent it.</p>
+      <h3>Why attackers use IP Spoofing?</h3>
+      <ul><li>Bypass firewall</li><li>Perform DDoS</li><li>Perform MITM attack</li><li>Hide identity</li></ul>
+      <h3>Prevention</h3>
+      <ul><li>Packet filtering</li><li>Authentication</li><li>Network monitoring</li><li>IDS/IPS</li></ul>
+      <hr>
+
+      <h3 class="topic-title">6. Port Scanning</h3>
+      <h4>What is Port Scanning?</h4>
+      <p>Port scanning is used to find open ports on a system.</p>
+      <div class="img-block">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Nmap-ls.png/800px-Nmap-ls.png" alt="Nmap port scanner output" loading="lazy">
+        <div class="img-caption">🔍 Nmap — the industry-standard port scanner used to discover open services</div>
+      </div>
+      <p>Every service runs on a port:</p>
+      <ul><li>HTTP → 80</li><li>HTTPS → 443</li><li>FTP → 21</li><li>SSH → 22</li></ul>
+      <p>Attacker scans ports to find:</p>
+      <ul><li>Open ports</li><li>Running services</li><li>Vulnerabilities</li></ul>
+      <h3>Tool</h3>
+      <ul><li>Nmap</li></ul>
+      <h3>Prevention</h3>
+      <ul><li>Close unused ports</li><li>Firewall</li><li>IDS alerts</li><li>Port filtering</li></ul>
+      <hr>
+
+      <h3 class="topic-title">7. Session Hijacking</h3>
+      <h4>What is Session Hijacking?</h4>
+      <p>When you login to a website, server gives a session ID.</p>
+      <p>If attacker steals that session ID, they can login without password.</p>
+      <h3>Example</h3>
+      <ol><li>User logs into website</li><li>Server gives session cookie</li><li>Attacker steals cookie</li><li>Attacker becomes logged-in user</li></ol>
+      <h3>Prevention</h3>
+      <ul><li>Use HTTPS</li><li>Secure cookies</li><li>Session timeout</li><li>Multi-factor authentication</li></ul>
+      <hr>
+
+      <h3>Easy Summary</h3>
+      <table>
+        <thead><tr><th>Attack</th><th>What attacker does</th></tr></thead>
+        <tbody>
+          <tr><td>MITM</td><td>Intercepts communication</td></tr>
+          <tr><td>DoS</td><td>Crashes server using traffic</td></tr>
+          <tr><td>DDoS</td><td>Crashes server using many systems</td></tr>
+          <tr><td>Packet Sniffing</td><td>Captures network packets</td></tr>
+          <tr><td>IP Spoofing</td><td>Changes IP to fake identity</td></tr>
+          <tr><td>Port Scanning</td><td>Finds open ports</td></tr>
+          <tr><td>Session Hijacking</td><td>Steals login session</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- REFERENCE -->
+    <div style="margin-top:44px;">
+      <div style="font-family:'Orbitron',sans-serif;font-size:0.75rem;letter-spacing:2px;color:var(--accent);opacity:0.6;margin-bottom:16px;text-transform:uppercase;">Reference Materials</div>
+      <div class="ref-card">
+        <span class="ref-icon">📄</span>
+        <div class="ref-body">
+          <div class="ref-name">Networking Fundmantals</div>
+          <div class="ref-sub">Comprehensive guide to cybersecurity fundamentals</div>
+        </div>
+        <a class="ref-dl" href="Networking fundmantals.pdf" target="_blank">Download PDF</a>
+      </div>
+    </div>
+
+    <!-- COMPLETE BUTTON -->
+    <div class="complete-wrap">
+      <button class="complete-btn" id="completeBtn" onclick="completeModule('networking')">✓ Mark Course as Completed</button>
+    </div>
+
+  </div><!-- /content -->
+
+  <footer>
+    © 2026 HackProof Notes · Created by <a href="mailto:ligerharry44@gmail.com">Liger44</a> · Built for ethical cyber security learning only.
+  </footer>
+
+</main>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCOEbqMZifKAVoKlZDHmcslXduBUxxb1xU",
+  authDomain: "hackproof-feb59.firebaseapp.com",
+  projectId: "hackproof-feb59",
+  storageBucket: "hackproof-feb59.firebasestorage.app",
+  messagingSenderId: "309682905913",
+  appId: "1:309682905913:web:7e32f772ed2e82672b3ee8",
+  measurementId: "G-PKSRE0Z6CC"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+function completeModule(moduleName) {
+  const btn = document.getElementById('completeBtn');
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) { alert("❌ Please login first"); return; }
+    try {
+      await db.collection("users").doc(user.uid).set({
+        coursesCompleted: firebase.firestore.FieldValue.increment(1),
+        [`progress.${moduleName}`]: firebase.firestore.FieldValue.increment(10)
+      }, { merge: true });
+      btn.textContent = "✅ Course Completed!";
+      btn.classList.add('done');
+      btn.disabled = true;
+    } catch(e) {
+      console.error(e);
+      alert("❌ Error updating data");
+    }
+  });
+}
+
+/* Reading progress bar */
+const indicator = document.getElementById('readIndicator');
+window.addEventListener('scroll', () => {
+  const el = document.documentElement;
+  indicator.style.transform = `scaleX(${el.scrollTop / (el.scrollHeight - el.clientHeight)})`;
+});
+
+/* Active TOC on scroll */
+const sections = document.querySelectorAll('.topic-section[id]');
+const tocLinks  = document.querySelectorAll('.toc-link');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      tocLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + id));
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+sections.forEach(s => observer.observe(s));
+
+/* Smooth scroll */
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const t = document.querySelector(a.getAttribute('href'));
+    if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+</script>
+</body>
+</html>

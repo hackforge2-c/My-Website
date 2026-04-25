@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HackProof | Technical Cybersecurity Awareness</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+body {
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+  background: #f4f7fb;
+  color: #0f172a;
+}
+
+/* ===== NAVBAR ===== */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 40px;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.logo {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.nav-links a {
+  margin: 0 15px;
+  text-decoration: none;
+  color: #475569;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: 0.2s;
+}
+
+.nav-links a:hover {
+  background: #22c55e;
+  color: white;
+}
+
+.dark-btn {
+  padding: 6px 12px;
+  border: none;
+  background: #22c55e;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* CONTAINER */
+.container {
+  max-width: 1300px;
+  margin: auto;
+  padding: 40px;
+}
+
+/* TITLE */
+.main-title {
+  font-size: 2rem;
+  font-weight: 700;
+  padding: 15px 20px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #22c55e, #06b6d4);
+  color: white;
+  margin-bottom: 20px;
+}
+
+/* INTRO BOX */
+.description-box {
+  background: white;
+  padding: 20px;
+  border-left: 6px solid #22c55e;
+  border-radius: 10px;
+  margin-bottom: 25px;
+}
+
+/* TABLE */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+th, td {
+  border: 1px solid #e5e7eb;
+  padding: 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  background: #0f172a;
+  color: white;
+}
+
+/* FOCUS AREA STYLES */
+.focus-phishing { 
+  font-weight: 700;
+  color: #dc2626;
+}
+
+.focus-identity { 
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.focus-patch { 
+  font-weight: 700;
+  color: #16a34a;
+}
+
+.focus-endpoint { 
+  font-weight: 700;
+  color: #9333ea;
+}
+
+.focus-network { 
+  font-weight: 700;
+  color: #ea580c;
+}
+
+.focus-insider { 
+  font-weight: 700;
+  color: #0891b2;
+}
+
+.focus-hardening { 
+  font-weight: 700;
+  color: #4f46e5;
+}
+
+.focus-cloud { 
+  font-weight: 700;
+  color: #0d9488;
+}
+
+.focus-api { 
+  font-weight: 700;
+  color: #be123c;
+}
+
+.focus-ir { 
+  font-weight: 700;
+  color: #7c3aed;
+}
+
+.focus-ti { 
+  font-weight: 700;
+  color: #15803d;
+}
+
+.focus-backup { 
+  font-weight: 700;
+  color: #b45309;
+}
+.dark {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.dark .navbar {
+  background: #111827;
+  border-color: #1f2933;
+}
+
+.dark table th {
+  background: #1f2933;
+}
+.focus-supply { font-weight: 700; color: #0ea5e9; }
+.focus-social { font-weight: 700; color: #e11d48; }
+.focus-physical { font-weight: 700; color: #a16207; }
+.focus-logging { font-weight: 700; color: #4f46e5; }
+.focus-vpn { font-weight: 700; color: #059669; }
+.focus-email { font-weight: 700; color: #ea580c; }
+.focus-training { font-weight: 700; color: #9333ea; }
+</style>
+</head>
+
+<body>
+
+<nav class="navbar">
+  <div class="logo">
+    HackProof
+  </div>
+
+  <div class="nav-links">
+    <a href="index.html">Notes</a>
+    <a href="roadmap.html">Roadmap</a>
+    <a href="practice-lab.html">Labs</a>
+    <a href="tools.html">Tools</a>
+    <a href="quiz.html">Quiz</a>
+  </div>
+
+  <button onclick="toggleDarkMode()" class="dark-btn">Dark</button>
+</nav>
+
+<div class="container">
+
+<div class="main-title">Technical Cybersecurity Awareness Matrix</div>
+
+<table>
+<tr>
+<th>FOCUS AREA </th>
+<th>DESCRIPTION</th>
+<th>AWARENESS OBJECTIVE</th>
+<th>KEY TECHNICAL CONCEPTS  </th>
+<th>PRACTICAL EXAMPLE </th>
+<th>ATTACKS PREVENTED </th>
+<th>EXPECTED OUTCOME </th>
+</tr>
+
+<tr>
+<td class="focus-phishing">Phishing & 
+Email 
+Security </td>
+<td>Phishing is an attack where attackers send fake emails to trick users into clicking malicious links or entering passwords. Email security protects users from fake emails, malicious attachments, and spoofed domains.</td>
+<td>Build awareness on email-based compromise and payload delivery.</td>
+<td>Email header analysis, SPF, DKIM, DMARC, sandboxing, attachment scanning.</td>
+<td>Analyse a phishing email with spoofed domain and malicious link.</td>
+<td>Business Email Compromise, Credential Theft, Malware Delivery.</td>
+<td>Users can identify phishing emails and report them before damage occurs.</td>
+</tr>
+
+<tr>
+<td class="focus-identity">Credential & 
+Identity 
+Security </td>
+<td>This area focuses on protecting user accounts, passwords, and privileged accounts from attackers who try to steal credentials.</td>
+<td>Prevent compromise through weak or reused credentials.</td>
+<td>MFA, PAM, password policy, Kerberos/NTLM monitoring.</td>
+<td>Simulate brute-force login attempts.</td>
+<td>Account Takeover, Privilege Escalation.</td>
+<td>Strong authentication and least privilege access.</td>
+</tr>
+
+<tr>
+<td class="focus-patch">Patch & 
+Vulnerability 
+Management </td>
+<td>Attackers exploit software vulnerabilities. Patch management ensures systems are updated and vulnerabilities are fixed.</td>
+<td>Reduce exposure from known vulnerabilities.</td>
+<td>CVE awareness, CVSS severity, patch cycle.</td>
+<td>Scan outdated server and demonstrate exploit.</td>
+<td>Ransomware, Remote Code Execution.</td>
+<td>Reduced attack surface.</td>
+</tr>
+
+<tr>
+<td class="focus-endpoint">Endpoint 
+Security 
+Awareness </td>
+<td>Endpoints like laptops and servers are common attack targets. Monitoring endpoints helps detect malware and suspicious activity.</td>
+<td>Increase visibility of suspicious endpoint behaviour.</td>
+<td>EDR telemetry, process injection, persistence registry keys.</td>
+<td>Analyse abnormal PowerShell activity.</td>
+<td>Malware, Persistence, Lateral Movement.</td>
+<td>Early detection of compromised devices.</td>
+</tr>
+
+<tr>
+<td class="focus-network">Network 
+Traffic & 
+Perimeter 
+Awareness/td>
+<td>This area focuses on monitoring network traffic to detect attackers moving inside networks.</td>
+<td>Understand how attackers move across network layers.</td>
+<td>Firewall, IDS/IPS, proxy logging, segmentation.</td>
+<td>Analyse PCAP showing beaconing traffic.</td>
+<td>C2 Communication, Lateral Movement.</td>
+<td>Better network monitoring.</td>
+</tr>
+
+<tr>
+<td class="focus-insider">Insider 
+Threat & 
+Data 
+Exfiltration </td>
+<td>Insider threats occur when employees or internal users steal or leak data intentionally or accidentally.</td>
+<td>Recognise malicious insider behaviour.</td>
+<td>UEBA, DLP, file activity monitoring.</td>
+<td>Detect excessive downloads to USB.</td>
+<td>Insider Data Theft.</td>
+<td>Early insider risk detection.</td>
+</tr>
+
+<tr>
+<td class="focus-hardening">Secure 
+Configuration & 
+Hardening </td>
+<td>Systems must be securely configured to prevent attackers from exploiting weak settings.</td>
+<td>Reduce exploitable misconfigurations.</td>
+<td>CIS benchmarks, disable SMBv1, remove default credentials.</td>
+<td>Harden Windows server configuration.</td>
+<td>Privilege Escalation.</td>
+<td>Secure system configurations.</td>
+</tr>
+
+<tr>
+<td class="focus-cloud">Cloud 
+Security 
+Awareness </td>
+<td>Cloud security focuses on protecting cloud storage, IAM roles, and cloud infrastructure.</td>
+<td>Understand cloud misconfigurations.</td>
+<td>IAM roles, public storage buckets, CloudTrail logs.</td>
+<td>Detect public cloud storage exposure.</td>
+<td>Data Leakage, Account Hijacking.</td>
+<td>Secure cloud environment.</td>
+</tr>
+
+<tr>
+<td class="focus-api">API & 
+Application 
+Security 
+Awareness </td>
+<td>APIs and applications must be protected from vulnerabilities and abuse.</td>
+<td>Prevent logic flaws and data exposure.</td>
+<td>Authentication, rate limiting, JWT tokens.</td>
+<td>Detect excessive API calls.</td>
+<td>API Abuse, Data Exposure.</td>
+<td>Secure applications.</td>
+</tr>
+
+<tr>
+<td class="focus-ir">Incident 
+Response 
+Readiness </td>
+<td>Incident response ensures organizations can respond quickly to cyber attacks.</td>
+<td>Ensure teams can respond fast.</td>
+<td>NIST Incident Response phases.</td>
+<td>Simulate ransomware incident.</td>
+<td>Ransomware, Phishing.</td>
+<td>Faster response time.</td>
+</tr>
+
+<tr>
+<td class="focus-ti">Threat 
+Intelligence 
+& IOC 
+Awareness</td>
+<td>Threat intelligence helps detect attackers using malicious IPs, domains, and file hashes.</td>
+<td>Enable proactive detection.</td>
+<td>IOC enrichment, threat feeds.</td>
+<td>Match malicious IP with threat feed.</td>
+<td>APT Attacks.</td>
+<td>Threat-informed detection.</td>
+</tr>
+
+<tr>
+<td class="focus-backup">Backup & 
+Ransomware 
+Resilience </td>
+<td>Backups help organizations recover after ransomware attacks without paying attackers.</td>
+<td>Ensure backup and recovery readiness.</td>
+<td>Offline backups, restoration testing.</td>
+<td>Restore system after ransomware simulation.</td>
+<td>Ransomware Impact.</td>
+<td>Business continuity maintained.</td>
+</tr>
+<tr>
+<td class="focus-supply">Supply Chain & Third-Party Security</td>
+<td>Supply chain security focuses on risks from vendors, suppliers, and third-party software. If a vendor is compromised, attackers can enter the organization through trusted software or services.</td>
+<td>Reduce risk from vendors and third-party integrations.</td>
+<td>Vendor assessment, SBOM, patch assurance, contract security clauses.</td>
+<td>Analyse software update compromise scenario (SolarWinds-style).</td>
+<td>Supply Chain Compromise.</td>
+<td>Third-party risk visibility and contractual security enforcement.</td>
+</tr>
+
+<tr>
+<td class="focus-social">Social Engineering & Human Exploitation</td>
+<td>Social engineering attacks target humans instead of systems. Attackers trick employees using phone calls, fake emails, or impersonation to steal credentials or sensitive data.</td>
+<td>Train staff to recognise manipulation attempts.</td>
+<td>OSINT awareness, vishing simulation, social media policy enforcement.</td>
+<td>Simulate fake IT support call or pretexting attack.</td>
+<td>Social Engineering, Account Compromise.</td>
+<td>Staff verify identities before sharing credentials.</td>
+</tr>
+
+<tr>
+<td class="focus-physical">Physical Security & Device Control</td>
+<td>Physical security protects devices and systems from unauthorized physical access such as USB attacks, stolen laptops, or server room access.</td>
+<td>Prevent physical access leading to digital compromise.</td>
+<td>USB control, clean desk policy, asset tagging, CCTV, access logs.</td>
+<td>Simulate rogue USB insertion or unattended computer access.</td>
+<td>Physical Intrusion, Data Theft.</td>
+<td>Reduced insider or onsite compromise risk.</td>
+</tr>
+
+<tr>
+<td class="focus-logging">Logging, Monitoring & SIEM Awareness</td>
+<td>Logging and monitoring help organizations detect attacks early by analysing logs from systems, networks, and applications.</td>
+<td>Build culture of visibility and continuous detection.</td>
+<td>Log retention, correlation rules, MITRE ATT&CK mapping, alert triage.</td>
+<td>Create alert for brute force or DNS tunnelling.</td>
+<td>Persistent Threats, Reconnaissance.</td>
+<td>Improved detection maturity and alert quality.</td>
+</tr>
+
+<tr>
+<td class="focus-vpn">Secure Remote Access & VPN Hygiene</td>
+<td>Remote access security ensures employees connecting from outside the network use secure VPN connections and strong authentication.</td>
+<td>Ensure secure external connectivity.</td>
+<td>TLS encryption, split tunnelling control, device posture check, MFA.</td>
+<td>Test VPN brute-force and account lockout.</td>
+<td>VPN Compromise, Credential Abuse.</td>
+<td>Secure remote access for employees.</td>
+</tr>
+
+<tr>
+<td class="focus-email">Email & 
+Communicat
+ion Channel 
+Security </td>
+<td>This focuses on securing communication platforms like email, Teams, Slack, and messaging systems to prevent data leaks and phishing.</td>
+<td>Secure collaboration platforms.</td>
+<td>Attachment restriction, link scanning, data loss prevention.</td>
+<td>Upload sensitive document and trigger DLP alert.</td>
+<td>Data Leakage, Credential Harvesting.</td>
+<td>Controlled communication environment.</td>
+</tr>
+
+<tr>
+<td class="focus-training">Continuous 
+Security 
+Education </td>
+<td>Cybersecurity training must be continuous because attackers constantly change their techniques. Organizations must train employees regularly.</td>
+<td>Sustain security mindset with evolving threats.</td>
+<td>Cyber drills, red team awareness, gamified training.</td>
+<td>Run mini cybersecurity training or CTF.</td>
+<td>Emerging Threats like AI phishing and deepfake scams.</td>
+<td>Long-term security culture in organization.</td>
+</tr>
+</table>
+
+</div>
+<script>
+function toggleDarkMode() {
+  document.body.classList.toggle("dark");
+}
+</script>
+</body>
+</html>

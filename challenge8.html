@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HackForge | Phase 08</title>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg: #020617;
+    --card: rgba(15, 23, 42, 0.8);
+    --primary: #ec4899; /* pink/magenta for XSS */
+    --secondary: #38bdf8;
+    --danger: #ef4444;
+    --border: rgba(236,72,153,0.2);
+    --text: #f8fafc;
+    --text-muted: #94a3b8;
+}
+body { margin:0; font-family:'Poppins',sans-serif; background:radial-gradient(circle at top,#2d0a1f,#020617); color:var(--text); }
+.nav-bar { display:flex; justify-content:space-between; align-items:center; padding:1.2rem 2.5rem; background:rgba(2,6,23,0.95); border-bottom:1px solid var(--border); }
+.exit-btn { text-decoration:none; color:var(--secondary); padding:6px 12px; border:1px solid var(--secondary); border-radius:6px; }
+.phase-title { color:var(--primary); }
+.score-box { font-family:'Fira Code'; color:var(--secondary); }
+.learning-banner { max-width:900px; margin:2rem auto; background:linear-gradient(135deg,rgba(236,72,153,0.1),rgba(56,189,248,0.05)); border:1px solid var(--border); padding:20px; border-radius:10px; }
+.container { max-width:900px; margin:2rem auto; }
+.glass-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:2rem; margin-bottom:2rem; position:relative; }
+.locked { opacity:0.3; pointer-events:none; }
+.lock-overlay { position:absolute; width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.5); top:0; left:0; border-radius:12px; }
+.input-group { display:flex; gap:10px; margin-top:1rem; }
+.input-field { flex:1; background:black; border:1px solid var(--border); color:var(--primary); padding:10px; border-radius:4px; font-family:'Fira Code'; }
+.btn { padding:10px 20px; cursor:pointer; border:none; border-radius:6px; font-weight:600; }
+.btn-primary { background:var(--primary); color:white; }
+.btn-hint { margin-top:10px; border:1px solid var(--secondary); background:transparent; color:var(--secondary); }
+.ai-box { display:none; margin-top:10px; padding:12px; border-left:3px solid var(--secondary); background:rgba(56,189,248,0.05); }
+.badge { display:inline-block; padding:4px 12px; border:1px solid currentColor; font-size:0.7rem; margin-bottom:10px; border-radius:4px; }
+.target-link-btn { background:var(--primary); color:white; border:none; padding:12px 28px; border-radius:8px; font-size:1rem; font-weight:700; cursor:pointer; text-decoration:none; display:inline-block; margin-top:10px; }
+.xss-demo { background:#000; border:1px solid var(--border); border-radius:8px; padding:16px; margin-top:12px; font-family:'Fira Code'; font-size:0.85rem; color:#94a3b8; }
+.xss-demo .code { color:var(--primary); }
+</style>
+</head>
+<body>
+
+<nav class="nav-bar">
+    <a href="main.html" class="exit-btn">← Exit Lab</a>
+    <h2 class="phase-title">PHASE_08 → XSS INJECTION</h2>
+    <div id="scoreDisplay" class="score-box">SCORE: 0</div>
+</nav>
+
+<div class="learning-banner">
+    <h3>LAB OBJECTIVES</h3>
+    <ul>
+        <li>Understand how user input is reflected in pages</li>
+        <li>Identify reflected XSS vulnerabilities</li>
+        <li>Exploit stored XSS in comment systems</li>
+        <li>Find DOM-based XSS via URL manipulation</li>
+    </ul>
+</div>
+
+<div class="container">
+
+<div class="glass-card" style="text-align:center;">
+    <h3>VULNERABLE WEB APPLICATION</h3>
+    <p style="color:#94a3b8;">The target application has unsanitized user input. Find and exploit XSS vulnerabilities.</p>
+    <a href="target.html#xss" target="_blank" class="target-link-btn">OPEN TARGET</a>
+</div>
+
+<!-- EASY -->
+<div id="card1" class="glass-card">
+<span class="badge" style="color:var(--primary);">EASY</span>
+<h2>Reflected XSS</h2>
+<p style="color:#94a3b8;">The search box on the target page reflects user input without sanitization. Identify the vulnerability.</p>
+
+<div class="xss-demo">
+    <div>What to look for:</div>
+    <div class="code">&lt;input type="text" id="search"&gt;</div>
+    <div class="code">// Input goes directly into innerHTML — dangerous!</div>
+</div>
+
+<div class="input-group">
+<input id="f1" class="input-field" placeholder="Enter flag">
+<button onclick="check(1,'HP{xss_reflected}',10,'card2')" class="btn btn-primary">Submit</button>
+</div>
+<button onclick="aiHint(1)" class="btn btn-hint">AI Hint</button>
+<div id="hint1" class="ai-box"></div>
+<div id="r1"></div>
+</div>
+
+<!-- MEDIUM -->
+<div id="card2" class="glass-card locked">
+<div id="lock2" class="lock-overlay">LOCKED</div>
+<span class="badge" style="color:#fbbf24;">MEDIUM</span>
+<h2>Stored XSS</h2>
+<p style="color:#94a3b8;">The guestbook on the target page stores comments and displays them. Can you find what's hidden inside?</p>
+
+<div class="xss-demo">
+    <div>Hint: Look at the guestbook section on the target.</div>
+    <div class="code">// Stored comments render as HTML</div>
+    <div class="code">// Check for hidden scripts in comments</div>
+</div>
+
+<div class="input-group">
+<input id="f2" class="input-field" placeholder="Enter flag">
+<button onclick="check(2,'HP{xss_stored}',20,'card3')" class="btn btn-primary">Submit</button>
+</div>
+<button onclick="aiHint(2)" class="btn btn-hint">AI Hint</button>
+<div id="hint2" class="ai-box"></div>
+<div id="r2"></div>
+</div>
+
+<!-- HARD -->
+<div id="card3" class="glass-card locked">
+<div id="lock3" class="lock-overlay">LOCKED</div>
+<span class="badge" style="color:var(--danger);">HARD</span>
+<h2>DOM-based XSS</h2>
+<p style="color:#94a3b8;">The page reads from <code style="color:var(--primary);">location.hash</code> and injects it into the DOM. Exploit this to find the hidden flag.</p>
+
+<div class="xss-demo">
+    <div class="code">// Vulnerable code pattern:</div>
+    <div class="code">document.getElementById('out').innerHTML = location.hash.slice(1);</div>
+    <div style="margin-top:8px;">Navigate to the #dom-xss section on target and check the URL hash parameter.</div>
+</div>
+
+<div class="input-group">
+<input id="f3" class="input-field" placeholder="Enter flag">
+<button onclick="check(3,'HP{xss_dom}',30,null)" class="btn btn-primary">Submit</button>
+</div>
+<button onclick="aiHint(3)" class="btn btn-hint">AI Hint</button>
+<div id="hint3" class="ai-box"></div>
+<div id="r3"></div>
+</div>
+
+</div>
+
+<script>
+let stage={};
+
+function aiHint(level){
+    if(!stage[level]) stage[level]=1;
+    const hints={
+        1:["User input is reflected in the page.","Open the target and use the search box.","Type something and check what appears on the page — then find the flag in source."],
+        2:["Some comments contain HTML.","View page source of the guestbook section.","Look for a hidden script tag in the comments area."],
+        3:["The URL hash is read and displayed.","Try navigating to target.html#xss-test","Check the #dom-xss section and read the source carefully."]
+    };
+    const box=document.getElementById('hint'+level);
+    box.style.display='block';
+    box.innerText=hints[level][stage[level]-1]||hints[level][2];
+    stage[level]++;
+}
+
+function check(l,c,pts,next){
+    const i=document.getElementById('f'+l).value.trim();
+    const r=document.getElementById('r'+l);
+    if(i===c){
+        r.innerHTML="<span style='color:var(--primary)'>✓ Correct! +"+pts+" pts</span>";
+        localStorage.setItem('p8',l+1);
+        let s=parseInt(localStorage.getItem('score')||0)+pts;
+        localStorage.setItem('score',s);
+        updateScore();
+        if(next) unlock(next,'lock'+(l+1));
+    } else {
+        r.innerHTML="<span style='color:var(--danger)'>✗ Wrong flag</span>";
+    }
+}
+function unlock(c,l){ document.getElementById(c).classList.remove('locked'); document.getElementById(l).style.display='none'; }
+function updateScore(){ document.getElementById('scoreDisplay').innerText='SCORE: '+(localStorage.getItem('score')||0); }
+document.addEventListener('DOMContentLoaded',()=>{
+    let p=parseInt(localStorage.getItem('p8'))||1;
+    if(p>=2) unlock('card2','lock2');
+    if(p>=3) unlock('card3','lock3');
+    updateScore();
+});
+</script>
+</body>
+</html>

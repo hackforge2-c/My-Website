@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Settings | HackForge</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+<style>
+:root{
+  --bg:#000;--bg-panel:#080d16;--panel:#0d1422;--panel-light:#131c2e;
+  --border:rgba(196,255,0,0.15);--border-dim:rgba(196,255,0,0.07);
+  --text:#dde6f0;--muted:#7a8fa8;--accent:#c4ff00;
+  --accent-dim:rgba(196,255,0,0.08);--accent-glow:rgba(196,255,0,0.2);
+  --danger:#ff4d4d;--warning:#f59e0b;--cyan:#00e5ff;--purple:#8b5cf6;
+  --sidebar-w:270px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);line-height:1.75;overflow-x:hidden;}
+
+.bg-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(196,255,0,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(196,255,0,0.02) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;animation:gridDrift 24s linear infinite;}
+@keyframes gridDrift{from{transform:translate(0,0)}to{transform:translate(48px,48px)}}
+.bg-vignette{position:fixed;inset:0;background:radial-gradient(ellipse at 25% 15%,rgba(196,255,0,0.04) 0%,transparent 55%),radial-gradient(ellipse at 75% 85%,rgba(0,229,255,0.03) 0%,transparent 55%);pointer-events:none;z-index:0;}
+
+/* ── SIDEBAR ── */
+.sidebar{position:fixed;left:0;top:0;width:var(--sidebar-w);height:100vh;background:linear-gradient(180deg,#02050e,#000);border-right:1px solid var(--border);z-index:200;display:flex;flex-direction:column;box-shadow:4px 0 32px rgba(196,255,0,0.05);}
+.logo-wrap{padding:18px 16px 16px;border-bottom:1px solid var(--border-dim);background:linear-gradient(180deg,rgba(196,255,0,0.05),transparent);text-align:center;}
+.logo-img{width:170px;height:auto;filter:drop-shadow(0 0 18px rgba(196,255,0,0.45));display:block;margin:0 auto;transition:filter .3s,transform .3s;}
+.logo-img:hover{filter:drop-shadow(0 0 30px rgba(196,255,0,0.7));transform:scale(1.04);}
+.logo-sub{font-size:.65rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:8px;font-family:'JetBrains Mono',monospace;}
+
+/* user mini card in sidebar */
+.user-mini{margin:14px 12px 0;background:var(--panel);border:1px solid var(--border-dim);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px;}
+.user-mini-avatar{width:36px;height:36px;border-radius:50%;border:2px solid rgba(196,255,0,0.3);object-fit:cover;background:var(--panel-light);}
+.user-mini-name{font-size:.82rem;font-weight:600;color:var(--text);}
+.user-mini-role{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--accent);letter-spacing:.5px;}
+
+.toc-label{padding:16px 22px 8px;font-family:'Orbitron',sans-serif;font-size:.6rem;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);opacity:.6;}
+.toc-scroll{flex:1;overflow-y:auto;padding:0 12px 16px;scrollbar-width:thin;scrollbar-color:rgba(196,255,0,.3) transparent;}
+.toc-scroll::-webkit-scrollbar{width:4px;}.toc-scroll::-webkit-scrollbar-thumb{background:rgba(196,255,0,.25);border-radius:2px;}
+.toc-link{display:flex;align-items:center;gap:10px;padding:9px 12px;margin:2px 0;border-radius:7px;color:var(--muted);text-decoration:none;font-size:.82rem;font-weight:500;transition:all .22s;border-left:2px solid transparent;}
+.toc-link .tn{font-size:.9rem;flex-shrink:0;width:20px;}
+.toc-link:hover{background:var(--accent-dim);color:var(--accent);border-left-color:var(--accent);transform:translateX(3px);}
+.toc-link.active{background:rgba(196,255,0,.12);color:var(--accent);border-left-color:var(--accent);}
+.sidebar-nav{padding:14px 12px;border-top:1px solid var(--border-dim);display:flex;flex-direction:column;gap:4px;}
+.sidebar-nav a{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:7px;color:var(--muted);text-decoration:none;font-size:.82rem;font-weight:500;transition:all .2s;}
+.sidebar-nav a:hover{background:var(--accent-dim);color:var(--accent);}
+.sidebar-nav a.active{color:var(--accent);background:var(--accent-dim);}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sidebar-w);min-height:100vh;position:relative;z-index:1;}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.88);backdrop-filter:blur(18px);border-bottom:1px solid var(--border);padding:13px 48px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.topbar-left{display:flex;align-items:center;gap:14px;}
+.breadcrumb{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.breadcrumb span{color:var(--accent);opacity:.6;}.breadcrumb strong{color:var(--text);}
+.topbar-badge{background:var(--accent-dim);border:1px solid var(--border);color:var(--accent);padding:4px 10px;border-radius:5px;font-size:.72rem;font-family:'JetBrains Mono',monospace;}
+.read-indicator{position:fixed;top:0;left:var(--sidebar-w);right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--cyan));transform-origin:left;transform:scaleX(0);z-index:300;transition:transform .1s;}
+.content{padding:44px 52px 80px;max-width:900px;}
+
+/* ── HERO ── */
+.page-hero{margin-bottom:36px;padding:36px 44px;background:linear-gradient(135deg,rgba(196,255,0,.06),rgba(0,229,255,.04));border:1px solid var(--border);border-radius:14px;position:relative;overflow:hidden;}
+.page-hero::before{content:'⚙️';position:absolute;right:36px;top:50%;transform:translateY(-50%);font-size:6rem;opacity:.05;pointer-events:none;}
+.hero-tag{display:inline-block;background:var(--accent-dim);border:1px solid var(--border);color:var(--accent);padding:4px 12px;border-radius:5px;font-size:.72rem;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;}
+.page-hero h1{font-family:'Orbitron',sans-serif;font-size:1.9rem;font-weight:700;background:linear-gradient(135deg,#fff 30%,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;}
+.page-hero p{color:var(--muted);font-size:.93rem;line-height:1.65;}
+
+/* ── SECTION CARD ── */
+.settings-card{background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:14px;padding:32px 36px;margin-bottom:20px;position:relative;transition:border-color .3s;}
+.settings-card:hover{border-color:rgba(196,255,0,.15);}
+.settings-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:linear-gradient(180deg,var(--accent),transparent);border-radius:14px 0 0 14px;opacity:0;transition:opacity .3s;}
+.settings-card:hover::before{opacity:1;}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border-dim);}
+.card-title{font-family:'Orbitron',sans-serif;font-size:.9rem;font-weight:600;color:var(--text);letter-spacing:.5px;display:flex;align-items:center;gap:10px;}
+.card-title::before{content:'';width:14px;height:2px;background:var(--accent);border-radius:1px;flex-shrink:0;}
+.card-badge{font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:3px 9px;border-radius:5px;letter-spacing:.5px;text-transform:uppercase;}
+.card-badge.green{background:rgba(196,255,0,.08);border:1px solid rgba(196,255,0,.15);color:var(--accent);}
+.card-badge.red{background:rgba(255,77,77,.08);border:1px solid rgba(255,77,77,.2);color:var(--danger);}
+.card-badge.cyan{background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.15);color:var(--cyan);}
+
+/* ── PROFILE AVATAR ── */
+.avatar-section{display:flex;align-items:center;gap:24px;margin-bottom:24px;padding:20px;background:var(--panel);border-radius:12px;border:1px solid var(--border-dim);}
+.avatar-wrap{position:relative;flex-shrink:0;}
+.avatar-img{width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid rgba(196,255,0,0.35);background:var(--panel-light);box-shadow:0 0 20px rgba(196,255,0,0.15);}
+.avatar-overlay{position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;cursor:pointer;font-size:1.2rem;}
+.avatar-wrap:hover .avatar-overlay{opacity:1;}
+.avatar-info{flex:1;}
+.avatar-name{font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:3px;}
+.avatar-email{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--muted);}
+.avatar-created{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:rgba(196,255,0,.5);margin-top:6px;letter-spacing:.5px;}
+
+/* ── FORM ELEMENTS ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.form-group{display:flex;flex-direction:column;gap:6px;}
+.form-group.full{grid-column:1/-1;}
+.form-label{font-family:'JetBrains Mono',monospace;font-size:.68rem;letter-spacing:1px;color:var(--muted);text-transform:uppercase;}
+.form-input,.form-select,.form-textarea{background:var(--panel);border:1px solid var(--border-dim);border-radius:8px;padding:10px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none;transition:all .2s;width:100%;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:rgba(196,255,0,.35);box-shadow:0 0 0 3px rgba(196,255,0,.06);}
+.form-input::placeholder,.form-textarea::placeholder{color:#3d5060;}
+.form-select option{background:var(--panel);}
+.form-textarea{resize:vertical;min-height:80px;}
+
+/* ── TOGGLE SWITCHES ── */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border-dim);}
+.toggle-row:last-child{border-bottom:none;padding-bottom:0;}
+.toggle-title{font-size:.9rem;font-weight:600;color:var(--text);margin-bottom:2px;}
+.toggle-desc{font-size:.78rem;color:var(--muted);}
+.toggle-switch{position:relative;width:44px;height:24px;flex-shrink:0;}
+.toggle-switch input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:rgba(255,255,255,.1);border:1px solid var(--border-dim);border-radius:30px;cursor:pointer;transition:all .3s;}
+.toggle-slider::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#7a8fa8;border-radius:50%;transition:all .3s;}
+.toggle-switch input:checked + .toggle-slider{background:rgba(196,255,0,.15);border-color:rgba(196,255,0,.4);}
+.toggle-switch input:checked + .toggle-slider::before{transform:translateX(20px);background:var(--accent);box-shadow:0 0 8px rgba(196,255,0,.5);}
+
+/* ── PROGRESS BAR ── */
+.skill-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.skill-name{font-size:.82rem;color:var(--text);width:140px;flex-shrink:0;}
+.skill-bar{flex:1;height:6px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden;}
+.skill-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),#7fd600);transition:width 1.2s cubic-bezier(.4,0,.2,1);box-shadow:0 0 8px rgba(196,255,0,.4);}
+.skill-fill.cyan{background:linear-gradient(90deg,var(--cyan),#0090cc);}
+.skill-fill.purple{background:linear-gradient(90deg,var(--purple),#6d28d9);}
+.skill-pct{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--muted);width:32px;text-align:right;}
+
+/* ── LOG ITEMS ── */
+.log-item{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--panel);border-radius:8px;margin-bottom:8px;font-size:.82rem;}
+.log-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.log-dot.green{background:var(--accent);box-shadow:0 0 6px rgba(196,255,0,.5);}
+.log-dot.amber{background:var(--warning);}
+.log-action{color:var(--text);font-weight:500;flex:1;}
+.log-time{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted);}
+
+/* ── THEME CARDS ── */
+.theme-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0;}
+.theme-card{border:2px solid var(--border-dim);border-radius:10px;padding:14px;cursor:pointer;transition:all .2s;text-align:center;}
+.theme-card:hover{border-color:var(--border);transform:translateY(-2px);}
+.theme-card.selected{border-color:var(--accent);box-shadow:0 0 14px rgba(196,255,0,.15);}
+.theme-swatch{width:100%;height:36px;border-radius:6px;margin-bottom:8px;}
+.theme-name{font-size:.78rem;font-weight:600;color:var(--muted);}
+.theme-card.selected .theme-name{color:var(--accent);}
+
+/* ── STATS MINI ── */
+.mini-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0;}
+.mini-stat{background:var(--panel);border:1px solid var(--border-dim);border-radius:10px;padding:14px;text-align:center;}
+.ms-val{font-family:'Orbitron',sans-serif;font-size:1.3rem;font-weight:700;color:var(--accent);}
+.ms-lbl{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:4px;}
+
+/* ── BUTTONS ── */
+.btn-save{padding:11px 22px;background:linear-gradient(135deg,var(--accent),#7fd600);color:#000;border:none;border-radius:8px;font-weight:700;font-size:.85rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .25s;box-shadow:0 0 14px rgba(196,255,0,.2);}
+.btn-save:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(196,255,0,.4);}
+.btn-outline{padding:11px 22px;background:transparent;border:1px solid var(--border-dim);color:var(--muted);border-radius:8px;font-weight:600;font-size:.85rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+.btn-outline:hover{border-color:var(--border);color:var(--text);}
+.btn-danger{padding:12px 20px;background:rgba(255,77,77,.08);border:1px solid rgba(255,77,77,.25);color:var(--danger);border-radius:8px;font-weight:700;font-size:.85rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;width:100%;}
+.btn-danger:hover{background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.5);}
+.btn-row{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;}
+
+/* FILE INPUT */
+.file-btn{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;background:var(--panel);border:1px solid var(--border-dim);border-radius:8px;color:var(--muted);font-size:.82rem;cursor:pointer;transition:all .2s;}
+.file-btn:hover{border-color:var(--border);color:var(--text);}
+#imageUpload{display:none;}
+
+/* DANGER ZONE */
+.danger-card{background:rgba(255,77,77,.03);border:1px solid rgba(255,77,77,.2);border-radius:14px;padding:32px 36px;margin-bottom:20px;}
+.danger-title{font-family:'Orbitron',sans-serif;font-size:.9rem;font-weight:600;color:var(--danger);margin-bottom:6px;display:flex;align-items:center;gap:10px;}
+.danger-title::before{content:'';width:14px;height:2px;background:var(--danger);border-radius:1px;flex-shrink:0;}
+.danger-desc{font-size:.85rem;color:var(--muted);margin-bottom:20px;line-height:1.65;}
+.danger-items{display:flex;flex-direction:column;gap:12px;}
+.danger-item{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--panel);border-radius:10px;border:1px solid rgba(255,77,77,.1);flex-wrap:wrap;gap:12px;}
+.danger-item-info .di-title{font-size:.88rem;font-weight:600;color:var(--text);margin-bottom:2px;}
+.danger-item-info .di-desc{font-size:.78rem;color:var(--muted);}
+.btn-danger-sm{padding:8px 16px;background:rgba(255,77,77,.08);border:1px solid rgba(255,77,77,.25);color:var(--danger);border-radius:7px;font-weight:700;font-size:.78rem;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .2s;white-space:nowrap;}
+.btn-danger-sm:hover{background:rgba(255,77,77,.18);}
+
+/* TOAST */
+.toast{position:fixed;bottom:28px;right:28px;background:var(--bg-panel);border:1px solid rgba(196,255,0,.25);border-radius:10px;padding:14px 20px;font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--accent);display:flex;align-items:center;gap:10px;box-shadow:0 8px 28px rgba(0,0,0,.5);transform:translateY(80px);opacity:0;transition:all .35s;z-index:9999;pointer-events:none;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.error{color:var(--danger);border-color:rgba(255,77,77,.3);}
+
+footer{text-align:center;padding:24px 52px;border-top:1px solid var(--border-dim);font-size:.8rem;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+footer a{color:var(--cyan);text-decoration:none;}
+@media(max-width:860px){:root{--sidebar-w:0px;}.sidebar{display:none;}.content{padding:24px 20px 60px;}.topbar{padding:12px 20px;}.form-grid{grid-template-columns:1fr;}.mini-stats{grid-template-columns:1fr 1fr;}.theme-grid{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-vignette"></div>
+<div class="read-indicator" id="readIndicator"></div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">✓ Saved successfully</div>
+
+<!-- ══════════ SIDEBAR ══════════ -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="logo.png" alt="HackForge" class="logo-img">
+    <div class="logo-sub">Cybersecurity Learning</div>
+  </div>
+
+  <div class="user-mini">
+    <img src="" id="sidebarAvatar" class="user-mini-avatar" alt="">
+    <div>
+      <div class="user-mini-name" id="sidebarName">Loading...</div>
+      <div class="user-mini-role">HackForge Member</div>
+    </div>
+  </div>
+  <div class="sidebar-nav">
+    <a href="index.html">📓 Notes</a>
+    <a href="roadmap.html">🗺️ Roadmap</a>
+    <a href="practice-lab.html">⚗️ Labs</a>
+    <a href="settings.html" class="active">⚙️ Settings</a>
+  </div>
+</aside>
+
+<!-- ══════════ MAIN ══════════ -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="breadcrumb"><span>HackForge</span> / <strong>Settings</strong></div>
+      <div class="topbar-badge">Account</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="page-hero">
+      <div class="hero-tag">Account Settings</div>
+      <h1>Settings</h1>
+      <p>Manage your profile, security, learning preferences, and account configuration.</p>
+    </div>
+
+    <!-- ── 01 PROFILE ── -->
+    <div class="settings-card" id="profile">
+      <div class="card-head">
+        <div class="card-title">Profile Settings</div>
+        <span class="card-badge green">Public</span>
+      </div>
+
+      <div class="avatar-section">
+        <div class="avatar-wrap" onclick="document.getElementById('imageUpload').click()">
+          <img id="profileImage" class="avatar-img" src="https://ui-avatars.com/api/?name=H&background=0d1422&color=c4ff00&bold=true" alt="Avatar">
+          <div class="avatar-overlay">📷</div>
+        </div>
+        <div class="avatar-info">
+          <div class="avatar-name" id="avatarName">Loading...</div>
+          <div class="avatar-email" id="avatarEmail">—</div>
+          <div class="avatar-created" id="createdDate">—</div>
+        </div>
+        <div>
+          <input type="file" id="imageUpload" accept="image/*">
+          <label for="imageUpload" class="file-btn">📷 Change Photo</label>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" class="form-input" id="usernameInput" placeholder="Your username">
+        </div>
+        <div class="form-group">
+          <label class="form-label">GitHub</label>
+          <input type="text" class="form-input" id="githubInput" placeholder="github.com/username">
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Bio</label>
+          <textarea class="form-textarea" id="bioInput" placeholder="Tell us about yourself..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Twitter / X</label>
+          <input type="text" class="form-input" id="twitterInput" placeholder="@handle">
+        </div>
+        <div class="form-group">
+          <label class="form-label">LinkedIn</label>
+          <input type="text" class="form-input" id="linkedinInput" placeholder="linkedin.com/in/...">
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-save" onclick="updateProfile()">💾 Save Profile</button>
+        <button class="btn-outline" onclick="copyProfileLink()">🔗 Copy Profile Link</button>
+      </div>
+    </div>
+
+    <!-- ── 02 ACCOUNT SECURITY ── -->
+    <div class="settings-card" id="account">
+      <div class="card-head">
+        <div class="card-title">Account Security</div>
+        <span class="card-badge cyan">Private</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group full">
+          <label class="form-label">New Email Address</label>
+          <input type="email" class="form-input" id="emailInput" placeholder="new@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">New Password</label>
+          <input type="password" class="form-input" id="passwordInput" placeholder="Min 8 characters">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirm Password</label>
+          <input type="password" class="form-input" id="confirmPasswordInput" placeholder="Repeat password">
+        </div>
+      </div>
+
+      <!-- password strength -->
+      <div style="margin-bottom:14px;">
+        <div class="form-label" style="margin-bottom:6px;">Password Strength</div>
+        <div style="height:5px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden;">
+          <div id="pwStrengthBar" style="height:100%;width:0%;border-radius:3px;background:var(--danger);transition:width .4s,background .4s;"></div>
+        </div>
+        <div id="pwStrengthLabel" style="font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--muted);margin-top:5px;letter-spacing:.5px;">Enter a password</div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-save" onclick="updateAccount()">🔐 Update Account</button>
+      </div>
+    </div>
+
+    <!-- ── 03 MY PROGRESS ── -->
+    <div class="settings-card" id="progress">
+      <div class="card-head">
+        <div class="card-title">My Progress</div>
+        <span class="card-badge green">Live</span>
+      </div>
+
+      <div class="mini-stats">
+        <div class="mini-stat"><div class="ms-val" id="pgCourses">—</div><div class="ms-lbl">Courses Done</div></div>
+        <div class="mini-stat"><div class="ms-val" id="pgStreak">—</div><div class="ms-lbl">Day Streak</div></div>
+        <div class="mini-stat"><div class="ms-val" id="pgScore">—</div><div class="ms-lbl">Total XP</div></div>
+      </div>
+
+      <div style="margin-top:20px;">
+        <div class="form-label" style="margin-bottom:14px;">Module Progress</div>
+        <div class="skill-row"><span class="skill-name">Cybersecurity 101</span><div class="skill-bar"><div class="skill-fill" id="bar1" style="width:0%"></div></div><span class="skill-pct" id="pct1">0%</span></div>
+        <div class="skill-row"><span class="skill-name">Networking</span><div class="skill-bar"><div class="skill-fill cyan" id="bar2" style="width:0%"></div></div><span class="skill-pct" id="pct2">0%</span></div>
+        <div class="skill-row"><span class="skill-name">Operating Systems</span><div class="skill-bar"><div class="skill-fill purple" id="bar3" style="width:0%"></div></div><span class="skill-pct" id="pct3">0%</span></div>
+        <div class="skill-row"><span class="skill-name">Web Fundamentals</span><div class="skill-bar"><div class="skill-fill" id="bar4" style="width:0%"></div></div><span class="skill-pct" id="pct4">0%</span></div>
+      </div>
+    </div>
+
+    <!-- ── 04 NOTIFICATIONS ── -->
+    <div class="settings-card" id="notif">
+      <div class="card-head">
+        <div class="card-title">Notifications</div>
+        <span class="card-badge green">Preferences</span>
+      </div>
+
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-title">Email Notifications</div>
+          <div class="toggle-desc">Receive weekly learning summaries and platform updates</div>
+        </div>
+        <label class="toggle-switch"><input type="checkbox" id="emailNotif"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-title">Course Updates</div>
+          <div class="toggle-desc">Get notified when new modules or content is added</div>
+        </div>
+        <label class="toggle-switch"><input type="checkbox" id="courseNotif" checked><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-title">CTF Alerts</div>
+          <div class="toggle-desc">Be notified when new CTF challenges are available</div>
+        </div>
+        <label class="toggle-switch"><input type="checkbox" id="ctfNotif" checked><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-title">Cyber News Digest</div>
+          <div class="toggle-desc">Daily digest of the latest cybersecurity threats and news</div>
+        </div>
+        <label class="toggle-switch"><input type="checkbox" id="newsNotif"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-title">Streak Reminders</div>
+          <div class="toggle-desc">Daily reminder to keep your learning streak alive</div>
+        </div>
+        <label class="toggle-switch"><input type="checkbox" id="streakNotif" checked><span class="toggle-slider"></span></label>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-save" onclick="saveNotifications()">💾 Save Notifications</button>
+      </div>
+    </div>
+
+    <!-- ── 05 LEARNING ── -->
+    <div class="settings-card" id="learning">
+      <div class="card-head">
+        <div class="card-title">Learning Preferences</div>
+        <span class="card-badge cyan">Personalise</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Learning Path</label>
+          <select class="form-select" id="learningPath">
+            <option>Red Team</option>
+            <option>Blue Team</option>
+            <option>Web Security</option>
+            <option>Network Security</option>
+            <option>Malware Analysis</option>
+            <option>Cloud Security</option>
+            <option>OSINT</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Daily Goal (minutes)</label>
+          <input type="number" class="form-input" id="dailyGoal" placeholder="e.g. 30" min="5" max="300">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Experience Level</label>
+          <select class="form-select" id="expLevel">
+            <option>Absolute Beginner</option>
+            <option>Beginner</option>
+            <option>Intermediate</option>
+            <option>Advanced</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Target Certification</label>
+          <select class="form-select" id="targetCert">
+            <option>None</option>
+            <option>CompTIA Security+</option>
+            <option>CEH</option>
+            <option>OSCP</option>
+            <option>eJPT</option>
+            <option>PNPT</option>
+            <option>CISSP</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="toggle-row" style="padding-top:14px;">
+        <div class="toggle-info">
+          <div class="toggle-title">Show Difficulty Tags</div>
+          <div class="toggle-desc">Display beginner/intermediate/advanced tags on content</div>
+        </div>
+        <label class="toggle-switch"><input type="checkbox" id="diffTags" checked><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-title">Compact Mode</div>
+          <div class="toggle-desc">Show more content on screen with reduced spacing</div>
+        </div>
+        <label class="toggle-switch"><input type="checkbox" id="compactMode"><span class="toggle-slider"></span></label>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-save" onclick="saveLearning()">💾 Save Learning Preferences</button>
+      </div>
+    </div>
+
+    <!-- ── 06 APPEARANCE ── -->
+    <div class="settings-card" id="appearance">
+      <div class="card-head">
+        <div class="card-title">Appearance</div>
+        <span class="card-badge green">Theme</span>
+      </div>
+
+      <div class="form-label" style="margin-bottom:12px;">Select Theme</div>
+      <div class="theme-grid">
+        <div class="theme-card selected" onclick="selectTheme(this,'hackforge')">
+          <div class="theme-swatch" style="background:linear-gradient(135deg,#000,#0d1422);border:1px solid rgba(196,255,0,.2);"></div>
+          <div class="theme-name">HackForge Dark</div>
+        </div>
+        <div class="theme-card" onclick="selectTheme(this,'midnight')">
+          <div class="theme-swatch" style="background:linear-gradient(135deg,#0a0a1a,#1a1a3e);border:1px solid rgba(99,102,241,.2);"></div>
+          <div class="theme-name">Midnight Purple</div>
+        </div>
+        <div class="theme-card" onclick="selectTheme(this,'matrix')">
+          <div class="theme-swatch" style="background:linear-gradient(135deg,#001100,#003300);border:1px solid rgba(0,255,0,.2);"></div>
+          <div class="theme-name">Matrix Green</div>
+        </div>
+      </div>
+
+      <div class="form-grid" style="margin-top:16px;">
+        <div class="form-group">
+          <label class="form-label">Font Size</label>
+          <select class="form-select" id="fontSize">
+            <option>Small</option>
+            <option selected>Medium</option>
+            <option>Large</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Code Font</label>
+          <select class="form-select" id="codeFont">
+            <option selected>JetBrains Mono</option>
+            <option>Fira Code</option>
+            <option>Courier New</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-save" onclick="saveAppearance()">💾 Save Appearance</button>
+      </div>
+    </div>
+
+    <!-- ── 07 PRIVACY ── -->
+    <div class="settings-card" id="privacy">
+      <div class="card-head">
+        <div class="card-title">Privacy Settings</div>
+        <span class="card-badge cyan">Security</span>
+      </div>
+
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-title">Public Profile</div>
+          <div class="toggle-desc">Allow others to view your profile, progress, and achievements</div>
+        </div>
+        <label class="toggle-switch"><input type="checkbox" id="publicProfile" checked><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-title">Show Progress on Profile</div>
+          <div class="toggle-desc">Display your module completion progress publicly</div>
+        </div>
+        <label class="toggle-switch"><input type="checkbox" id="showProgress" checked><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-title">Analytics Cookies</div>
+          <div class="toggle-desc">Help us improve HackForge with anonymous usage data</div>
+        </div>
+        <label class="toggle-switch"><input type="checkbox" id="analyticsCookies"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-title">Two-Factor Authentication</div>
+          <div class="toggle-desc">Add an extra layer of security to your account (via email)</div>
+        </div>
+        <label class="toggle-switch"><input type="checkbox" id="twoFactor"><span class="toggle-slider"></span></label>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-save" onclick="savePrivacy()">💾 Save Privacy Settings</button>
+        <a href="privacy.html" style="display:inline-flex;align-items:center;padding:11px 16px;background:transparent;border:1px solid var(--border-dim);color:var(--muted);border-radius:8px;font-size:.85rem;font-weight:600;text-decoration:none;transition:all .2s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">📄 Privacy Policy</a>
+      </div>
+    </div>
+
+    <!-- ── 08 SECURITY LOGS ── -->
+    <div class="settings-card" id="logs">
+      <div class="card-head">
+        <div class="card-title">Security Logs</div>
+        <span class="card-badge cyan">Activity</span>
+      </div>
+      <div id="logsContainer">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--muted);text-align:center;padding:20px;">Loading activity logs...</div>
+      </div>
+    </div>
+
+    <!-- ── 09 DANGER ZONE ── -->
+    <div class="danger-card" id="danger">
+      <div class="danger-title">⚠️ Danger Zone</div>
+      <p class="danger-desc">Actions in this section are permanent and cannot be undone. Please proceed with extreme caution.</p>
+
+      <div class="danger-items">
+        <div class="danger-item">
+          <div class="danger-item-info">
+            <div class="di-title">Export My Data</div>
+            <div class="di-desc">Download a copy of all your data including progress and settings</div>
+          </div>
+          <button class="btn-danger-sm" onclick="exportData()">📦 Export Data</button>
+        </div>
+        <div class="danger-item">
+          <div class="danger-item-info">
+            <div class="di-title">Reset Progress</div>
+            <div class="di-desc">Wipe all course progress and start fresh. Cannot be undone.</div>
+          </div>
+          <button class="btn-danger-sm" onclick="resetProgress()">🔄 Reset Progress</button>
+        </div>
+        <div class="danger-item">
+          <div class="danger-item-info">
+            <div class="di-title">Delete Account Permanently</div>
+            <div class="di-desc">Permanently delete your account and all associated data. This cannot be reversed.</div>
+          </div>
+          <button class="btn-danger-sm" onclick="deleteAccount()">💀 Delete Account</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <footer>© 2026 HackForge · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · Built by <a href="mailto:ligerharry44@gmail.com">Liger44</a></footer>
+</main>
+
+<script src="firebase-config.js"></script>
+<script>
+/* ── TOAST ── */
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = (type === 'error' ? '✕ ' : '✓ ') + msg;
+  t.className = 'toast' + (type === 'error' ? ' error' : '');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+/* ── LOAD USER ── */
+auth.onAuthStateChanged(async user => {
+  if (!user) { window.location.href = "login.html"; return; }
+
+  const doc  = await db.collection("users").doc(user.uid).get();
+  const data = doc.data() || {};
+
+  /* populate sidebar */
+  document.getElementById('sidebarName').innerText = data.username || user.displayName || 'Learner';
+  if (data.photoURL) document.getElementById('sidebarAvatar').src = data.photoURL;
+
+  /* populate profile */
+  document.getElementById('usernameInput').value = data.username || '';
+  document.getElementById('bioInput').value      = data.bio      || '';
+  document.getElementById('githubInput').value   = data.github   || '';
+  document.getElementById('twitterInput').value  = data.twitter  || '';
+  document.getElementById('linkedinInput').value = data.linkedin || '';
+  document.getElementById('avatarName').innerText  = data.username || user.displayName || 'Learner';
+  document.getElementById('avatarEmail').innerText = user.email || '—';
+  document.getElementById('createdDate').innerText = 'Joined: ' + new Date(user.metadata.creationTime).toDateString();
+  if (data.photoURL) document.getElementById('profileImage').src = data.photoURL;
+
+  /* populate learning */
+  if (data.learningPath) document.getElementById('learningPath').value = data.learningPath;
+  if (data.dailyGoal)    document.getElementById('dailyGoal').value    = data.dailyGoal;
+  if (data.expLevel)     document.getElementById('expLevel').value     = data.expLevel;
+  if (data.targetCert)   document.getElementById('targetCert').value   = data.targetCert;
+
+  /* notifications */
+  if (data.notifications) {
+    document.getElementById('emailNotif').checked  = !!data.notifications.email;
+    document.getElementById('courseNotif').checked = !!data.notifications.course;
+    document.getElementById('ctfNotif').checked    = !!data.notifications.ctf;
+    document.getElementById('newsNotif').checked   = !!data.notifications.news;
+    document.getElementById('streakNotif').checked = data.notifications.streak !== false;
+  }
+
+  /* progress */
+  const progress = data.progress || {};
+  document.getElementById('pgCourses').innerText = data.coursesCompleted || 0;
+  document.getElementById('pgStreak').innerText  = 'Day ' + (Math.floor((new Date() - new Date('2026-04-23')) / 86400000) + 1);
+  document.getElementById('pgScore').innerText   = (data.coursesCompleted || 0) * 10;
+
+  const modules = {
+    cybersecurity: { bar:'bar1', pct:'pct1' },
+    networking:    { bar:'bar2', pct:'pct2' },
+    os:            { bar:'bar3', pct:'pct3' },
+    web:           { bar:'bar4', pct:'pct4' },
+  };
+  for (const [key, ids] of Object.entries(modules)) {
+    const val = Math.min((progress[key] || 0), 100);
+    setTimeout(() => {
+      document.getElementById(ids.bar).style.width = val + '%';
+      document.getElementById(ids.pct).innerText   = val + '%';
+    }, 400);
+  }
+
+  logSecurity(user.uid, "Settings Viewed");
+  loadLogs(user.uid);
+});
+
+/* ── IMAGE UPLOAD ── */
+document.getElementById('imageUpload').addEventListener('change', async function() {
+  const file = this.files[0];
+  const user = auth.currentUser;
+  if (!file) return;
+  try {
+    const ref = firebase.storage().ref("profiles/" + user.uid);
+    await ref.put(file);
+    const url = await ref.getDownloadURL();
+    await db.collection("users").doc(user.uid).update({ photoURL: url });
+    document.getElementById('profileImage').src = url;
+    document.getElementById('sidebarAvatar').src = url;
+    showToast('Profile photo updated!');
+  } catch(e) { showToast('Upload failed', 'error'); }
+});
+
+/* ── PROFILE ── */
+async function updateProfile() {
+  const user = auth.currentUser;
+  await db.collection("users").doc(user.uid).update({
+    username: usernameInput.value,
+    bio:      bioInput.value,
+    github:   githubInput.value,
+    twitter:  twitterInput.value,
+    linkedin: linkedinInput.value,
+  });
+  document.getElementById('sidebarName').innerText  = usernameInput.value || 'Learner';
+  document.getElementById('avatarName').innerText   = usernameInput.value || 'Learner';
+  showToast('Profile saved!');
+}
+
+function copyProfileLink() {
+  const link = window.location.origin + '/profile?user=' + encodeURIComponent(usernameInput.value);
+  navigator.clipboard.writeText(link).then(() => showToast('Profile link copied!'));
+}
+
+/* ── ACCOUNT ── */
+async function updateAccount() {
+  const user = auth.currentUser;
+  const pw   = document.getElementById('passwordInput').value;
+  const cpw  = document.getElementById('confirmPasswordInput').value;
+  const em   = document.getElementById('emailInput').value;
+
+  if (pw && pw !== cpw) { showToast('Passwords do not match', 'error'); return; }
+  if (pw && pw.length < 8) { showToast('Password must be at least 8 characters', 'error'); return; }
+  try {
+    if (em) await user.updateEmail(em);
+    if (pw) await user.updatePassword(pw);
+    showToast('Account updated!');
+    document.getElementById('passwordInput').value = '';
+    document.getElementById('confirmPasswordInput').value = '';
+  } catch(e) { showToast('Update failed: ' + e.message, 'error'); }
+}
+
+/* ── PASSWORD STRENGTH ── */
+document.getElementById('passwordInput').addEventListener('input', function() {
+  const pw  = this.value;
+  const bar = document.getElementById('pwStrengthBar');
+  const lbl = document.getElementById('pwStrengthLabel');
+  let score = 0;
+  if (pw.length >= 8)  score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  const levels = [
+    { w:'0%',   c:'var(--danger)',  l:'Too weak' },
+    { w:'20%',  c:'var(--danger)',  l:'Weak' },
+    { w:'40%',  c:'var(--warning)', l:'Fair' },
+    { w:'65%',  c:'var(--warning)', l:'Good' },
+    { w:'85%',  c:'var(--accent)',  l:'Strong' },
+    { w:'100%', c:'var(--accent)',  l:'Very strong ✓' },
+  ];
+  const lvl = levels[Math.min(score, 5)];
+  bar.style.width      = pw ? lvl.w : '0%';
+  bar.style.background = lvl.c;
+  lbl.innerText        = pw ? lvl.l : 'Enter a password';
+  lbl.style.color      = pw ? lvl.c : 'var(--muted)';
+});
+
+/* ── NOTIFICATIONS ── */
+async function saveNotifications() {
+  const user = auth.currentUser;
+  await db.collection("users").doc(user.uid).update({
+    notifications: {
+      email:  emailNotif.checked,
+      course: courseNotif.checked,
+      ctf:    ctfNotif.checked,
+      news:   newsNotif.checked,
+      streak: streakNotif.checked,
+    }
+  });
+  showToast('Notifications saved!');
+}
+
+/* ── LEARNING ── */
+async function saveLearning() {
+  const user = auth.currentUser;
+  await db.collection("users").doc(user.uid).update({
+    learningPath: learningPath.value,
+    dailyGoal:    dailyGoal.value,
+    expLevel:     expLevel.value,
+    targetCert:   targetCert.value,
+  });
+  showToast('Learning preferences saved!');
+}
+
+/* ── APPEARANCE ── */
+function selectTheme(el, name) {
+  document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+async function saveAppearance() {
+  showToast('Appearance settings saved!');
+}
+
+/* ── PRIVACY ── */
+async function savePrivacy() {
+  const user = auth.currentUser;
+  await db.collection("users").doc(user.uid).update({
+    privacy: {
+      publicProfile:   publicProfile.checked,
+      showProgress:    showProgress.checked,
+      analyticsCookies:analyticsCookies.checked,
+      twoFactor:       twoFactor.checked,
+    }
+  });
+  showToast('Privacy settings saved!');
+}
+
+/* ── SECURITY LOG ── */
+function logSecurity(uid, action) {
+  db.collection("securityLogs").doc(uid).collection("logs").add({
+    action: action,
+    time:   new Date().toISOString()
+  });
+}
+
+async function loadLogs(uid) {
+  const snap = await db.collection("securityLogs").doc(uid)
+    .collection("logs").orderBy("time","desc").limit(8).get();
+  const container = document.getElementById('logsContainer');
+  if (snap.empty) {
+    container.innerHTML = '<div style="font-family:JetBrains Mono,monospace;font-size:.78rem;color:var(--muted);text-align:center;padding:20px;">No activity logs yet.</div>';
+    return;
+  }
+  container.innerHTML = '';
+  snap.forEach(doc => {
+    const d = doc.data();
+    const t = new Date(d.time);
+    const timeStr = t.toLocaleDateString('en-US', {month:'short',day:'numeric'}) + ' · ' + t.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    container.innerHTML += `
+      <div class="log-item">
+        <div class="log-dot ${d.action.includes('Login')?'green':'amber'}"></div>
+        <div class="log-action">${d.action}</div>
+        <div class="log-time">${timeStr}</div>
+      </div>`;
+  });
+}
+
+/* ── EXPORT DATA ── */
+async function exportData() {
+  const user = auth.currentUser;
+  const doc  = await db.collection("users").doc(user.uid).get();
+  const data = { uid: user.uid, email: user.email, ...doc.data() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'hackforge-data.json';
+  a.click();
+  showToast('Data exported!');
+}
+
+/* ── RESET PROGRESS ── */
+async function resetProgress() {
+  if (!confirm('Reset ALL your progress? This cannot be undone.')) return;
+  const code = prompt('Type RESET to confirm:');
+  if (code !== 'RESET') { showToast('Reset cancelled', 'error'); return; }
+  const user = auth.currentUser;
+  await db.collection("users").doc(user.uid).update({
+    coursesCompleted: 0,
+    progress: {}
+  });
+  showToast('Progress reset!');
+  setTimeout(() => window.location.reload(), 1500);
+}
+
+/* ── DELETE ACCOUNT ── */
+async function deleteAccount() {
+  if (!confirm('Permanently delete your account? This CANNOT be undone.')) return;
+  const code = prompt('Type DELETE to confirm:');
+  if (code !== 'DELETE') { showToast('Cancelled', 'error'); return; }
+  const user = auth.currentUser;
+  await db.collection("users").doc(user.uid).delete();
+  await user.delete();
+  showToast('Account deleted. Goodbye!');
+  setTimeout(() => window.location.href = 'index.html', 1500);
+}
+
+/* ── READ PROGRESS ── */
+const indicator = document.getElementById('readIndicator');
+window.addEventListener('scroll', () => {
+  const el = document.documentElement;
+  indicator.style.transform = `scaleX(${el.scrollTop / (el.scrollHeight - el.clientHeight)})`;
+});
+
+/* ── ACTIVE TOC ── */
+const sections = document.querySelectorAll('[id]');
+const tocLinks = document.querySelectorAll('.toc-link');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      tocLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + e.target.id));
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+sections.forEach(s => obs.observe(s));
+</script>
+</body>
+</html>

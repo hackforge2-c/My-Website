@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard | HackForge</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+/* ─── VARIABLES ──────────────────────────────────────────── */
+:root {
+  --bg:          #000000;
+  --bg-panel:    #080d16;
+  --panel:       #0d1422;
+  --panel-light: #131c2e;
+  --border:      rgba(196,255,0,0.15);
+  --border-dim:  rgba(196,255,0,0.07);
+  --text:        #dde6f0;
+  --muted:       #7a8fa8;
+  --accent:      #c4ff00;
+  --accent-dim:  rgba(196,255,0,0.08);
+  --accent-glow: rgba(196,255,0,0.22);
+  --cyan:        #00e5ff;
+  --cyan-dim:    rgba(0,229,255,0.10);
+  --purple:      #8b5cf6;
+  --danger:      #ff4d4d;
+  --warning:     #f59e0b;
+  --orange:      #f97316;
+  --sidebar-w:   270px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.75;}
+
+/* ─── GRID BACKGROUND ────────────────────────────────────── */
+.bg-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(196,255,0,0.022) 1px,transparent 1px),linear-gradient(90deg,rgba(196,255,0,0.022) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;animation:gridDrift 24s linear infinite;}
+@keyframes gridDrift{from{transform:translate(0,0)}to{transform:translate(48px,48px)}}
+.bg-vignette{position:fixed;inset:0;background:radial-gradient(ellipse at 25% 15%,rgba(196,255,0,0.05) 0%,transparent 55%),radial-gradient(ellipse at 75% 85%,rgba(0,229,255,0.03) 0%,transparent 55%);pointer-events:none;z-index:0;}
+
+/* ─── SIDEBAR ────────────────────────────────────────────── */
+.sidebar{position:fixed;left:0;top:0;width:var(--sidebar-w);height:100vh;background:linear-gradient(180deg,#02050e,#000);border-right:1px solid var(--border);z-index:200;display:flex;flex-direction:column;box-shadow:4px 0 32px rgba(196,255,0,0.06);overflow:hidden;}
+
+.logo-wrap{padding:18px 16px 16px;border-bottom:1px solid var(--border-dim);background:linear-gradient(180deg,rgba(196,255,0,0.05),transparent);text-align:center;}
+.logo-img{width:170px;height:auto;filter:drop-shadow(0 0 18px rgba(196,255,0,0.45));display:block;margin:0 auto;transition:filter .3s,transform .3s;}
+.logo-img:hover{filter:drop-shadow(0 0 30px rgba(196,255,0,0.7));transform:scale(1.04);}
+.logo-sub{font-size:.65rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:8px;font-family:'JetBrains Mono',monospace;}
+
+/* user mini card */
+.user-mini{margin:14px 12px 0;background:var(--panel);border:1px solid rgba(196,255,0,0.12);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px;}
+.user-avatar{width:36px;height:36px;border-radius:50%;border:2px solid rgba(196,255,0,0.3);background:var(--panel-light);object-fit:cover;flex-shrink:0;}
+.user-mini-name{font-size:.85rem;font-weight:600;color:var(--text);margin-bottom:1px;}
+.user-mini-status{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--accent);display:flex;align-items:center;gap:5px;}
+.status-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 5px var(--accent);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* clock in sidebar */
+.clock-wrap{margin:10px 12px 0;background:var(--panel);border:1px solid var(--border-dim);border-radius:10px;padding:10px 14px;text-align:center;}
+.clock-time{font-family:'Orbitron',sans-serif;font-size:1.2rem;color:var(--accent);letter-spacing:3px;font-weight:600;text-shadow:0 0 12px rgba(196,255,0,0.4);}
+.clock-date{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--muted);letter-spacing:1.5px;margin-top:3px;text-transform:uppercase;}
+
+.toc-label{padding:14px 22px 7px;font-family:'Orbitron',sans-serif;font-size:.58rem;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);opacity:.6;}
+.toc-scroll{flex:1;overflow-y:auto;padding:0 12px 12px;scrollbar-width:thin;scrollbar-color:rgba(196,255,0,.3) transparent;}
+.toc-scroll::-webkit-scrollbar{width:4px;}.toc-scroll::-webkit-scrollbar-thumb{background:rgba(196,255,0,.25);border-radius:2px;}
+.toc-link{display:flex;align-items:center;gap:10px;padding:9px 12px;margin:2px 0;border-radius:7px;color:var(--muted);text-decoration:none;font-size:.82rem;font-weight:500;transition:all .22s;border-left:2px solid transparent;}
+.toc-link .tn{font-size:.88rem;flex-shrink:0;width:20px;}
+.toc-link:hover{background:var(--accent-dim);color:var(--accent);border-left-color:var(--accent);transform:translateX(3px);}
+.toc-link.active{background:rgba(196,255,0,.12);color:var(--accent);border-left-color:var(--accent);}
+.sidebar-nav{padding:10px 12px;border-top:1px solid var(--border-dim);display:flex;flex-direction:column;gap:3px;}
+.sidebar-nav a{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:7px;color:var(--muted);text-decoration:none;font-size:.82rem;font-weight:500;transition:all .2s;}
+.sidebar-nav a:hover{background:var(--accent-dim);color:var(--accent);}
+.logout-btn{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:7px;color:var(--muted);cursor:pointer;font-size:.82rem;font-weight:500;transition:all .2s;background:none;border:none;font-family:'DM Sans',sans-serif;width:100%;}
+.logout-btn:hover{background:rgba(255,77,77,.08);color:var(--danger);}
+
+/* ─── MAIN ───────────────────────────────────────────────── */
+.main{margin-left:var(--sidebar-w);min-height:100vh;position:relative;z-index:1;}
+
+/* ─── TOPBAR ─────────────────────────────────────────────── */
+.topbar{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.88);backdrop-filter:blur(18px);border-bottom:1px solid var(--border);padding:12px 48px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.topbar-left{display:flex;align-items:center;gap:14px;}
+.breadcrumb{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.breadcrumb span{color:var(--accent);opacity:.6;}.breadcrumb strong{color:var(--text);}
+.online-chip{display:flex;align-items:center;gap:6px;background:rgba(196,255,0,0.06);border:1px solid rgba(196,255,0,0.15);color:var(--accent);padding:4px 10px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:.5px;}
+.online-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);animation:blink 2s infinite;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.user-chip{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--border-dim);border-radius:8px;padding:6px 14px;font-size:.85rem;font-weight:600;color:var(--text);}
+.logout-link{padding:7px 14px;background:rgba(255,77,77,.07);border:1px solid rgba(255,77,77,.2);color:var(--danger);border-radius:7px;font-size:.78rem;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .2s;}
+.logout-link:hover{background:rgba(255,77,77,.15);}
+
+/* ─── READ INDICATOR ─────────────────────────────────────── */
+.read-indicator{position:fixed;top:0;left:var(--sidebar-w);right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--cyan));transform-origin:left;transform:scaleX(0);z-index:300;transition:transform .1s;}
+
+/* ─── CONTENT ────────────────────────────────────────────── */
+.content{padding:36px 52px 80px;max-width:1060px;}
+
+/* ─── WELCOME HEADER ─────────────────────────────────────── */
+.dash-header{margin-bottom:32px;padding-bottom:24px;border-bottom:1px solid var(--border-dim);}
+.dash-label{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.dash-label::before{content:'//';color:var(--accent);opacity:.5;}
+#welcomeLine{font-family:'Orbitron',sans-serif;font-size:2rem;font-weight:700;background:linear-gradient(135deg,#fff 30%,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.2;margin-bottom:6px;}
+#subLine{font-family:'JetBrains Mono',monospace;font-size:.88rem;color:var(--muted);min-height:22px;}
+#subLine::after{content:'▌';animation:blink 1s step-end infinite;}
+
+/* ─── DAILY CHALLENGE BANNER ─────────────────────────────── */
+.daily-banner{background:linear-gradient(135deg,rgba(196,255,0,0.06) 0%,rgba(8,13,22,1) 50%,rgba(0,229,255,0.04) 100%);border:1px solid rgba(196,255,0,0.2);border-radius:16px;padding:24px 30px;margin-bottom:28px;display:flex;align-items:center;gap:20px;position:relative;overflow:hidden;animation:fadeUp .5s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.daily-banner::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),var(--cyan),transparent);animation:slideGlow 3s linear infinite;}
+@keyframes slideGlow{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+.daily-icon{font-size:2.8rem;flex-shrink:0;filter:drop-shadow(0 0 14px rgba(196,255,0,0.5));animation:iconFloat 3s ease-in-out infinite;}
+@keyframes iconFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.daily-info{flex:1;}
+.daily-label{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--accent);letter-spacing:3px;text-transform:uppercase;margin-bottom:5px;display:flex;align-items:center;gap:7px;}
+.daily-label .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);animation:blink 1.2s infinite;}
+.daily-title{font-family:'Orbitron',sans-serif;font-size:1.05rem;font-weight:600;color:#fff;margin-bottom:8px;}
+.daily-meta{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+.tag{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.68rem;font-family:'JetBrains Mono',monospace;letter-spacing:.5px;font-weight:600;}
+.tag-easy  {background:rgba(196,255,0,0.08);color:var(--accent);border:1px solid rgba(196,255,0,0.2);}
+.tag-medium{background:rgba(245,158,11,0.08);color:var(--warning);border:1px solid rgba(245,158,11,0.2);}
+.tag-hard  {background:rgba(255,77,77,0.08);color:var(--danger);border:1px solid rgba(255,77,77,0.2);}
+.meta-item{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--muted);}
+.daily-right{display:flex;flex-direction:column;align-items:flex-end;gap:12px;flex-shrink:0;}
+.countdown-box{text-align:center;}
+.countdown-label{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:3px;}
+.countdown-time{font-family:'Orbitron',sans-serif;font-size:1.2rem;color:var(--cyan);letter-spacing:3px;font-weight:600;text-shadow:0 0 10px rgba(0,229,255,0.4);}
+.start-challenge-btn{padding:10px 20px;background:linear-gradient(135deg,var(--accent),#7fd600);color:#000;border:none;border-radius:8px;font-weight:700;font-size:.82rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .25s;box-shadow:0 0 14px rgba(196,255,0,0.2);letter-spacing:.3px;}
+.start-challenge-btn:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(196,255,0,0.45);}
+
+/* ─── STAT CARDS ─────────────────────────────────────────── */
+.stat-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;}
+.stat-card{background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:13px;padding:22px 20px;position:relative;overflow:hidden;transition:all .25s;text-align:center;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity .3s;}
+.stat-card:hover{transform:translateY(-4px);}
+.stat-card:hover::before{opacity:1;}
+.stat-card.sc-green::before{background:linear-gradient(90deg,transparent,var(--accent),transparent);}
+.stat-card.sc-cyan::before {background:linear-gradient(90deg,transparent,var(--cyan),transparent);}
+.stat-card.sc-purple::before{background:linear-gradient(90deg,transparent,var(--purple),transparent);}
+.stat-card.sc-amber::before{background:linear-gradient(90deg,transparent,var(--warning),transparent);}
+.stat-card:hover.sc-green {box-shadow:0 8px 28px rgba(196,255,0,0.1);}
+.stat-card:hover.sc-cyan  {box-shadow:0 8px 28px rgba(0,229,255,0.1);}
+.stat-card:hover.sc-purple{box-shadow:0 8px 28px rgba(139,92,246,0.1);}
+.stat-card:hover.sc-amber {box-shadow:0 8px 28px rgba(245,158,11,0.1);}
+.sc-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin:0 auto 12px;}
+.sc-icon.green {background:rgba(196,255,0,0.07);border:1px solid rgba(196,255,0,0.15);}
+.sc-icon.cyan  {background:rgba(0,229,255,0.07);border:1px solid rgba(0,229,255,0.15);}
+.sc-icon.purple{background:rgba(139,92,246,0.07);border:1px solid rgba(139,92,246,0.15);}
+.sc-icon.amber {background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.15);}
+.sc-val{font-family:'Orbitron',sans-serif;font-size:1.8rem;font-weight:700;line-height:1;margin-bottom:6px;}
+.sc-val.green {color:var(--accent);text-shadow:0 0 14px rgba(196,255,0,.35);}
+.sc-val.cyan  {color:var(--cyan);  text-shadow:0 0 14px rgba(0,229,255,.3);}
+.sc-val.purple{color:var(--purple);text-shadow:0 0 14px rgba(139,92,246,.3);}
+.sc-val.amber {color:var(--warning);text-shadow:0 0 14px rgba(245,158,11,.3);}
+.sc-lbl{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;}
+
+/* ─── XP BAR ─────────────────────────────────────────────── */
+.xp-wrap{background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:12px;padding:18px 24px;margin-bottom:20px;display:flex;flex-direction:column;gap:8px;}
+.xp-head{display:flex;justify-content:space-between;align-items:center;font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--muted);}
+.xp-head span:last-child{color:var(--accent);font-weight:600;}
+.xp-track{height:8px;background:rgba(255,255,255,0.04);border-radius:4px;overflow:hidden;}
+.xp-fill{height:100%;background:linear-gradient(90deg,#7fd600,var(--accent));border-radius:4px;width:0%;transition:width 1.2s cubic-bezier(.4,0,.2,1);box-shadow:0 0 10px rgba(196,255,0,0.45);position:relative;}
+.xp-fill::after{content:'';position:absolute;right:0;top:0;bottom:0;width:20px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.25));}
+
+/* ─── SECTION CARD ───────────────────────────────────────── */
+.section-card{background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:14px;padding:26px 28px;margin-bottom:16px;position:relative;overflow:hidden;transition:border-color .3s;}
+.section-card:hover{border-color:rgba(196,255,0,0.15);}
+.section-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:linear-gradient(180deg,var(--accent),transparent);border-radius:14px 0 0 14px;opacity:0;transition:opacity .3s;}
+.section-card:hover::before{opacity:1;}
+.sc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border-dim);}
+.sc-title{font-family:'Orbitron',sans-serif;font-size:.8rem;font-weight:600;color:var(--text);letter-spacing:.5px;display:flex;align-items:center;gap:9px;}
+.sc-title .pulse{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 7px var(--accent);animation:pulse 2s ease-in-out infinite;flex-shrink:0;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
+.sc-badge{font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:3px 9px;border-radius:5px;letter-spacing:.5px;text-transform:uppercase;background:var(--accent-dim);border:1px solid var(--border);color:var(--accent);}
+
+/* ─── CONTINUE LEARNING ──────────────────────────────────── */
+#resumeText{color:var(--text);font-size:.95rem;margin-bottom:18px;line-height:1.7;}
+.resume-btn{padding:11px 22px;background:linear-gradient(135deg,var(--accent),#7fd600);color:#000;border:none;border-radius:8px;font-weight:700;font-size:.85rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .25s;box-shadow:0 0 14px rgba(196,255,0,.2);}
+.resume-btn:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(196,255,0,.45);}
+
+/* ─── TWO COL ────────────────────────────────────────────── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+@media(max-width:760px){.two-col{grid-template-columns:1fr;}}
+
+/* ─── SKILL BARS ─────────────────────────────────────────── */
+.skill-list{display:flex;flex-direction:column;gap:16px;}
+.skill-row-item{display:flex;flex-direction:column;gap:5px;}
+.skill-header{display:flex;justify-content:space-between;align-items:center;}
+.skill-name{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--text);}
+.skill-pct{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--muted);}
+.skill-track{height:6px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden;}
+.skill-fill{height:100%;border-radius:3px;width:0%;transition:width 1.4s cubic-bezier(.4,0,.2,1);}
+.sf-green {background:linear-gradient(90deg,#7fd600,var(--accent));box-shadow:0 0 8px rgba(196,255,0,.4);}
+.sf-cyan  {background:linear-gradient(90deg,#0090cc,var(--cyan));box-shadow:0 0 8px rgba(0,229,255,.4);}
+.sf-purple{background:linear-gradient(90deg,#6d28d9,var(--purple));box-shadow:0 0 8px rgba(139,92,246,.4);}
+.sf-orange{background:linear-gradient(90deg,#c2410c,var(--orange));box-shadow:0 0 8px rgba(249,115,22,.4);}
+.sf-red   {background:linear-gradient(90deg,#b91c1c,var(--danger));box-shadow:0 0 8px rgba(255,77,77,.4);}
+
+/* ─── STREAK ─────────────────────────────────────────────── */
+.streak-row{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+.streak-fire{font-size:2.5rem;filter:drop-shadow(0 0 12px rgba(249,115,22,.7));animation:fireFlicker 1.5s ease-in-out infinite alternate;}
+@keyframes fireFlicker{from{transform:scale(1) rotate(-2deg)}to{transform:scale(1.06) rotate(2deg)}}
+.streak-num{font-family:'Orbitron',sans-serif;font-size:2rem;color:var(--orange);text-shadow:0 0 16px rgba(249,115,22,.5);line-height:1;}
+.streak-lbl{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:3px;}
+.week-dots{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;}
+.week-day{display:flex;flex-direction:column;align-items:center;gap:5px;}
+.day-label{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--muted);letter-spacing:.5px;}
+.week-dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--border-dim);background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:.75rem;transition:all .3s;}
+.week-dot.done {background:rgba(249,115,22,.12);border-color:var(--orange);box-shadow:0 0 7px rgba(249,115,22,.35);}
+.week-dot.today{border-color:var(--accent);background:rgba(196,255,0,.1);box-shadow:0 0 10px rgba(196,255,0,.3);}
+
+/* ─── BADGES ─────────────────────────────────────────────── */
+.badge-shelf{display:flex;gap:14px;flex-wrap:wrap;margin-top:4px;}
+.badge-item{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:default;}
+.badge-icon-box{width:54px;height:54px;border-radius:12px;background:var(--panel);border:1px solid var(--border-dim);display:flex;align-items:center;justify-content:center;font-size:1.5rem;transition:transform .2s,box-shadow .2s;}
+.badge-item:hover .badge-icon-box{transform:translateY(-3px);}
+.badge-icon-box.earned{border-color:rgba(196,255,0,.4);background:rgba(196,255,0,.07);box-shadow:0 0 16px rgba(196,255,0,.2);}
+.badge-icon-box.locked{filter:grayscale(1) brightness(.35);}
+.badge-name{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted);text-align:center;letter-spacing:.3px;}
+
+/* ─── ACTIVITY LIST ──────────────────────────────────────── */
+.activity-list{list-style:none;padding:0;}
+.activity-list li{padding:10px 14px;border-bottom:1px solid var(--border-dim);color:var(--muted);font-size:.85rem;font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:8px;transition:background .2s;}
+.activity-list li:last-child{border-bottom:none;}
+.activity-list li::before{content:'›';color:var(--accent);flex-shrink:0;}
+.activity-list li:hover{background:rgba(196,255,0,.03);}
+
+/* ─── TOP HACKERS ────────────────────────────────────────── */
+.hacker-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:9px;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:.82rem;background:var(--panel);border:1px solid var(--border-dim);transition:all .2s;}
+.hacker-row:hover{background:rgba(196,255,0,.04);border-color:rgba(196,255,0,.12);}
+.hacker-medal{font-size:1rem;flex-shrink:0;}
+.hacker-name{flex:1;color:var(--text);font-weight:600;}
+.hacker-xp{color:var(--cyan);font-size:.78rem;}
+
+/* ─── QUICK NAV GRID ─────────────────────────────────────── */
+.quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.quick-card{background:var(--panel);border:1px solid var(--border-dim);border-radius:10px;padding:16px 14px;text-decoration:none;transition:all .2s;display:flex;align-items:center;gap:12px;}
+.quick-card:hover{border-color:rgba(196,255,0,.2);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.4);}
+.qc-icon{font-size:1.4rem;flex-shrink:0;}
+.qc-label{font-size:.85rem;font-weight:600;color:var(--text);margin-bottom:1px;}
+.qc-sub{font-size:.72rem;color:var(--muted);}
+
+footer{text-align:center;padding:20px 52px;border-top:1px solid var(--border-dim);font-size:.78rem;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+footer a{color:var(--cyan);text-decoration:none;}
+
+@media(max-width:860px){
+  :root{--sidebar-w:0px;}
+  .sidebar{display:none;}
+  .content{padding:20px 16px 60px;}
+  .topbar{padding:12px 20px;}
+  .stat-cards{grid-template-columns:1fr 1fr;}
+  .quick-grid{grid-template-columns:1fr 1fr;}
+  .daily-banner{flex-direction:column;align-items:flex-start;gap:16px;}
+  .daily-right{align-items:flex-start;}
+  #welcomeLine{font-size:1.4rem;}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-vignette"></div>
+<div class="read-indicator" id="readIndicator"></div>
+
+<!-- ═══════════════════ SIDEBAR ═══════════════════════════ -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="logo.png" alt="HackForge" class="logo-img">
+    <div class="logo-sub">Cybersecurity Learning</div>
+  </div>
+
+  <!-- user mini -->
+  <div class="user-mini">
+    <img class="user-avatar" src="https://ui-avatars.com/api/?name=H&background=0d1422&color=c4ff00&bold=true" id="sidebarAvatar" alt="">
+    <div>
+      <div class="user-mini-name" id="sidebarName">Loading...</div>
+      <div class="user-mini-status"><div class="status-dot"></div>Online</div>
+    </div>
+  </div>
+
+  <!-- live clock -->
+  <div class="clock-wrap">
+    <div class="clock-time" id="clockTime">00:00:00</div>
+    <div class="clock-date" id="clockDate">---</div>
+  </div>
+
+  <div class="toc-label">Dashboard</div>
+  <div class="toc-scroll">
+    <a class="toc-link active" href="#daily">   <span class="tn">⚡</span>Daily Challenge</a>
+    <a class="toc-link"        href="#stats">   <span class="tn">📊</span>Stats</a>
+    <a class="toc-link"        href="#continue"><span class="tn">▶️</span>Continue Learning</a>
+    <a class="toc-link"        href="#skills">  <span class="tn">🎯</span>Skill Progress</a>
+    <a class="toc-link"        href="#streak">  <span class="tn">🔥</span>Daily Streak</a>
+    <a class="toc-link"        href="#badges">  <span class="tn">🏅</span>Badges</a>
+    <a class="toc-link"        href="#activity"><span class="tn">📋</span>Recent Activity</a>
+    <a class="toc-link"        href="#leaders"> <span class="tn">🏆</span>Top Hackers</a>
+  </div>
+
+  <div class="sidebar-nav">
+    <a href="settings.html">⚙️ Settings</a>
+    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+  </div>
+</aside>
+
+<!-- ═══════════════════ MAIN ══════════════════════════════ -->
+<main class="main">
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="breadcrumb"><span>HackForge</span> / <strong>Dashboard</strong></div>
+      <div class="online-chip"><div class="online-dot"></div>Online</div>
+    </div>
+    <div class="topbar-right">
+      <div class="user-chip">👤 <span id="username">User</span></div>
+      <button class="logout-link" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- WELCOME HEADER -->
+    <div class="dash-header">
+      <div class="dash-label">Dashboard</div>
+      <h1 id="welcomeLine"></h1>
+      <p id="subLine"></p>
+    </div>
+
+    <!-- DAILY CHALLENGE -->
+    <div class="daily-banner" id="daily">
+      <div class="daily-icon" id="dailyIcon">⚡</div>
+      <div class="daily-info">
+        <div class="daily-label"><div class="dot"></div>Daily Challenge</div>
+        <div class="daily-title" id="dailyTitle">Loading...</div>
+        <div class="daily-meta">
+          <span id="dailyDiff"></span>
+          <span class="meta-item" id="dailyXP"></span>
+          <span class="meta-item" id="dailyCat"></span>
+        </div>
+      </div>
+      <div class="daily-right">
+        <div class="countdown-box">
+          <div class="countdown-label">Resets in</div>
+          <div class="countdown-time" id="countdown">--:--:--</div>
+        </div>
+        <button class="start-challenge-btn" onclick="location.href='index.html'">⚡ Start Challenge</button>
+      </div>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="stat-cards" id="stats">
+      <div class="stat-card sc-green">
+        <div class="sc-icon green">⚡</div>
+        <div class="sc-val green" id="points">0</div>
+        <div class="sc-lbl">Total XP</div>
+      </div>
+      <div class="stat-card sc-purple">
+        <div class="sc-icon purple">🏆</div>
+        <div class="sc-val purple" id="rank">#—</div>
+        <div class="sc-lbl">Global Rank</div>
+      </div>
+      <div class="stat-card sc-cyan">
+        <div class="sc-icon cyan">🔰</div>
+        <div class="sc-val cyan" id="level">1</div>
+        <div class="sc-lbl">Level</div>
+      </div>
+      <div class="stat-card sc-amber">
+        <div class="sc-icon amber">⚗️</div>
+        <div class="sc-val amber" id="labs">0</div>
+        <div class="sc-lbl">Labs Done</div>
+      </div>
+    </div>
+
+    <!-- XP BAR -->
+    <div class="xp-wrap">
+      <div class="xp-head">
+        <span id="xpBarLabel">Level Progress</span>
+        <span id="xpBarPct">0%</span>
+      </div>
+      <div class="xp-track"><div class="xp-fill" id="xpFill"></div></div>
+    </div>
+
+    <!-- QUICK NAV -->
+    <div class="section-card" style="margin-bottom:16px;">
+      <div class="sc-head">
+        <div class="sc-title"><div class="pulse"></div>Quick Access</div>
+      </div>
+      <div class="quick-grid">
+        <a href="index.html" class="quick-card"><div class="qc-icon">📓</div><div><div class="qc-label">Notes</div><div class="qc-sub">Study modules</div></div></a>
+        <a href="main.html"  class="quick-card"><div class="qc-icon">🚩</div><div><div class="qc-label">CTF Arena</div><div class="qc-sub">7 Challenges</div></div></a>
+        <a href="roadmap.html" class="quick-card"><div class="qc-icon">🗺️</div><div><div class="qc-label">Roadmap</div><div class="qc-sub">Your path</div></div></a>
+        <a href="cyber-news.html" class="quick-card"><div class="qc-icon">📡</div><div><div class="qc-label">Cyber News</div><div class="qc-sub">Live feed</div></div></a>
+        <a href="learn.html" class="quick-card"><div class="qc-icon">🎓</div><div><div class="qc-label">Daily Learn</div><div class="qc-sub">Vuln of the day</div></div></a>
+        <a href="settings.html" class="quick-card"><div class="qc-icon">⚙️</div><div><div class="qc-label">Settings</div><div class="qc-sub">Your account</div></div></a>
+      </div>
+    </div>
+
+    <!-- CONTINUE LEARNING -->
+    <div class="section-card" id="continue">
+      <div class="sc-head">
+        <div class="sc-title"><div class="pulse"></div>Continue Learning</div>
+        <span class="sc-badge">Resume</span>
+      </div>
+      <p id="resumeText">Start your journey 🚀</p>
+      <button class="resume-btn" onclick="location.href='index.html'">▶ Resume</button>
+    </div>
+
+    <!-- SKILL PROGRESS + STREAK -->
+    <div class="two-col">
+      <div class="section-card" style="margin-bottom:0;" id="skills">
+        <div class="sc-head">
+          <div class="sc-title"><div class="pulse"></div>Skill Progress</div>
+        </div>
+        <div class="skill-list" id="skillList"></div>
+      </div>
+
+      <div class="section-card" style="margin-bottom:0;" id="streak">
+        <div class="sc-head">
+          <div class="sc-title"><div class="pulse"></div>Daily Streak</div>
+        </div>
+        <div class="streak-row">
+          <div class="streak-fire">🔥</div>
+          <div>
+            <div class="streak-num" id="streakCount">0</div>
+            <div class="streak-lbl">Day Streak</div>
+          </div>
+        </div>
+        <div class="week-dots" id="weekDots"></div>
+      </div>
+    </div>
+
+    <!-- BADGES -->
+    <div class="section-card" id="badges" style="margin-top:16px;">
+      <div class="sc-head">
+        <div class="sc-title"><div class="pulse"></div>Badges &amp; Achievements</div>
+        <span class="sc-badge">Earned</span>
+      </div>
+      <div class="badge-shelf" id="badgeShelf"></div>
+    </div>
+
+    <!-- ACTIVITY -->
+    <div class="section-card" id="activity">
+      <div class="sc-head">
+        <div class="sc-title"><div class="pulse"></div>Recent Activity</div>
+      </div>
+      <ul class="activity-list" id="activityList"><li>No activity yet</li></ul>
+    </div>
+
+    <!-- TOP HACKERS -->
+    <div class="section-card" id="leaders">
+      <div class="sc-head">
+        <div class="sc-title"><div class="pulse"></div>Top Hackers</div>
+        <span class="sc-badge">Global</span>
+      </div>
+      <div id="topUsers"></div>
+    </div>
+
+  </div><!-- /content -->
+
+  <footer>© 2026 HackForge · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · Built by <a href="mailto:ligerharry44@gmail.com">Liger44</a></footer>
+</main>
+
+<!-- ═══════════════════ SCRIPTS ════════════════════════════ -->
+<script src="firebase-config.js"></script>
+<script>
+
+/* ── LEVEL ── */
+function getLevel(xp) { return Math.floor(xp / 100) + 1; }
+
+/* ── RANK ── */
+async function calculateRank(userId) {
+  const snap = await db.collection("users").get();
+  let users = [];
+  snap.forEach(doc => users.push({ id: doc.id, xp: doc.data().points || 0 }));
+  users.sort((a, b) => b.xp - a.xp);
+  return users.findIndex(u => u.id === userId) + 1;
+}
+
+/* ── TYPING EFFECT ── */
+function typeText(text, id) {
+  const el = document.getElementById(id);
+  el.innerHTML = "";
+  let i = 0;
+  (function typing() {
+    if (i < text.length) { el.innerHTML += text.charAt(i++); setTimeout(typing, 30); }
+  })();
+}
+
+/* ── LIVE CLOCK ── */
+function updateClock() {
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  document.getElementById("clockTime").textContent =
+    `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  document.getElementById("clockDate").textContent =
+    now.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' }).toUpperCase();
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+/* ── DAILY CHALLENGE ── */
+const challenges = [
+  { title:"SQL Injection — Login Bypass",   icon:"💉", diff:"easy",   xp:50,  cat:"Web Security"   },
+  { title:"XSS Reflected Attack Lab",       icon:"⚡", diff:"medium", xp:100, cat:"Web Security"   },
+  { title:"Buffer Overflow Exploit",        icon:"💣", diff:"hard",   xp:200, cat:"Binary Exploit" },
+  { title:"Port Scan & Service Enum",       icon:"🔍", diff:"easy",   xp:50,  cat:"Recon"          },
+  { title:"JWT Token Forgery",              icon:"🔑", diff:"medium", xp:100, cat:"Cryptography"   },
+  { title:"SSRF to Internal Network",       icon:"🌐", diff:"hard",   xp:200, cat:"Web Security"   },
+  { title:"Privilege Escalation via SUID",  icon:"🛡️", diff:"medium", xp:100, cat:"Linux"          },
+];
+
+function loadDailyChallenge() {
+  const c = challenges[Math.floor(Date.now() / 86400000) % challenges.length];
+  document.getElementById("dailyIcon").textContent  = c.icon;
+  document.getElementById("dailyTitle").textContent = c.title;
+  const cls = { easy:"tag-easy", medium:"tag-medium", hard:"tag-hard" }[c.diff];
+  document.getElementById("dailyDiff").innerHTML = `<span class="tag ${cls}">${c.diff.toUpperCase()}</span>`;
+  document.getElementById("dailyXP").textContent  = `⚡ +${c.xp} XP`;
+  document.getElementById("dailyCat").textContent = `📁 ${c.cat}`;
+}
+
+function updateCountdown() {
+  const now   = new Date();
+  const reset = new Date(now);
+  reset.setUTCHours(24, 0, 0, 0);
+  const diff  = reset - now;
+  const pad   = n => String(n).padStart(2,'0');
+  document.getElementById("countdown").textContent =
+    `${pad(Math.floor(diff/3600000))}:${pad(Math.floor((diff%3600000)/60000))}:${pad(Math.floor((diff%60000)/1000))}`;
+}
+loadDailyChallenge();
+updateCountdown();
+setInterval(updateCountdown, 1000);
+
+/* ── SKILLS ── */
+const skills = [
+  { name:"🌐  Web Security",    pct:65, cls:"sf-green"  },
+  { name:"🔵  Network Hacking", pct:40, cls:"sf-cyan"   },
+  { name:"🟣  Cryptography",    pct:30, cls:"sf-purple" },
+  { name:"🟠  Binary Exploit",  pct:20, cls:"sf-orange" },
+  { name:"🔴  Forensics",       pct:55, cls:"sf-red"    },
+];
+
+function renderSkills() {
+  document.getElementById("skillList").innerHTML = skills.map(s => `
+    <div class="skill-row-item">
+      <div class="skill-header">
+        <span class="skill-name">${s.name}</span>
+        <span class="skill-pct">${s.pct}%</span>
+      </div>
+      <div class="skill-track">
+        <div class="skill-fill ${s.cls}" data-pct="${s.pct}"></div>
+      </div>
+    </div>`).join('');
+  setTimeout(() => {
+    document.querySelectorAll(".skill-fill").forEach(el => { el.style.width = el.dataset.pct + "%"; });
+  }, 500);
+}
+
+/* ── STREAK ── */
+function renderStreak(streak) {
+  document.getElementById("streakCount").textContent = streak;
+  const days     = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+  const todayIdx = (new Date().getDay() + 6) % 7;
+  document.getElementById("weekDots").innerHTML = days.map((d, i) => {
+    const today = i === todayIdx;
+    const done  = i < todayIdx;
+    const cls   = today ? 'today' : done ? 'done' : '';
+    const icon  = today ? '⚡' : done ? '🔥' : '';
+    return `<div class="week-day"><div class="week-dot ${cls}">${icon}</div><div class="day-label">${d}</div></div>`;
+  }).join('');
+}
+
+/* ── BADGES ── */
+const allBadges = [
+  { icon:"🏅", name:"First Blood",    earned:true  },
+  { icon:"🔥", name:"7-Day Streak",   earned:false },
+  { icon:"💣", name:"Exploit King",   earned:false },
+  { icon:"🌐", name:"Web Wizard",     earned:true  },
+  { icon:"🔑", name:"Crypto Cracker", earned:false },
+  { icon:"🥇", name:"Top 10",         earned:false },
+];
+
+function renderBadges(labs) {
+  if (labs >= 1)  allBadges[0].earned = true;
+  if (labs >= 5)  allBadges[2].earned = true;
+  if (labs >= 10) allBadges[5].earned = true;
+  document.getElementById("badgeShelf").innerHTML = allBadges.map(b => `
+    <div class="badge-item" title="${b.name}">
+      <div class="badge-icon-box ${b.earned ? 'earned' : 'locked'}">${b.icon}</div>
+      <div class="badge-name">${b.name}</div>
+    </div>`).join('');
+}
+
+/* ── TOP USERS ── */
+async function loadTopUsers() {
+  const snap = await db.collection("users").get();
+  let users = [];
+  snap.forEach(doc => users.push({ name: doc.data().username || 'Anonymous', xp: doc.data().points || 0 }));
+  users.sort((a, b) => b.xp - a.xp);
+  const medals = ['🥇','🥈','🥉'];
+  document.getElementById("topUsers").innerHTML = users.slice(0, 5).map((u, i) => `
+    <div class="hacker-row">
+      <span class="hacker-medal">${medals[i] || `#${i+1}`}</span>
+      <span class="hacker-name">${u.name}</span>
+      <span class="hacker-xp">${u.xp} XP</span>
+    </div>`).join('');
+}
+
+/* ── AUTH ── */
+auth.onAuthStateChanged(async (user) => {
+  if (!user) { window.location.href = "login.html"; return; }
+
+  const docSnap  = await db.collection("users").doc(user.uid).get();
+  const data     = docSnap.data() || {};
+  const username = data.username || user.displayName || 'Hacker';
+
+  /* topbar + sidebar */
+  document.getElementById("username").innerText   = username;
+  document.getElementById("sidebarName").innerText = username;
+  if (data.photoURL) document.getElementById("sidebarAvatar").src = data.photoURL;
+
+  /* welcome */
+  document.getElementById("welcomeLine").innerText = `Welcome back, ${username} 👋`;
+  const msgs = [
+    "Your mission continues. Stay sharp.",
+    "Ready for the next challenge?",
+    "Hack smarter today.",
+  ];
+  typeText(msgs[Math.floor(Math.random() * msgs.length)], "subLine");
+
+  /* xp / level */
+  const xp  = data.points || 0;
+  const lvl = getLevel(xp);
+  const pct = xp % 100;
+  document.getElementById("points").innerText = xp;
+  document.getElementById("level").innerText  = lvl;
+  document.getElementById("xpBarLabel").textContent = `Level ${lvl} → ${lvl + 1}`;
+  document.getElementById("xpBarPct").textContent   = pct + "%";
+  setTimeout(() => { document.getElementById("xpFill").style.width = pct + "%"; }, 400);
+
+  /* rank */
+  const rank = await calculateRank(user.uid);
+  document.getElementById("rank").innerText = "#" + rank;
+
+  /* labs */
+  const labs = data.labsCompleted || 0;
+  document.getElementById("labs").innerText = labs;
+
+  /* resume */
+  document.getElementById("resumeText").innerText =
+    data.progress?.cybersecurity > 0
+      ? "Continue Cybersecurity module where you left off 🔐"
+      : "Start your journey — Cybersecurity 101 is the recommended starting point 🚀";
+
+  renderStreak(data.streak || 0);
+  renderSkills();
+  renderBadges(labs);
+  loadTopUsers();
+});
+
+/* ── LOGOUT ── */
+function logout() {
+  auth.signOut();
+  window.location.href = "login.html";
+}
+
+/* ── READ PROGRESS ── */
+const indicator = document.getElementById('readIndicator');
+window.addEventListener('scroll', () => {
+  const el = document.documentElement;
+  indicator.style.transform = `scaleX(${el.scrollTop / (el.scrollHeight - el.clientHeight)})`;
+});
+
+/* ── ACTIVE TOC ── */
+const sections = document.querySelectorAll('[id]');
+const tocLinks = document.querySelectorAll('.toc-link');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting)
+      tocLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + e.target.id));
+  });
+}, { rootMargin: '-25% 0px -65% 0px' });
+sections.forEach(s => obs.observe(s));
+</script>
+</body>
+</html>

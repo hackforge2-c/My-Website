@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HackForge | Web Fundamentals for Cybersecurity</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ─── VARIABLES ──────────────────────────────────────────── */
+:root {
+  --bg:          #000000;
+  --bg-panel:    #080d16;
+  --panel:       #0d1422;
+  --panel-light: #131c2e;
+  --border:      rgba(196,255,0,0.15);
+  --border-dim:  rgba(196,255,0,0.07);
+  --text:        #dde6f0;
+  --muted:       #7a8fa8;
+  --accent:      #c4ff00;
+  --accent-glow: rgba(196,255,0,0.18);
+  --accent-dim:  rgba(196,255,0,0.08);
+  --danger:      #ff4d4d;
+  --warning:     #f59e0b;
+  --cyan:        #00e5ff;
+  --cyan-dim:    rgba(0,229,255,0.12);
+  --purple:      #8b5cf6;
+  --sidebar-w:   270px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  line-height: 1.75;
+  scroll-behavior: smooth;
+}
+
+/* ─── ANIMATED GRID ──────────────────────────────────────── */
+.bg-grid {
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(196,255,0,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(196,255,0,0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none; z-index: 0;
+  animation: gridDrift 24s linear infinite;
+}
+@keyframes gridDrift { from{transform:translate(0,0)} to{transform:translate(48px,48px)} }
+
+.bg-vignette {
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 30% 20%, rgba(196,255,0,0.04) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 80%, rgba(0,229,255,0.03) 0%, transparent 60%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ─── SIDEBAR ────────────────────────────────────────────── */
+.sidebar {
+  position: fixed; left:0; top:0;
+  width: var(--sidebar-w); height: 100vh;
+  background: linear-gradient(180deg, #02050e 0%, #000000 100%);
+  border-right: 1px solid var(--border);
+  z-index: 200;
+  display: flex; flex-direction: column;
+  box-shadow: 4px 0 32px rgba(196,255,0,0.06);
+  overflow: hidden;
+}
+
+.logo-wrap {
+  padding: 18px 16px 16px;
+  border-bottom: 1px solid var(--border-dim);
+  background: linear-gradient(180deg, rgba(196,255,0,0.05) 0%, transparent 100%);
+  text-align: center;
+}
+.logo-img {
+  width: 170px; height: auto;
+  filter: drop-shadow(0 0 18px rgba(196,255,0,0.45));
+  transition: filter 0.3s, transform 0.3s;
+  display: block; margin: 0 auto;
+}
+.logo-img:hover { filter: drop-shadow(0 0 30px rgba(196,255,0,0.7)); transform: scale(1.04); }
+.logo-sub {
+  font-size: 0.65rem; color: var(--muted);
+  letter-spacing: 2px; text-transform: uppercase;
+  margin-top: 8px; font-family: 'JetBrains Mono', monospace;
+}
+
+.toc-label {
+  padding: 18px 22px 8px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.6rem; letter-spacing: 2.5px;
+  text-transform: uppercase; color: var(--accent); opacity: 0.6;
+}
+
+.toc-scroll {
+  flex: 1; overflow-y: auto; padding: 0 12px 20px;
+  scrollbar-width: thin; scrollbar-color: rgba(196,255,0,0.3) transparent;
+}
+.toc-scroll::-webkit-scrollbar { width: 4px; }
+.toc-scroll::-webkit-scrollbar-thumb { background: rgba(196,255,0,0.25); border-radius: 2px; }
+
+.toc-link {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; margin: 2px 0; border-radius: 7px;
+  color: var(--muted); text-decoration: none;
+  font-size: 0.82rem; font-weight: 500;
+  transition: all 0.22s; border-left: 2px solid transparent; line-height: 1.3;
+}
+.toc-link .toc-num {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;
+  color: rgba(196,255,0,0.35); flex-shrink: 0; width: 18px;
+}
+.toc-link:hover { background: var(--accent-dim); color: var(--accent); border-left-color: var(--accent); transform: translateX(3px); }
+.toc-link.active { background: rgba(196,255,0,0.12); color: var(--accent); border-left-color: var(--accent); }
+
+.sidebar-nav {
+  padding: 14px 12px; border-top: 1px solid var(--border-dim);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.sidebar-nav a {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; border-radius: 7px; color: var(--muted);
+  text-decoration: none; font-size: 0.82rem; font-weight: 500; transition: all 0.2s;
+}
+.sidebar-nav a:hover { background: var(--accent-dim); color: var(--accent); }
+.sidebar-nav a.active { color: var(--accent); background: var(--accent-dim); }
+
+/* ─── MAIN ───────────────────────────────────────────────── */
+.main { margin-left: var(--sidebar-w); min-height: 100vh; position: relative; z-index: 1; }
+
+/* ─── TOPBAR ─────────────────────────────────────────────── */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(0,0,0,0.85); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 48px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.topbar-left { display: flex; align-items: center; gap: 14px; }
+.breadcrumb {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+  color: var(--muted); display: flex; align-items: center; gap: 6px;
+}
+.breadcrumb span { color: var(--accent); opacity: 0.6; }
+.breadcrumb strong { color: var(--text); }
+.topbar-badge {
+  background: var(--accent-dim); border: 1px solid var(--border);
+  color: var(--accent); padding: 4px 10px; border-radius: 5px;
+  font-size: 0.72rem; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px;
+}
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.progress-pill {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--panel); border: 1px solid var(--border-dim);
+  border-radius: 30px; padding: 6px 14px; font-size: 0.78rem; color: var(--muted);
+}
+.progress-pill-bar { width: 80px; height: 5px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+.progress-pill-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #7fd600); border-radius: 3px; width: 30%; box-shadow: 0 0 8px rgba(196,255,0,0.5); }
+.mark-btn {
+  background: linear-gradient(135deg, var(--accent), #7fd600); color: #000;
+  border: none; padding: 9px 18px; border-radius: 7px;
+  font-weight: 700; font-size: 0.8rem; cursor: pointer;
+  font-family: 'Orbitron', sans-serif; transition: all 0.25s;
+  box-shadow: 0 0 16px rgba(196,255,0,0.25); letter-spacing: 0.3px;
+}
+.mark-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 24px rgba(196,255,0,0.45); }
+
+/* ─── READ INDICATOR ─────────────────────────────────────── */
+.read-indicator {
+  position: fixed; top: 0; left: var(--sidebar-w); right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--cyan));
+  transform-origin: left; transform: scaleX(0); z-index: 300; transition: transform 0.1s;
+}
+
+/* ─── CONTENT ────────────────────────────────────────────── */
+.content { padding: 48px 52px 80px; max-width: 920px; }
+
+/* ─── HERO ───────────────────────────────────────────────── */
+.page-hero {
+  margin-bottom: 48px; padding: 40px 44px;
+  background: linear-gradient(135deg, rgba(196,255,0,0.06) 0%, rgba(0,229,255,0.04) 100%);
+  border: 1px solid var(--border); border-radius: 14px;
+  position: relative; overflow: hidden;
+}
+.page-hero::before {
+  content: 'WEB'; position: absolute; right: 24px; top: 50%; transform: translateY(-50%);
+  font-family: 'Orbitron', sans-serif; font-size: 5.5rem; font-weight: 900;
+  color: rgba(196,255,0,0.04); pointer-events: none; user-select: none;
+}
+.hero-tag {
+  display: inline-block; background: var(--accent-dim); border: 1px solid var(--border);
+  color: var(--accent); padding: 4px 12px; border-radius: 5px;
+  font-size: 0.72rem; font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 1px; text-transform: uppercase; margin-bottom: 16px;
+}
+.page-hero h1 {
+  font-family: 'Orbitron', sans-serif; font-size: 2.2rem; font-weight: 700;
+  background: linear-gradient(135deg, #ffffff 30%, var(--accent));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; margin-bottom: 12px; line-height: 1.2;
+}
+.page-hero p { color: var(--muted); font-size: 0.97rem; max-width: 620px; line-height: 1.7; }
+.hero-meta { display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap; }
+.hero-stat { display: flex; align-items: center; gap: 7px; font-size: 0.8rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+.hero-stat .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+
+/* ─── TOPIC SECTION ──────────────────────────────────────── */
+.topic-section {
+  margin-bottom: 44px; padding: 36px 40px;
+  background: var(--bg-panel); border: 1px solid var(--border-dim);
+  border-radius: 14px; position: relative; transition: border-color 0.3s;
+  animation: fadeUp 0.4s ease both;
+}
+.topic-section:hover { border-color: rgba(196,255,0,0.2); }
+.topic-section::before {
+  content: ''; position: absolute; top: 0; left: 0;
+  width: 3px; height: 100%;
+  background: linear-gradient(180deg, var(--accent), transparent);
+  border-radius: 14px 0 0 14px; opacity: 0; transition: opacity 0.3s;
+}
+.topic-section:hover::before { opacity: 1; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+.topic-section:nth-child(1){animation-delay:0.05s}.topic-section:nth-child(2){animation-delay:0.10s}
+.topic-section:nth-child(3){animation-delay:0.15s}.topic-section:nth-child(4){animation-delay:0.20s}
+.topic-section:nth-child(5){animation-delay:0.25s}.topic-section:nth-child(6){animation-delay:0.30s}
+
+.s-head {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 22px; padding-bottom: 16px; border-bottom: 1px solid var(--border-dim);
+}
+.s-num { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--accent); opacity: 0.55; flex-shrink: 0; }
+.topic-section h2 { font-family: 'Orbitron', sans-serif; font-size: 1.05rem; font-weight: 600; color: #fff; letter-spacing: 0.5px; }
+
+.s-badge { margin-left: auto; padding: 3px 9px; border-radius: 5px; font-size: 0.68rem; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+.s-badge-green  { background: var(--accent-dim); border: 1px solid var(--border); color: var(--accent); }
+.s-badge-red    { background: rgba(255,77,77,0.1); border: 1px solid rgba(255,77,77,0.25); color: var(--danger); }
+.s-badge-purple { background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.25); color: var(--purple); }
+.s-badge-warn   { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); color: var(--warning); }
+.s-badge-cyan   { background: var(--cyan-dim); border: 1px solid rgba(0,229,255,0.2); color: var(--cyan); }
+
+/* body text */
+.topic-section p { color: var(--muted); font-size: 0.93rem; margin-bottom: 10px; line-height: 1.78; }
+.topic-section h3 {
+  font-size: 0.98rem; font-weight: 600; color: var(--text); margin: 20px 0 8px;
+  display: flex; align-items: center; gap: 8px;
+}
+.topic-section h3::before { content: ''; width: 14px; height: 2px; background: var(--accent); border-radius: 1px; flex-shrink: 0; }
+.topic-section h4 { font-size: 0.88rem; font-weight: 600; color: var(--accent); margin: 14px 0 6px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.3px; }
+.topic-section strong { color: var(--text); }
+
+.topic-title {
+  font-size: 1rem; font-weight: 600; margin: 22px 0 10px;
+  color: var(--accent); display: flex; align-items: center; gap: 10px;
+}
+.topic-title::before { content: ''; width: 4px; height: 18px; background: var(--accent); border-radius: 2px; flex-shrink: 0; }
+
+.topic-section ul, .topic-section ol { margin: 8px 0 12px 20px; color: var(--muted); font-size: 0.9rem; }
+.topic-section li { margin: 6px 0; padding-left: 4px; line-height: 1.65; }
+.topic-section li strong { color: var(--text); }
+
+/* ─── INFO / WARNING BOXES ───────────────────────────────── */
+.info-box {
+  background: rgba(196,255,0,0.05); border-left: 3px solid var(--accent);
+  padding: 14px 18px; margin: 14px 0; border-radius: 8px;
+  color: var(--muted); font-size: 0.88rem; line-height: 1.65;
+}
+.info-box strong { color: var(--text); }
+.warning-box {
+  background: rgba(245,158,11,0.06); border-left: 3px solid var(--warning);
+  padding: 14px 18px; margin: 14px 0; border-radius: 8px;
+  color: var(--muted); font-size: 0.88rem; line-height: 1.65;
+}
+.warning-box strong { color: var(--text); }
+.danger-box {
+  background: rgba(255,77,77,0.06); border-left: 3px solid var(--danger);
+  padding: 14px 18px; margin: 14px 0; border-radius: 8px;
+  color: var(--muted); font-size: 0.88rem; line-height: 1.65;
+}
+.danger-box strong { color: var(--text); }
+
+/* ─── CODE ───────────────────────────────────────────────── */
+code {
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(196,255,0,0.08); border: 1px solid rgba(196,255,0,0.15);
+  color: var(--accent); padding: 2px 7px; border-radius: 4px; font-size: 0.82em;
+}
+pre {
+  font-family: 'JetBrains Mono', monospace;
+  background: #02040a; border: 1px solid var(--border-dim);
+  color: var(--accent); padding: 14px 18px; margin: 12px 0;
+  border-radius: 8px; font-size: 0.82rem; overflow-x: auto; line-height: 1.8;
+}
+
+/* ─── TABLE ──────────────────────────────────────────────── */
+.topic-section table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.88rem; }
+.topic-section thead tr { background: rgba(196,255,0,0.07); border-bottom: 1px solid var(--border); }
+.topic-section th { padding: 11px 14px; text-align: left; font-family: 'Orbitron', sans-serif; font-size: 0.65rem; font-weight: 600; color: var(--accent); letter-spacing: 0.8px; text-transform: uppercase; }
+.topic-section td { padding: 10px 14px; border-bottom: 1px solid var(--border-dim); color: var(--muted); vertical-align: top; }
+.topic-section td:first-child { color: var(--text); font-weight: 500; }
+.topic-section tr:hover td { background: rgba(196,255,0,0.03); }
+
+/* ─── DIAGRAM / SVG CONTAINER ───────────────────────────── */
+.diagram-wrap {
+  background: #02040a; border: 1px solid var(--border-dim);
+  border-radius: 12px; padding: 24px; margin: 18px 0;
+}
+.diagram-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+  letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 14px;
+}
+
+/* ─── IMAGE BLOCK ────────────────────────────────────────── */
+.img-block { margin: 18px 0; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-dim); background: #02040a; }
+.img-block img { width: 100%; height: auto; display: block; opacity: 0.92; transition: opacity 0.3s; }
+.img-block img:hover { opacity: 1; }
+.img-caption {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+  color: var(--muted); text-align: center; padding: 8px 12px;
+  letter-spacing: 0.5px; border-top: 1px solid var(--border-dim);
+  background: rgba(196,255,0,0.03);
+}
+
+/* ─── CONCEPT CARDS ──────────────────────────────────────── */
+.concept-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin: 18px 0; }
+.concept-grid-2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; margin: 18px 0; }
+.concept-card {
+  background: var(--panel); border: 1px solid var(--border-dim);
+  border-radius: 10px; padding: 18px 16px; transition: all 0.25s;
+}
+.concept-card:hover { border-color: var(--border); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+.cc-icon { font-size: 1.6rem; margin-bottom: 10px; display: block; }
+.cc-label { font-family: 'Orbitron', sans-serif; font-size: 0.75rem; font-weight: 600; color: var(--accent); margin-bottom: 6px; }
+.cc-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.6; margin: 0; }
+
+/* ─── FLOW ROW ───────────────────────────────────────────── */
+.flow-row { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin: 18px 0; justify-content: center; }
+.flow-node { text-align: center; padding: 12px 16px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; min-width: 100px; transition: all 0.2s; }
+.flow-node:hover { border-color: var(--accent); box-shadow: 0 0 14px var(--accent-glow); }
+.flow-node .fn-icon { font-size: 1.3rem; }
+.flow-node .fn-name { font-family: 'Orbitron', sans-serif; font-size: 0.65rem; font-weight: 600; color: var(--accent); margin-top: 5px; letter-spacing: 0.5px; }
+.flow-node .fn-desc { font-size: 0.7rem; color: var(--muted); margin-top: 3px; line-height: 1.3; }
+.flow-arrow { color: var(--accent); font-size: 1rem; opacity: 0.5; padding: 0 4px; }
+
+/* ─── SCHED / LIST ITEMS ─────────────────────────────────── */
+.item-list { display: flex; flex-direction: column; gap: 10px; margin: 14px 0; }
+.item-card { display: flex; align-items: flex-start; gap: 14px; padding: 14px 16px; background: var(--panel); border: 1px solid var(--border-dim); border-radius: 9px; transition: all 0.2s; }
+.item-card:hover { border-color: var(--border); background: var(--panel-light); }
+.ic-num { font-family: 'Orbitron', sans-serif; font-size: 0.72rem; color: var(--accent); flex-shrink: 0; padding-top: 2px; opacity: 0.7; }
+.ic-name { font-weight: 600; color: var(--text); font-size: 0.9rem; margin-bottom: 3px; }
+.ic-desc { font-size: 0.82rem; color: var(--muted); margin: 0; line-height: 1.55; }
+
+/* ─── HR ─────────────────────────────────────────────────── */
+hr { border: none; border-top: 1px solid var(--border-dim); margin: 22px 0; }
+
+/* ─── REFERENCE ──────────────────────────────────────────── */
+.ref-card { display: flex; align-items: center; gap: 16px; padding: 18px 22px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px; transition: all 0.25s; }
+.ref-card:hover { transform: translateX(5px); box-shadow: 0 4px 20px rgba(0,0,0,0.4); border-color: rgba(196,255,0,0.25); }
+.ref-icon { font-size: 2rem; }
+.ref-body { flex: 1; }
+.ref-name { font-weight: 600; color: var(--text); font-size: 0.95rem; margin-bottom: 3px; }
+.ref-sub { font-size: 0.8rem; color: var(--muted); }
+.ref-dl { background: var(--accent); color: #000; border: none; padding: 8px 16px; border-radius: 7px; font-weight: 700; font-size: 0.8rem; cursor: pointer; text-decoration: none; font-family: 'Orbitron', sans-serif; transition: all 0.2s; display: inline-block; white-space: nowrap; box-shadow: 0 0 12px rgba(196,255,0,0.25); }
+.ref-dl:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(196,255,0,0.4); }
+
+/* ─── COMPLETE BUTTON ─────────────────────────────────────── */
+.complete-wrap { text-align: center; padding: 40px 0 20px; }
+.complete-btn { background: linear-gradient(135deg, var(--accent), #7fd600); color: #000; border: none; padding: 14px 36px; border-radius: 10px; font-weight: 700; font-size: 0.92rem; cursor: pointer; font-family: 'Orbitron', sans-serif; letter-spacing: 0.5px; transition: all 0.3s; box-shadow: 0 0 24px rgba(196,255,0,0.3); }
+.complete-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 32px rgba(196,255,0,0.5); }
+.complete-btn.done { background: linear-gradient(135deg, #22c55e, #16a34a); }
+
+/* ─── FOOTER ─────────────────────────────────────────────── */
+footer { text-align: center; padding: 24px 52px; border-top: 1px solid var(--border-dim); font-size: 0.8rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; }
+footer a { color: var(--cyan); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+/* ─── MOBILE ─────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  :root { --sidebar-w: 0px; }
+  .sidebar { display: none; }
+  .content { padding: 24px 20px 60px; }
+  .topbar { padding: 12px 20px; }
+  .page-hero h1 { font-size: 1.5rem; }
+  .topic-section { padding: 20px; }
+  .concept-grid { grid-template-columns: 1fr 1fr; }
+  .concept-grid-2 { grid-template-columns: 1fr; }
+  .flow-row { gap: 4px; }
+  .flow-node { min-width: 80px; padding: 8px 10px; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-vignette"></div>
+<div class="read-indicator" id="readIndicator"></div>
+
+<!-- ══════════════════════ SIDEBAR ══════════════════════════ -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="logo.png" alt="HackForge Logo" class="logo-img">
+    <div class="logo-sub">Cybersecurity Learning</div>
+  </div>
+
+  <div class="toc-label">On this page</div>
+
+  <div class="toc-scroll">
+    <a class="toc-link" href="#dns">      <span class="toc-num">01</span>DNS</a>
+    <a class="toc-link" href="#http">     <span class="toc-num">02</span>HTTP &amp; HTTPS</a>
+    <a class="toc-link" href="#web">      <span class="toc-num">03</span>How Websites Work</a>
+    <a class="toc-link" href="#cookies">  <span class="toc-num">04</span>Cookies &amp; Sessions</a>
+    <a class="toc-link" href="#apis">     <span class="toc-num">05</span>APIs &amp; REST</a>
+    <a class="toc-link" href="#attacks">  <span class="toc-num">06</span>Web Attacks Deep Dive</a>
+    <a class="toc-link" href="#headers">  <span class="toc-num">07</span>Security Headers</a>
+    <a class="toc-link" href="#tools">    <span class="toc-num">08</span>Hacker Tools for Web</a>
+    <a class="toc-link" href="#cheat">    <span class="toc-num">09</span>Cheat Sheet</a>
+  </div>
+
+  <div class="sidebar-nav">
+    <a href="index.html">📓 Notes</a>
+    <a href="roadmap.html">🗺️ Roadmap</a>
+    <a href="practice-lab.html">⚗️ Labs</a>
+  </div>
+</aside>
+
+<!-- ══════════════════════ MAIN ═════════════════════════════ -->
+<main class="main">
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="breadcrumb">
+        <span>HackForge</span> / <span>Notes</span> / <strong>Web Fundamentals</strong>
+      </div>
+      <div class="topbar-badge">MODULE 04</div>
+    </div>
+    <div class="topbar-right">
+      <div class="progress-pill">
+        <span>Progress</span>
+        <div class="progress-pill-bar"><div class="progress-pill-fill"></div></div>
+        <span>30%</span>
+      </div>
+      <button class="mark-btn" id="markBtn" onclick="markDone()">✓ Mark Complete</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- HERO -->
+    <div class="page-hero">
+      <div class="hero-tag">Core Module</div>
+      <h1>🌐 Web Fundamentals</h1>
+      <p>This section teaches how the web actually works — from DNS to HTTP to servers — so you can understand how hackers attack and how to defend systems.</p>
+      <div class="hero-meta">
+        <div class="hero-stat"><div class="dot"></div>9 Topics</div>
+        <div class="hero-stat"><div class="dot" style="background:var(--cyan);box-shadow:0 0 6px var(--cyan);"></div>~55 min read</div>
+        <div class="hero-stat"><div class="dot" style="background:#f59e0b;box-shadow:0 0 6px #f59e0b;"></div>Attack Surface</div>
+      </div>
+    </div>
+
+    <!-- ══ 01 DNS ══ -->
+    <div class="topic-section" id="dns">
+      <div class="s-head">
+        <span class="s-num">01</span>
+        <h2>DNS (Domain Name System)</h2>
+        <span class="s-badge s-badge-cyan">Foundation</span>
+      </div>
+
+      <p>DNS is like the <strong>phonebook of the internet</strong>. Instead of remembering IP addresses like <code>142.250.183.206</code>, we use names like google.com.</p>
+
+      <!-- diagram -->
+      <div class="diagram-wrap">
+        <div class="diagram-label">DNS Resolution Flow</div>
+        <svg width="100%" viewBox="0 0 700 120" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+              <path d="M1 1L9 5L1 9" fill="none" stroke="#c4ff00" stroke-width="1.5"/>
+            </marker>
+          </defs>
+          <!-- nodes -->
+          <rect x="10"  y="30" width="110" height="50" rx="8" fill="rgba(196,255,0,0.06)" stroke="#c4ff00" stroke-width="1"/>
+          <text x="65"  y="52" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#c4ff00">YOUR BROWSER</text>
+          <text x="65"  y="68" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#7a8fa8">types google.com</text>
+
+          <rect x="150" y="30" width="110" height="50" rx="8" fill="rgba(0,229,255,0.06)" stroke="#00e5ff" stroke-width="1"/>
+          <text x="205" y="52" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#00e5ff">DNS RESOLVER</text>
+          <text x="205" y="68" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#7a8fa8">asks root server</text>
+
+          <rect x="290" y="30" width="110" height="50" rx="8" fill="rgba(139,92,246,0.06)" stroke="#8b5cf6" stroke-width="1"/>
+          <text x="345" y="52" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#8b5cf6">ROOT SERVER</text>
+          <text x="345" y="68" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#7a8fa8">points to TLD</text>
+
+          <rect x="430" y="30" width="110" height="50" rx="8" fill="rgba(245,158,11,0.06)" stroke="#f59e0b" stroke-width="1"/>
+          <text x="485" y="52" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#f59e0b">TLD / AUTH</text>
+          <text x="485" y="68" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#7a8fa8">returns IP</text>
+
+          <rect x="570" y="30" width="110" height="50" rx="8" fill="rgba(196,255,0,0.06)" stroke="#c4ff00" stroke-width="1"/>
+          <text x="625" y="52" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#c4ff00">BROWSER</text>
+          <text x="625" y="68" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#7a8fa8">connects to IP</text>
+
+          <!-- arrows -->
+          <line x1="122" y1="55" x2="148" y2="55" stroke="#c4ff00" stroke-width="1.2" marker-end="url(#arr)"/>
+          <line x1="262" y1="55" x2="288" y2="55" stroke="#c4ff00" stroke-width="1.2" marker-end="url(#arr)"/>
+          <line x1="402" y1="55" x2="428" y2="55" stroke="#c4ff00" stroke-width="1.2" marker-end="url(#arr)"/>
+          <line x1="542" y1="55" x2="568" y2="55" stroke="#c4ff00" stroke-width="1.2" marker-end="url(#arr)"/>
+        </svg>
+      </div>
+
+      <h3>Why DNS Matters in Cybersecurity</h3>
+      <p>Attackers often exploit DNS using:</p>
+      <ul>
+        <li>DNS Spoofing</li>
+        <li>DNS Cache Poisoning</li>
+        <li>Malicious Domain Redirection</li>
+      </ul>
+
+      <h3>How DNS Works (Simple Flow)</h3>
+      <ol>
+        <li>You type a website name</li>
+        <li>Your system asks DNS resolver</li>
+        <li>Resolver queries servers</li>
+        <li>IP is returned</li>
+        <li>Browser connects</li>
+      </ol>
+
+      <h3>Key DNS Components</h3>
+      <div class="concept-grid">
+        <div class="concept-card">
+          <span class="cc-icon">🔍</span>
+          <div class="cc-label">Resolver</div>
+          <p class="cc-desc">Your device's first point of contact. It asks other servers on your behalf to find the IP address.</p>
+        </div>
+        <div class="concept-card">
+          <span class="cc-icon">🌍</span>
+          <div class="cc-label">Root Server</div>
+          <p class="cc-desc">The top of the DNS tree. There are 13 root server clusters worldwide. They know where TLD servers are.</p>
+        </div>
+        <div class="concept-card">
+          <span class="cc-icon">🗂️</span>
+          <div class="cc-label">TLD Server</div>
+          <p class="cc-desc">Handles top-level domains like <code>.com</code>, <code>.org</code>, <code>.in</code>. Points to the authoritative server.</p>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <strong>🛡️ Security Tip:</strong> Always verify HTTPS to avoid DNS-based attacks. Use DNS over HTTPS (DoH) to encrypt your DNS queries so attackers on the network can't intercept them.
+      </div>
+
+      <!-- DNS attack types — beginner friendly -->
+      <h3>DNS Attack Types (Beginner Explanation)</h3>
+      <div class="item-list">
+        <div class="item-card">
+          <div class="ic-num">💉</div>
+          <div>
+            <div class="ic-name">DNS Spoofing / Cache Poisoning</div>
+            <p class="ic-desc">Imagine asking for Google's address and someone gives you a fake address that leads to a malicious website. The resolver stores this fake answer in its cache — so everyone using it gets redirected too.</p>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="ic-num">🎭</div>
+          <div>
+            <div class="ic-name">Domain Hijacking</div>
+            <p class="ic-desc">Attacker gains control of a domain's DNS settings by compromising the domain registrar account. They redirect all traffic to their own server.</p>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="ic-num">🚇</div>
+          <div>
+            <div class="ic-name">DNS Tunneling</div>
+            <p class="ic-desc">Attackers hide malicious data inside DNS queries to bypass firewalls. The data is encoded in the domain name itself — e.g. <code>stolensecrets.evil.com</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="img-block">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Example_of_an_iterative_DNS_resolver.svg/800px-Example_of_an_iterative_DNS_resolver.svg.png" alt="DNS resolution process diagram" loading="lazy">
+        <div class="img-caption">🌐 Full DNS resolution — iterative query from resolver to root to TLD to authoritative server</div>
+      </div>
+    </div>
+
+    <!-- ══ 02 HTTP & HTTPS ══ -->
+    <div class="topic-section" id="http">
+      <div class="s-head">
+        <span class="s-num">02</span>
+        <h2>HTTP &amp; HTTPS</h2>
+        <span class="s-badge s-badge-warn">Critical</span>
+      </div>
+
+      <p>HTTP is the protocol used to transfer web data. Every time you open a website, your browser and the server are communicating using HTTP requests and responses.</p>
+
+      <div class="diagram-wrap">
+        <div class="diagram-label">HTTP Request / Response Cycle</div>
+        <svg width="100%" viewBox="0 0 700 160" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+              <path d="M1 1L9 5L1 9" fill="none" stroke="#c4ff00" stroke-width="1.5"/>
+            </marker>
+            <marker id="arr3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+              <path d="M1 1L9 5L1 9" fill="none" stroke="#00e5ff" stroke-width="1.5"/>
+            </marker>
+          </defs>
+          <!-- Browser box -->
+          <rect x="30" y="40" width="140" height="80" rx="10" fill="rgba(196,255,0,0.06)" stroke="#c4ff00" stroke-width="1.2"/>
+          <text x="100" y="72" text-anchor="middle" font-size="20">🖥️</text>
+          <text x="100" y="92" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#c4ff00">BROWSER</text>
+          <text x="100" y="108" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#7a8fa8">(Client)</text>
+
+          <!-- Server box -->
+          <rect x="530" y="40" width="140" height="80" rx="10" fill="rgba(0,229,255,0.06)" stroke="#00e5ff" stroke-width="1.2"/>
+          <text x="600" y="72" text-anchor="middle" font-size="20">🖧</text>
+          <text x="600" y="92" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#00e5ff">SERVER</text>
+          <text x="600" y="108" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#7a8fa8">(Web Server)</text>
+
+          <!-- Request arrow -->
+          <line x1="172" y1="72" x2="528" y2="72" stroke="#c4ff00" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arr2)"/>
+          <text x="350" y="65" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#c4ff00">→ HTTP REQUEST (GET /index.html)</text>
+
+          <!-- Response arrow -->
+          <line x1="528" y1="100" x2="172" y2="100" stroke="#00e5ff" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arr3)"/>
+          <text x="350" y="118" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#00e5ff">← HTTP RESPONSE (200 OK + HTML)</text>
+        </svg>
+      </div>
+
+      <h3>HTTP vs HTTPS</h3>
+      <table>
+        <thead><tr><th>Feature</th><th>HTTP</th><th>HTTPS</th></tr></thead>
+        <tbody>
+          <tr><td>Encryption</td><td>❌ None — plain text</td><td>✅ SSL/TLS encrypted</td></tr>
+          <tr><td>Port</td><td>80</td><td>443</td></tr>
+          <tr><td>Data visible?</td><td>Yes — attacker can read</td><td>No — encrypted</td></tr>
+          <tr><td>Used for?</td><td>Old/legacy sites</td><td>All modern websites</td></tr>
+          <tr><td>Security</td><td>Vulnerable to MITM</td><td>Protected</td></tr>
+        </tbody>
+      </table>
+
+      <p>Hackers can intercept HTTP traffic easily → called <strong>Man-in-the-Middle attack</strong>.</p>
+
+      <h3>HTTP Methods</h3>
+      <div class="concept-grid">
+        <div class="concept-card">
+          <span class="cc-icon">📥</span>
+          <div class="cc-label">GET</div>
+          <p class="cc-desc">Fetch/retrieve data from the server. Like reading a webpage. Data is visible in the URL.</p>
+        </div>
+        <div class="concept-card">
+          <span class="cc-icon">📤</span>
+          <div class="cc-label">POST</div>
+          <p class="cc-desc">Send data to the server. Used in login forms, file uploads. Data is in the request body — not visible in URL.</p>
+        </div>
+        <div class="concept-card">
+          <span class="cc-icon">✏️</span>
+          <div class="cc-label">PUT / PATCH</div>
+          <p class="cc-desc">Update existing data on the server. PUT replaces the whole thing; PATCH updates part of it.</p>
+        </div>
+      </div>
+      <div class="concept-grid-2" style="margin-top:0;">
+        <div class="concept-card">
+          <span class="cc-icon">🗑️</span>
+          <div class="cc-label">DELETE</div>
+          <p class="cc-desc">Remove a resource from the server. If not secured properly, attackers can delete data.</p>
+        </div>
+        <div class="concept-card">
+          <span class="cc-icon">🔎</span>
+          <div class="cc-label">OPTIONS / HEAD</div>
+          <p class="cc-desc">OPTIONS asks what methods are allowed. HEAD gets headers only (no body). Both used in recon by attackers.</p>
+        </div>
+      </div>
+
+      <h3>Status Codes</h3>
+      <table>
+        <thead><tr><th>Code</th><th>Meaning</th><th>Hacker Relevance</th></tr></thead>
+        <tbody>
+          <tr><td><code>200</code> OK</td><td>Request succeeded</td><td>Page exists — potential target</td></tr>
+          <tr><td><code>301</code> Redirect</td><td>Moved permanently</td><td>Can be abused for open redirects</td></tr>
+          <tr><td><code>403</code> Forbidden</td><td>No permission</td><td>Resource exists but blocked — try to bypass</td></tr>
+          <tr><td><code>404</code> Not Found</td><td>Doesn't exist</td><td>Used to enumerate hidden pages</td></tr>
+          <tr><td><code>500</code> Server Error</td><td>Server crashed</td><td>May reveal stack traces / info leakage</td></tr>
+          <tr><td><code>401</code> Unauthorized</td><td>Login required</td><td>Auth bypass target</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Headers (Important for Hackers)</h3>
+      <ul>
+        <li><strong>Cookies</strong> — store session tokens; stealing these = account takeover</li>
+        <li><strong>User-Agent</strong> — identifies browser; can be spoofed by attackers</li>
+        <li><strong>Authorization</strong> — carries API tokens; leaked tokens = full access</li>
+      </ul>
+
+      <div class="warning-box">
+        <strong>⚠️ Security Insight:</strong> Misconfigured headers → vulnerability. Missing security headers like <code>Content-Security-Policy</code>, <code>X-Frame-Options</code>, and <code>Strict-Transport-Security</code> are direct attack vectors.
+      </div>
+
+      <div class="img-block">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/HTTP_logo.svg/800px-HTTP_logo.svg.png" alt="HTTP HTTPS protocol" loading="lazy">
+        <div class="img-caption">🔐 HTTPS adds an SSL/TLS encryption layer on top of HTTP — making all data unreadable to interceptors</div>
+      </div>
+    </div>
+
+    <!-- ══ 03 How Websites Work ══ -->
+    <div class="topic-section" id="web">
+      <div class="s-head">
+        <span class="s-num">03</span>
+        <h2>How Websites Work</h2>
+        <span class="s-badge s-badge-green">Core</span>
+      </div>
+
+      <p>When you open a website, your browser communicates with a server using HTTP. Understanding this flow is essential because every step is a potential attack surface.</p>
+
+      <!-- full flow diagram -->
+      <div class="diagram-wrap">
+        <div class="diagram-label">Full Web Request Flow</div>
+        <svg width="100%" viewBox="0 0 700 130" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arr4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto">
+              <path d="M1 1L9 5L1 9" fill="none" stroke="#c4ff00" stroke-width="1.5"/>
+            </marker>
+          </defs>
+          <rect x="5"   y="35" width="90" height="55" rx="8" fill="rgba(196,255,0,0.06)" stroke="#c4ff00" stroke-width="1"/>
+          <text x="50"  y="60"  text-anchor="middle" font-size="16">🧑</text>
+          <text x="50"  y="78"  text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#c4ff00">USER</text>
+
+          <rect x="115" y="35" width="90" height="55" rx="8" fill="rgba(0,229,255,0.06)" stroke="#00e5ff" stroke-width="1"/>
+          <text x="160" y="60"  text-anchor="middle" font-size="16">🌐</text>
+          <text x="160" y="78"  text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#00e5ff">DNS</text>
+
+          <rect x="225" y="35" width="90" height="55" rx="8" fill="rgba(139,92,246,0.06)" stroke="#8b5cf6" stroke-width="1"/>
+          <text x="270" y="60"  text-anchor="middle" font-size="16">🛡️</text>
+          <text x="270" y="78"  text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#8b5cf6">WAF/CDN</text>
+
+          <rect x="335" y="35" width="90" height="55" rx="8" fill="rgba(245,158,11,0.06)" stroke="#f59e0b" stroke-width="1"/>
+          <text x="380" y="60"  text-anchor="middle" font-size="16">⚙️</text>
+          <text x="380" y="78"  text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#f59e0b">WEB SERVER</text>
+
+          <rect x="445" y="35" width="90" height="55" rx="8" fill="rgba(255,77,77,0.06)" stroke="#ff4d4d" stroke-width="1"/>
+          <text x="490" y="60"  text-anchor="middle" font-size="16">🔧</text>
+          <text x="490" y="78"  text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#ff4d4d">BACKEND</text>
+
+          <rect x="555" y="35" width="95" height="55" rx="8" fill="rgba(196,255,0,0.06)" stroke="#c4ff00" stroke-width="1"/>
+          <text x="602" y="60"  text-anchor="middle" font-size="16">🗄️</text>
+          <text x="602" y="78"  text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#c4ff00">DATABASE</text>
+
+          <line x1="97"  y1="62" x2="113" y2="62" stroke="#c4ff00" stroke-width="1.2" marker-end="url(#arr4)"/>
+          <line x1="207" y1="62" x2="223" y2="62" stroke="#c4ff00" stroke-width="1.2" marker-end="url(#arr4)"/>
+          <line x1="317" y1="62" x2="333" y2="62" stroke="#c4ff00" stroke-width="1.2" marker-end="url(#arr4)"/>
+          <line x1="427" y1="62" x2="443" y2="62" stroke="#c4ff00" stroke-width="1.2" marker-end="url(#arr4)"/>
+          <line x1="537" y1="62" x2="553" y2="62" stroke="#c4ff00" stroke-width="1.2" marker-end="url(#arr4)"/>
+        </svg>
+      </div>
+
+      <h3>Frontend</h3>
+      <div class="concept-grid">
+        <div class="concept-card">
+          <span class="cc-icon">🏗️</span>
+          <div class="cc-label">HTML</div>
+          <p class="cc-desc">Structure — the skeleton of the webpage. Defines headings, paragraphs, forms, and buttons. Attack: injecting malicious HTML tags.</p>
+        </div>
+        <div class="concept-card">
+          <span class="cc-icon">🎨</span>
+          <div class="cc-label">CSS</div>
+          <p class="cc-desc">Design — controls colours, layout, fonts. Mostly safe, but can be used in clickjacking and UI redressing attacks.</p>
+        </div>
+        <div class="concept-card">
+          <span class="cc-icon">⚡</span>
+          <div class="cc-label">JavaScript</div>
+          <p class="cc-desc">Logic — makes websites interactive. The #1 target for XSS attacks. Runs in the user's browser — never trust JS input.</p>
+        </div>
+      </div>
+
+      <h3>Backend</h3>
+      <div class="concept-grid">
+        <div class="concept-card">
+          <span class="cc-icon">🖧</span>
+          <div class="cc-label">Server</div>
+          <p class="cc-desc">Runs code that processes requests. Examples: Node.js, Apache, Nginx. Misconfigured servers expose sensitive files.</p>
+        </div>
+        <div class="concept-card">
+          <span class="cc-icon">🗄️</span>
+          <div class="cc-label">Database</div>
+          <p class="cc-desc">Stores all data — users, passwords, content. SQL Injection attacks target this layer directly to steal data.</p>
+        </div>
+        <div class="concept-card">
+          <span class="cc-icon">🔗</span>
+          <div class="cc-label">APIs</div>
+          <p class="cc-desc">The communication bridge between frontend and backend. Broken API authentication is one of the top OWASP risks.</p>
+        </div>
+      </div>
+
+      <h3>Security Components</h3>
+      <ul>
+        <li><strong>WAF (Web Application Firewall)</strong> — filters and blocks malicious HTTP traffic</li>
+        <li><strong>CDN</strong> — distributes content globally; also absorbs DDoS attacks</li>
+        <li><strong>Load Balancer</strong> — spreads traffic across multiple servers for availability</li>
+      </ul>
+
+      <h3>Static vs Dynamic</h3>
+      <table>
+        <thead><tr><th>Type</th><th>What it means</th><th>Security Risk</th></tr></thead>
+        <tbody>
+          <tr><td>Static</td><td>Fixed content — same HTML served to everyone</td><td>Lower risk — no database queries</td></tr>
+          <tr><td>Dynamic</td><td>Generated per request — pulls from DB</td><td>Higher risk — SQL injection, XSS, CSRF possible</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Common Web Attacks</h3>
+      <ul>
+        <li><strong>XSS (Cross Site Scripting)</strong> — injecting malicious JavaScript into a web page</li>
+        <li><strong>SQL Injection</strong> — inserting SQL commands into input fields to manipulate the database</li>
+        <li><strong>CSRF</strong> — tricking a logged-in user into performing unwanted actions</li>
+      </ul>
+
+      <div class="danger-box">
+        <strong>⚡ Important:</strong> Most cybersecurity attacks happen at the web layer. Understanding how websites work is the foundation of both offensive (pen testing) and defensive (hardening) security work.
+      </div>
+
+      <div class="img-block">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/WAF_Archi.png/800px-WAF_Archi.png" alt="Web application architecture with WAF" loading="lazy">
+        <div class="img-caption">🏛️ Web application architecture — user → WAF → load balancer → web server → database</div>
+      </div>
+    </div>
+
+    <!-- ══ 04 Cookies & Sessions (NEW) ══ -->
+    <div class="topic-section" id="cookies">
+      <div class="s-head">
+        <span class="s-num">04</span>
+        <h2>Cookies &amp; Sessions</h2>
+        <span class="s-badge s-badge-warn">Attack Surface</span>
+      </div>
+
+      <p>HTTP is <strong>stateless</strong> — meaning every request is treated as brand new with no memory of who you are. Cookies and sessions solve this problem by remembering you between requests.</p>
+
+      <div class="info-box">
+        <strong>📌 Simple Analogy:</strong> When you enter a concert, you get a wristband (cookie). Every time staff checks you, they see the wristband and know you already paid. Without it, you'd have to prove yourself every single time.
+      </div>
+
+      <h3>What is a Cookie?</h3>
+      <p>A cookie is a small piece of data the server sends to your browser, which the browser stores and sends back with every future request. This lets the server remember you.</p>
+
+      <div class="item-list">
+        <div class="item-card">
+          <div class="ic-num">🔐</div>
+          <div>
+            <div class="ic-name">Session Cookie</div>
+            <p class="ic-desc">Deleted when you close the browser. Used for login sessions. If an attacker steals this — they can log in as you without a password. This is called <strong>Session Hijacking</strong>.</p>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="ic-num">💾</div>
+          <div>
+            <div class="ic-name">Persistent Cookie</div>
+            <p class="ic-desc">Stays saved even after you close the browser. Used for "remember me" features. Longer lifetime = larger attack window.</p>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="ic-num">🛡️</div>
+          <div>
+            <div class="ic-name">Secure &amp; HttpOnly Flags</div>
+            <p class="ic-desc"><code>Secure</code> = only sent over HTTPS. <code>HttpOnly</code> = JavaScript cannot read the cookie — prevents XSS from stealing it. Always set both flags on session cookies.</p>
+          </div>
+        </div>
+      </div>
+
+      <h3>Cookie Security Attacks</h3>
+      <table>
+        <thead><tr><th>Attack</th><th>What happens</th><th>Prevention</th></tr></thead>
+        <tbody>
+          <tr><td>Session Hijacking</td><td>Attacker steals your session cookie via sniffing or XSS</td><td>Use HTTPS, HttpOnly, short session lifetime</td></tr>
+          <tr><td>CSRF</td><td>Attacker tricks your browser into sending a cookie to a malicious site</td><td>SameSite cookie flag, CSRF tokens</td></tr>
+          <tr><td>Cookie Theft via XSS</td><td>Malicious JS reads <code>document.cookie</code></td><td>HttpOnly flag blocks JS cookie access</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ══ 05 APIs & REST (NEW) ══ -->
+    <div class="topic-section" id="apis">
+      <div class="s-head">
+        <span class="s-num">05</span>
+        <h2>APIs &amp; REST</h2>
+        <span class="s-badge s-badge-purple">Modern Web</span>
+      </div>
+
+      <p>An <strong>API (Application Programming Interface)</strong> is how the frontend and backend communicate. When you press "Login", the browser sends an API request to the server, which checks your credentials and sends back a response.</p>
+
+      <div class="info-box">
+        <strong>📌 Simple Analogy:</strong> An API is like a waiter in a restaurant. You (frontend) tell the waiter (API) what you want. The waiter goes to the kitchen (backend/database), gets it, and brings it back to you.
+      </div>
+
+      <!-- REST diagram -->
+      <div class="diagram-wrap">
+        <div class="diagram-label">REST API Request/Response</div>
+        <svg width="100%" viewBox="0 0 700 110" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arr5" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto">
+              <path d="M1 1L9 5L1 9" fill="none" stroke="#8b5cf6" stroke-width="1.5"/>
+            </marker>
+            <marker id="arr6" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto">
+              <path d="M1 1L9 5L1 9" fill="none" stroke="#c4ff00" stroke-width="1.5"/>
+            </marker>
+          </defs>
+          <rect x="20"  y="25" width="200" height="60" rx="10" fill="rgba(196,255,0,0.06)" stroke="#c4ff00" stroke-width="1"/>
+          <text x="120" y="53"  text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#c4ff00">CLIENT (Browser/App)</text>
+          <text x="120" y="70"  text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#7a8fa8">GET /api/users/123</text>
+
+          <rect x="480" y="25" width="200" height="60" rx="10" fill="rgba(139,92,246,0.06)" stroke="#8b5cf6" stroke-width="1"/>
+          <text x="580" y="53"  text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#8b5cf6">API SERVER</text>
+          <text x="580" y="70"  text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#7a8fa8">{ "name":"Liger44" }</text>
+
+          <line x1="222" y1="48" x2="478" y2="48" stroke="#8b5cf6" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arr5)"/>
+          <text x="350" y="42"  text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#8b5cf6">→ HTTP Request + Auth Token</text>
+
+          <line x1="478" y1="70" x2="222" y2="70" stroke="#c4ff00" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arr6)"/>
+          <text x="350" y="88"  text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#c4ff00">← JSON Response (200 OK)</text>
+        </svg>
+      </div>
+
+      <h3>Common API Security Issues</h3>
+      <div class="item-list">
+        <div class="item-card">
+          <div class="ic-num">🔑</div>
+          <div>
+            <div class="ic-name">Broken Authentication</div>
+            <p class="ic-desc">APIs that accept expired tokens, weak passwords, or no auth at all. Attacker simply calls the API without logging in.</p>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="ic-num">📂</div>
+          <div>
+            <div class="ic-name">IDOR (Insecure Direct Object Reference)</div>
+            <p class="ic-desc">Changing <code>/api/user/123</code> to <code>/api/user/124</code> and getting someone else's data. No authorisation check on the server side.</p>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="ic-num">💥</div>
+          <div>
+            <div class="ic-name">Rate Limiting Missing</div>
+            <p class="ic-desc">No limit on how many requests you can make. Attackers brute-force login APIs or scrape entire databases.</p>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="ic-num">🗝️</div>
+          <div>
+            <div class="ic-name">Exposed API Keys</div>
+            <p class="ic-desc">Developers accidentally commit API keys to GitHub. Attackers scan GitHub for these and get full access to services.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 06 Web Attacks Deep Dive (NEW) ══ -->
+    <div class="topic-section" id="attacks">
+      <div class="s-head">
+        <span class="s-num">06</span>
+        <h2>Web Attacks Deep Dive</h2>
+        <span class="s-badge s-badge-red">High Priority</span>
+      </div>
+
+      <p>The three most common and dangerous web attacks that every cybersecurity learner must know in detail.</p>
+
+      <h3 class="topic-title">XSS — Cross Site Scripting</h3>
+      <p>XSS happens when an attacker injects malicious JavaScript code into a webpage that other users then load in their browsers. The browser executes the script thinking it is trusted.</p>
+
+      <div class="info-box">
+        <strong>📌 Simple Example:</strong> A website shows comments posted by users. An attacker posts a comment containing <code>&lt;script&gt;alert('hacked')&lt;/script&gt;</code>. Every user who loads that page executes the attacker's script.
+      </div>
+
+      <h4>XSS Types:</h4>
+      <div class="item-list">
+        <div class="item-card">
+          <div class="ic-num">💾</div>
+          <div>
+            <div class="ic-name">Stored XSS (Persistent)</div>
+            <p class="ic-desc">Malicious script is stored in the database and served to every user who loads that page. Most dangerous type — one injection affects all users.</p>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="ic-num">🔗</div>
+          <div>
+            <div class="ic-name">Reflected XSS</div>
+            <p class="ic-desc">Script is in the URL. Attacker sends victim a malicious link. When victim clicks it, the script executes once in their browser.</p>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="ic-num">🧠</div>
+          <div>
+            <div class="ic-name">DOM-based XSS</div>
+            <p class="ic-desc">Happens entirely in the browser — the server never sees it. JavaScript reads from a dangerous source like <code>location.hash</code> and writes it directly to the DOM.</p>
+          </div>
+        </div>
+      </div>
+      <p><strong>Prevention:</strong> Encode all output. Use Content-Security-Policy header. Never use <code>innerHTML</code> with user data.</p>
+
+      <hr>
+
+      <h3 class="topic-title">SQL Injection</h3>
+      <p>SQL Injection happens when an attacker inserts SQL commands into an input field (like a login form) that the server executes directly against the database.</p>
+
+      <div class="warning-box">
+        <strong>Classic example:</strong> In a login form, username field receives: <code>' OR '1'='1</code> — this makes the SQL query always true and logs the attacker in without a valid password.
+      </div>
+
+      <pre>-- Normal query:
+SELECT * FROM users WHERE username='admin' AND password='1234';
+
+-- After injection:
+SELECT * FROM users WHERE username='' OR '1'='1' --' AND password='';</pre>
+
+      <p><strong>Prevention:</strong> Use prepared statements / parameterised queries. Never build SQL strings by concatenating user input. Use an ORM.</p>
+
+      <hr>
+
+      <h3 class="topic-title">CSRF — Cross Site Request Forgery</h3>
+      <p>CSRF tricks a logged-in user's browser into sending a request to a website without the user knowing. The browser automatically attaches the victim's cookies — so the server thinks it is a legitimate request.</p>
+
+      <div class="info-box">
+        <strong>📌 Simple Example:</strong> You are logged into your bank. You visit a malicious site that has a hidden form that sends a transfer request to your bank. Your browser submits the form with your session cookie. The bank processes the transfer.
+      </div>
+
+      <p><strong>Prevention:</strong> Use CSRF tokens on all state-changing requests. Use the <code>SameSite</code> cookie attribute. Check the <code>Origin</code> header on the server.</p>
+
+      <div class="img-block">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/XSS.png/800px-XSS.png" alt="XSS attack diagram" loading="lazy">
+        <div class="img-caption">💉 XSS attack flow — attacker injects script → victim loads page → browser executes malicious code</div>
+      </div>
+    </div>
+
+    <!-- ══ 07 Security Headers (NEW) ══ -->
+    <div class="topic-section" id="headers">
+      <div class="s-head">
+        <span class="s-num">07</span>
+        <h2>Security Headers</h2>
+        <span class="s-badge s-badge-cyan">Defence</span>
+      </div>
+
+      <p>Security headers are HTTP response headers that tell the browser how to behave when handling your website's content. They are one of the easiest and most powerful defences to implement.</p>
+
+      <table>
+        <thead><tr><th>Header</th><th>What it does</th><th>Protects against</th></tr></thead>
+        <tbody>
+          <tr><td><code>Content-Security-Policy</code></td><td>Defines which sources of scripts, images and styles are trusted</td><td>XSS, Data injection</td></tr>
+          <tr><td><code>Strict-Transport-Security</code></td><td>Forces browser to always use HTTPS</td><td>MITM, SSL stripping</td></tr>
+          <tr><td><code>X-Frame-Options</code></td><td>Prevents your site from being embedded in an iframe</td><td>Clickjacking</td></tr>
+          <tr><td><code>X-Content-Type-Options</code></td><td>Prevents browser from guessing file types</td><td>MIME sniffing attacks</td></tr>
+          <tr><td><code>Referrer-Policy</code></td><td>Controls how much referrer info is shared</td><td>Information leakage</td></tr>
+          <tr><td><code>Permissions-Policy</code></td><td>Controls access to browser features (camera, mic, location)</td><td>Feature abuse</td></tr>
+        </tbody>
+      </table>
+
+      <div class="info-box">
+        <strong>💡 Quick Check:</strong> You can test any website's security headers for free at <code>securityheaders.com</code>. Missing headers will be flagged — this is a standard part of any web pen test.
+      </div>
+    </div>
+
+    <!-- ══ 08 Hacker Tools (NEW) ══ -->
+    <div class="topic-section" id="tools">
+      <div class="s-head">
+        <span class="s-num">08</span>
+        <h2>Hacker Tools for Web</h2>
+        <span class="s-badge s-badge-red">Pen Testing</span>
+      </div>
+
+      <p>These are the most commonly used tools in web application security testing. Every ethical hacker needs to know these.</p>
+
+      <div class="concept-grid">
+        <div class="concept-card">
+          <span class="cc-icon">🔥</span>
+          <div class="cc-label">Burp Suite</div>
+          <p class="cc-desc">The #1 web hacking tool. Acts as a proxy between browser and server — intercepts, modifies, and replays HTTP requests. Industry standard for web pen testing.</p>
+        </div>
+        <div class="concept-card">
+          <span class="cc-icon">🕷️</span>
+          <div class="cc-label">OWASP ZAP</div>
+          <p class="cc-desc">Free alternative to Burp Suite. Automatically scans websites for common vulnerabilities. Great for beginners and used in bug bounty hunting.</p>
+        </div>
+        <div class="concept-card">
+          <span class="cc-icon">🗺️</span>
+          <div class="cc-label">Nikto</div>
+          <p class="cc-desc">Web server scanner. Detects dangerous files, outdated software, misconfigurations, and default credentials on web servers automatically.</p>
+        </div>
+      </div>
+      <div class="concept-grid">
+        <div class="concept-card">
+          <span class="cc-icon">📁</span>
+          <div class="cc-label">DirBuster / Gobuster</div>
+          <p class="cc-desc">Directory and file brute-forcers. Discover hidden paths on a website like <code>/admin</code>, <code>/backup.zip</code>, <code>/.env</code> by trying thousands of common names.</p>
+        </div>
+        <div class="concept-card">
+          <span class="cc-icon">💉</span>
+          <div class="cc-label">SQLMap</div>
+          <p class="cc-desc">Automatically detects and exploits SQL injection vulnerabilities. Can dump entire databases, read files, and sometimes get a shell on the server.</p>
+        </div>
+        <div class="concept-card">
+          <span class="cc-icon">🌊</span>
+          <div class="cc-label">Sublist3r / Amass</div>
+          <p class="cc-desc">Subdomain enumeration tools. Find hidden subdomains like <code>dev.target.com</code>, <code>api.target.com</code> — often less secured than the main site.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 09 Cheat Sheet (NEW) ══ -->
+    <div class="topic-section" id="cheat">
+      <div class="s-head">
+        <span class="s-num">09</span>
+        <h2>⚡ Quick Revision Cheat Sheet</h2>
+        <span class="s-badge s-badge-green">All Topics</span>
+      </div>
+
+      <p>Everything in this module in one fast-scan table. Perfect for exam or CTF prep.</p>
+
+      <table>
+        <thead><tr><th>Concept</th><th>One-Line Summary</th></tr></thead>
+        <tbody>
+          <tr><td>DNS</td><td>Converts domain names to IP addresses — the internet's phonebook</td></tr>
+          <tr><td>DNS Cache Poisoning</td><td>Attacker injects fake DNS records so users get redirected to malicious IPs</td></tr>
+          <tr><td>HTTP</td><td>Unencrypted web protocol — data visible to anyone on the network</td></tr>
+          <tr><td>HTTPS</td><td>HTTP + TLS encryption — data is unreadable to interceptors</td></tr>
+          <tr><td>GET</td><td>Fetches data — parameters visible in URL</td></tr>
+          <tr><td>POST</td><td>Sends data — parameters in request body</td></tr>
+          <tr><td>200 / 403 / 404 / 500</td><td>OK / Forbidden / Not Found / Server Error</td></tr>
+          <tr><td>Cookie</td><td>Small data stored in browser — tracks session state</td></tr>
+          <tr><td>HttpOnly flag</td><td>Prevents JavaScript from reading the cookie — blocks XSS theft</td></tr>
+          <tr><td>CSRF</td><td>Tricks browser into submitting a request using victim's cookies</td></tr>
+          <tr><td>XSS</td><td>Injecting malicious JavaScript into a webpage viewed by others</td></tr>
+          <tr><td>SQL Injection</td><td>Injecting SQL into input fields to manipulate the database</td></tr>
+          <tr><td>IDOR</td><td>Changing an ID in a URL/API to access another user's data</td></tr>
+          <tr><td>WAF</td><td>Web Application Firewall — filters malicious HTTP traffic</td></tr>
+          <tr><td>CSP header</td><td>Tells browser which script sources are trusted — blocks XSS</td></tr>
+          <tr><td>HSTS header</td><td>Forces HTTPS — prevents downgrade to HTTP</td></tr>
+          <tr><td>Burp Suite</td><td>Industry-standard web proxy for intercepting and modifying requests</td></tr>
+          <tr><td>SQLMap</td><td>Automated SQL injection discovery and exploitation tool</td></tr>
+          <tr><td>Gobuster</td><td>Brute-forces hidden directories and files on a web server</td></tr>
+          <tr><td>API Key leak</td><td>Sensitive keys committed to GitHub — attackers scan for them</td></tr>
+        </tbody>
+      </table>
+
+      <div class="info-box" style="margin-top:20px;">
+        <strong>🏆 You've completed the Web Fundamentals module!</strong> These concepts are tested in <strong>OWASP Top 10</strong>, <strong>CompTIA Security+</strong>, <strong>CEH</strong>, <strong>eJPT</strong>, and every real-world web pen test. Mark it complete and move forward.
+      </div>
+    </div>
+
+    <!-- REFERENCE -->
+    <div style="margin-top:44px;">
+      <div style="font-family:'Orbitron',sans-serif;font-size:0.75rem;letter-spacing:2px;color:var(--accent);opacity:0.6;margin-bottom:16px;text-transform:uppercase;">Reference Materials</div>
+      <div class="ref-card">
+        <span class="ref-icon">📄</span>
+        <div class="ref-body">
+          <div class="ref-name">Web Fundamentals.pdf</div>
+          <div class="ref-sub">Comprehensive guide to web security fundamentals for cybersecurity</div>
+        </div>
+        <a class="ref-dl" href="Web Fundamentals.pdf" target="_blank">Download PDF</a>
+      </div>
+    </div>
+
+    <!-- COMPLETE BUTTON -->
+    <div class="complete-wrap">
+      <button class="complete-btn" id="completeBtn" onclick="markDone()">✓ Mark as Complete</button>
+    </div>
+
+  </div><!-- /content -->
+
+  <footer>
+    © 2026 HackForge · Built by <a href="mailto:ligerharry44@gmail.com">Liger44</a> · For ethical cybersecurity learning only
+  </footer>
+
+</main>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCOEbqMZifKAVoKlZDHmcslXduBUxxb1xU",
+  authDomain: "hackproof-feb59.firebaseapp.com",
+  projectId: "hackproof-feb59",
+  storageBucket: "hackproof-feb59.firebasestorage.app",
+  messagingSenderId: "309682905913",
+  appId: "1:309682905913:web:7e32f772ed2e82672b3ee8",
+  measurementId: "G-PKSRE0Z6CC"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+function markDone() {
+  const btn = document.getElementById('completeBtn');
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) { alert("❌ Please login first to track your progress"); return; }
+    try {
+      await db.collection("users").doc(user.uid).set({
+        coursesCompleted: firebase.firestore.FieldValue.increment(1),
+        "progress.web": firebase.firestore.FieldValue.increment(10)
+      }, { merge: true });
+      btn.textContent = "✅ Module Completed!";
+      btn.classList.add('done');
+      btn.disabled = true;
+    } catch(e) {
+      console.error(e);
+      alert("❌ Error updating data. Please try again.");
+    }
+  });
+}
+
+/* Reading progress bar */
+const indicator = document.getElementById('readIndicator');
+window.addEventListener('scroll', () => {
+  const el = document.documentElement;
+  indicator.style.transform = `scaleX(${el.scrollTop / (el.scrollHeight - el.clientHeight)})`;
+});
+
+/* Active TOC on scroll */
+const sections = document.querySelectorAll('.topic-section[id]');
+const tocLinks  = document.querySelectorAll('.toc-link');
+const observer  = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      tocLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + id));
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+sections.forEach(s => observer.observe(s));
+
+/* Smooth scroll */
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const t = document.querySelector(a.getAttribute('href'));
+    if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+</script>
+</body>
+</html>

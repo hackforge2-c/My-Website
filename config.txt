@@ -1,0 +1,5 @@
+database=prod
+user=admin
+password=admin123
+
+flag=HP{config_exposed}

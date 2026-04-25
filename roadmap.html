@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HackProof | Cybersecurity Roadmap</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+body {
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+  background: #f4f7fb;
+  color: #0f172a;
+}
+
+/* HEADER */
+.header {
+  text-align: center;
+  padding: 50px 20px;
+  background: linear-gradient(90deg, #22c55e, #3b82f6);
+  color: white;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 2.2rem;
+}
+
+/* ROADMAP */
+.roadmap {
+  max-width: 1100px;
+  margin: auto;
+  padding: 40px 20px;
+}
+
+/* GRID */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 25px;
+}
+
+/* CARD */
+.card {
+  background: white;
+  border-radius: 14px;
+  padding: 25px;
+  border: 1px solid #e5e7eb;
+  transition: 0.3s;
+  text-decoration: none;
+  color: #0f172a;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+.stat h2{
+  color:var(--accent);
+  font-size:40px;
+}
+
+/* STEP NUMBER */
+.step {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 10px;
+}
+
+/* TITLE */
+.title {
+  font-size: 1.3rem;
+  margin-bottom: 10px;
+  color: #22c55e;
+}
+
+/* DESCRIPTION */
+.desc {
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+/* FOOTER */
+footer {
+  text-align: center;
+  padding: 40px;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 40px;
+}
+
+/* MOBILE */
+@media(max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+.coming {
+  opacity: 0.6;
+  pointer-events: none;
+  position: relative;
+}
+
+.coming::after {
+  content: "Coming Soon";
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #0f172a;
+  color: #22c55e;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <h1>Cybersecurity Learning Roadmap</h1>
+  <p>Beginner → Advanced Learning Path</p>
+</div>
+
+<div class="roadmap">
+<div class="grid">
+
+  <a href="cybersecurity-101.html" class="card">
+    <div class="step">STEP 1</div>
+    <div class="title">Cybersecurity 101</div>
+    <div class="desc">
+      Learn basics, CIA triad, threats, attacks, and security domains.
+    </div>
+  </a>
+
+  <a href="networking.html" class="card">
+    <div class="step">STEP 2</div>
+    <div class="title">Networking</div>
+    <div class="desc">
+      TCP/IP, DNS, ports, protocols, routing and firewalls.
+    </div>
+  </a>
+
+  <a href="operating-systems.html" class="card">
+    <div class="step">STEP 3</div>
+    <div class="title">Operating Systems</div>
+    <div class="desc">
+      Linux, Windows, permissions, processes and file systems.
+    </div>
+  </a>
+
+  <a href="linux-cheatsheet.html" class="card">
+    <div class="step">STEP 4</div>
+    <div class="title">Linux</div>
+    <div class="desc">
+      Linux commands, file system, networking tools and permissions.
+    </div>
+  </a>
+
+  <a href="WebFundamentals.html" class="card">
+    <div class="step">STEP 5</div>
+    <div class="title">Web Fundamentals</div>
+    <div class="desc">
+      HTTP, cookies, sessions and web architecture.
+    </div>
+  </a>
+
+  <a class="card coming">
+    <div class="step">STEP 6</div>
+    <div class="title">Blue Team</div>
+    <div class="desc">
+      Logs, monitoring, SOC, incident response and detection.
+    </div>
+  </a>
+
+  <a class="card coming">
+    <div class="step">STEP 7</div>
+    <div class="title">Red Team</div>
+    <div class="desc">
+      Recon, exploitation, web attacks and ethical hacking.
+    </div>
+  </a>
+
+  <a class="card coming">
+    <div class="step">STEP 8</div>
+    <div class="title">Cloud Security</div>
+    <div class="desc">
+      AWS, Azure, IAM roles, cloud vulnerabilities and security.
+    </div>
+  </a>
+
+  <a class="card coming">
+    <div class="step">STEP 9</div>
+    <div class="title">Malware Analysis</div>
+    <div class="desc">
+      Static & dynamic malware analysis and reverse engineering.
+    </div>
+  </a>
+
+</div>
+</div>
+<footer>
+  © 2026 HackProof Cybersecurity Roadmap
+</footer>
+
+</body>
+</html>

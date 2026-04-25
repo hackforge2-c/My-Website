@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HackProof | Cybersecurity Activities</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+body {
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+  background: #f4f7fb;
+  color: #0f172a;
+}
+
+/* ===== NAVBAR ===== */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 40px;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.logo {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.nav-links a {
+  margin: 0 15px;
+  text-decoration: none;
+  color: #475569;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: 0.2s;
+}
+
+.nav-links a:hover {
+  background: #22c55e;
+  color: white;
+}
+
+.dark-btn {
+  padding: 6px 12px;
+  border: none;
+  background: #22c55e;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+/* SIDEBAR */
+#sidebar {
+  position: fixed;
+  left: 0;
+  top: 70px;
+  width: 250px;
+  height: 85vh;
+  overflow-y: auto;
+  padding: 20px;
+  background: #0f172a;
+}
+
+#sidebar a {
+  display: block;
+  margin: 8px 0;
+  padding: 10px;
+  text-decoration: none;
+  color: #22c55e;
+  border-radius: 8px;
+}
+
+/* CONTAINER */
+.container {
+  margin-left: 270px;
+  max-width: 950px;
+  padding: 40px;
+}
+
+/* MAIN TITLE */
+.main-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  padding: 15px 20px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #22c55e, #06b6d4);
+  color: white;
+  margin-bottom: 30px;
+}
+
+/* SECTION */
+section {
+  margin-bottom: 60px;
+  padding: 30px;
+  background: white;
+  border-radius: 14px;
+  border-left: 8px solid #22c55e;
+}
+
+/* TABLE */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th, td {
+  border: 1px solid #e5e7eb;
+  padding: 10px;
+}
+
+th {
+  background: #f1f5f9;
+}
+.dark {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.dark .navbar {
+  background: #111827;
+  border-color: #1f2933;
+}
+
+.dark table th {
+  background: #1f2933;
+}
+/* Mobile only */
+@media (max-width:768px){
+
+  .navbar{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .nav-links{
+    display:block;
+    width:100%;
+  }
+
+  .cards{
+    grid-template-columns:1fr;
+  }
+
+  .progress-diagram{
+    flex-direction:column;
+    align-items:center;
+  }
+
+  .container{
+    padding:20px;
+  }
+
+  table{
+    display:block;
+    overflow-x:auto;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div id="sidebar"></div>
+
+<nav class="navbar">
+  <div class="logo">
+     HackProof
+  </div>
+
+  <div class="nav-links">
+    <a href="index.html">Notes</a>
+    <a href="roadmap.html">Roadmap</a>
+    <a href="practice-lab.html">Labs</a>
+    <a href="tools.html">Tools</a>
+    <a href="quiz.html">Quiz</a>
+  </div>
+
+  <button onclick="toggleDarkMode()" class="dark-btn">Dark</button>
+</nav>
+
+<div class="container">
+
+<div class="main-title">CYBERSECURITY ACTIVITIES MATRIX </div>
+
+<section>
+<h2>MONITORING & DETECTION</h2>
+<table>
+<tr><th>ACTIVITY </th><th>PURPOSE </th><th>REAL-WORLD EXAMPLE </th></tr>
+<tr><td>SIEM Monitoring</td><td>Like CCTV for IT systems – watch logs 24/7 for unusual activity</td><td>A SIEM notices 500 failed logins on your online banking app at midnight and alerts the SOC team.</td></tr>
+<tr><td>SOAR</td><td>Automatic guard response, reacts to alarms without waiting for humans</td><td>If a phishing email is detected, SOAR auto-blocks the sender and quarantines the email.</td></tr>
+<tr><td>Threat Hunting</td><td>Like detectives, actively searching for burglars already inside</td><td>Analyst checks for hidden malware on laptops that normal antivirus missed.</td></tr>
+<tr><td>EDR/XDR Monitoring</td><td>Focuses on endpoints (PCs, servers, phones), monitors for hacking attempts</td><td>XDR detects ransomware encrypting files on a staff laptop and stops the process.</td></tr>
+<tr><td>NDR Monitoring</td><td>Like traffic police, monitors cars (data packets) on the highway (network)</td><td>Detects abnormal data flowing to Russia from a server that shouldn’t talk to foreign IPs.</td></tr>
+<tr><td>UEBA</td><td>Behaviour analysis, looks for people acting suspiciously</td><td>Employee account suddenly downloads thousands of files at 2AM → flagged.</td></tr>
+<tr><td>Deception Tech</td><td>Digital traps/honeypots, lure attackers into fake systems</td><td>Hacker breaks into a fake payroll server; SOC instantly knows and traces them.</td></tr>
+</table>
+</section>
+
+<section>
+<h2>ASSESSMENT & EVALUATION </h2>
+<table>
+<tr><th>ACTIVITY </th><th>PURPOSE </th><th>REAL-WORLD EXAMPLE </th></tr>
+<tr><td>Vulnerability Scanning</td><td>Finds weak locks/windows in your house but doesn’t test break-in</td><td>Scanner shows outdated Apache web server vulnerable.</td></tr>
+<tr><td>Penetration Testing</td><td>Ethical hackers try to break in</td><td>Tester steals HR salary data via weak login.</td></tr>
+<tr><td>Red Team Assessment</td><td>Simulate real attackers</td><td>Fake phishing email gains access.</td></tr>
+<tr><td>Blue Team Assessment</td><td>Defensive drill</td><td>SIEM catches brute force login.</td></tr>
+<tr><td>Purple Teaming</td><td>Red + Blue teamwork</td><td>Phishing test detection improvement.</td></tr>
+<tr><td>Compromise Assessment</td><td>Check if already hacked</td><td>Malware beaconing found.</td></tr>
+<tr><td>Security Posture Assessment</td><td>General health check</td><td>70% ISO compliance.</td></tr>
+<tr><td>Risk Assessment</td><td>Business risk analysis</td><td>Payment system hacked → high risk.</td></tr>
+<tr><td>Gap Assessment</td><td>Compare compliance</td><td>Fails PCI encryption.</td></tr>
+</table>
+</section>
+
+<section>
+<h2>INCIDENT RESPONSE & FORENSICS</h2>
+<table>
+<tr><th>ACTIVITY </th><th>PURPOSE </th><th>REAL-WORLD EXAMPLE </th></tr>
+<tr><td>Incident Response</td><td>Step-by-step reaction after attack</td><td>SOC blocks attacker IP and restores operations.</td></tr>
+<tr><td>Digital Forensics</td><td>Collect evidence</td><td>Recover deleted attacker tools.</td></tr>
+<tr><td>Malware Analysis</td><td>Study malware behavior</td><td>Analyze ransomware sample.</td></tr>
+<tr><td>Compromise Recovery</td><td>Clean systems</td><td>Remove backdoors and reset passwords.</td></tr>
+<tr><td>Tabletop Exercises</td><td>Fire drill for cyber incidents</td><td>Management ransomware simulation.</td></tr>
+<tr><td>Breach Simulation</td><td>Automated attack simulation</td><td>Simulate phishing attacks.</td></tr>
+</table>
+</section>
+
+<section>
+<h2>GOVERNANCE, RISK & COMPLIANCE</h2>
+<table>
+<tr><th>ACTIVITY </th><th>PURPOSE </th><th>REAL-WORLD EXAMPLE </th></tr>
+<tr><td>Policy Development</td><td>Rulebook for staff</td><td>No USB drives allowed → prevents malware spread.</td></tr>
+<tr><td>Audit & Compliance</td><td>Formal check by auditors</td><td>PCI-DSS audit ensures bank meets card security rules.</td></tr>
+<tr><td>Third Party Risk</td><td>Vendor risk check</td><td>Cloud provider security assessed before contract signed.</td></tr>
+<tr><td>BIA</td><td>Critical business functions</td><td>Online banking restore within 2 hours.</td></tr>
+<tr><td>Maturity Assessment</td><td>Security maturity level</td><td>Company level 2.</td></tr>
+</table>
+</section>
+
+<section>
+<h2>PREVENTIVE SECURITY </h2>
+<table>
+<tr><th>ACTIVITY </th><th>PURPOSE </th><th>REAL-WORLD EXAMPLE </th></tr>
+<tr><td>Patch Management</td><td>Apply fixes</td><td>Update Windows servers.</td></tr>
+<tr><td>Config Hardening</td><td>Secure configurations</td><td>Disable default admin.</td></tr>
+<tr><td>IAM</td><td>Access control</td><td>Finance access payroll only.</td></tr>
+<tr><td>PAM</td><td>Privileged access control</td><td>One-time password vault.</td></tr>
+<tr><td>Zero Trust</td><td>No blind trust</td><td>Re-authenticate HR portal.</td></tr>
+<tr><td>DLP</td><td>Stop data leaks</td><td>Block credit card emails.</td></tr>
+<tr><td>Network Segmentation</td><td>Divide network</td><td>HR malware cannot spread.</td></tr>
+<tr><td>Cloud Security Assessment</td><td>Check cloud security</td><td>Public S3 bucket found.</td></tr>
+</table>
+</section>
+
+<section>
+<h2>THREAT INTELLIGENCE & RESEARCH</h2>
+<table>
+<tr><th>ACTIVITY </th><th>PURPOSE </th><th>REAL-WORLD EXAMPLE </th></tr>
+<tr><td>Threat Intelligence</td><td>Collect attacker info</td><td>New phishing domains detected.</td></tr>
+<tr><td>OSINT</td><td>Public info investigation</td><td>VirusTotal check.</td></tr>
+<tr><td>Dark Web Monitoring</td><td>Monitor hacker forums</td><td>Company emails found.</td></tr>
+<tr><td>Threat Actor Profiling</td><td>Identify attackers</td><td>APT41 group.</td></tr>
+<tr><td>Honeynet Analysis</td><td>Study attacker behavior</td><td>Fake web server trap.</td></tr>
+</table>
+</section>
+
+<section>
+<h2>TRAINING & AWARENESS </h2>
+<table>
+<tr><th>ACTIVITY </th><th>PURPOSE </th><th>REAL-WORLD EXAMPLE </th></tr>
+<tr><td>Security Awareness</td><td>Train staff</td><td>Staff learn phishing awareness.</td></tr>
+<tr><td>Phishing Simulation</td><td>Test employees</td><td>Fake HR email test.</td></tr>
+<tr><td>Cyber Drills</td><td>Practice response</td><td>Ransomware simulation.</td></tr>
+<tr><td>Playbook Development</td><td>Response manual</td><td>SOC phishing playbook.</td></tr>
+</table>
+</section>
+
+<section>
+<h2>SPECIALISED SECURITY OPS</h2>
+<table>
+<tr><th>ACTIVITY </th><th>PURPOSE </th><th>REAL-WORLD EXAMPLE </th></tr>
+<tr><td>OT/ICS Security</td><td>Protect industrial systems</td><td>SCADA monitoring.</td></tr>
+<tr><td>AppSec Testing</td><td>Test apps</td><td>SQL injection testing.</td></tr>
+<tr><td>API Security</td><td>Secure APIs</td><td>Login API abuse detection.</td></tr>
+<tr><td>Cloud Pentest</td><td>Test cloud services</td><td>Azure misconfigurations.</td></tr>
+<tr><td>Wireless Security</td><td>Secure Wi-Fi</td><td>Guest Wi-Fi testing.</td></tr>
+<tr><td>Physical Security</td><td>Test physical access</td><td>Server room access test.</td></tr>
+<tr><td>IoT Security</td><td>Secure devices</td><td>Weak CCTV passwords.</td></tr>
+</table>
+</section>
+
+<section>
+<h2>RESILIENCE & RECOVERY </h2>
+<table>
+<tr><th>ACTIVITY </th><th>PURPOSE </th><th>REAL-WORLD EXAMPLE </th></tr>
+<tr><td>Backup & Recovery</td><td>Ensure restore works</td><td>Monthly restore test.</td></tr>
+<tr><td>DRP</td><td>Disaster recovery planning</td><td>Rebuild after cyberattack.</td></tr>
+<tr><td>BCP</td><td>Business continuity</td><td>Move service to backup site.</td></tr>
+<tr><td>Ransomware Readiness</td><td>Check resilience</td><td>Offline backups test.</td></tr>
+</table>
+</section>
+
+</div>
+
+<script>
+const sections = document.querySelectorAll("section");
+const sidebar = document.getElementById("sidebar");
+
+sections.forEach((section, index) => {
+  const id = "section-" + index;
+  section.id = id;
+
+  const link = document.createElement("a");
+  link.href = "#" + id;
+  link.innerText = section.querySelector("h2").innerText;
+
+  sidebar.appendChild(link);
+});
+</script>
+<script>
+function toggleDarkMode() {
+  document.body.classList.toggle("dark");
+}
+</script>
+</body>
+</html>

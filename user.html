@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>User Dashboard</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: #020617;
+    color: white;
+    text-align: center;
+    padding: 50px;
+}
+
+.card {
+    background: #0f172a;
+    padding: 30px;
+    border-radius: 10px;
+    display: inline-block;
+}
+</style>
+</head>
+
+<body>
+
+<h1>User Dashboard</h1>
+
+<div class="card" id="userData"></div>
+
+<script>
+const users = {
+    1: "User: Guest → FLAG: HP{idor_easy}",
+    2: "User: Employee → FLAG: HP{idor_medium}",
+    3: "User: Manager",
+    999: "Admin Panel → FLAG: HP{idor_admin}"
+};
+
+const params = new URLSearchParams(window.location.search);
+const id = params.get("id") || 1;
+
+document.getElementById("userData").innerText =
+    users[id] || "User not found";
+</script>
+
+</body>
+</html>

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>About | HackForge</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#000; --bg-panel:#080d16; --panel:#0d1422; --panel-light:#131c2e;
+  --border:rgba(196,255,0,0.15); --border-dim:rgba(196,255,0,0.07);
+  --text:#dde6f0; --muted:#7a8fa8; --accent:#c4ff00;
+  --accent-dim:rgba(196,255,0,0.08); --accent-glow:rgba(196,255,0,0.2);
+  --cyan:#00e5ff; --cyan-dim:rgba(0,229,255,0.1);
+  --purple:#8b5cf6; --danger:#ff4d4d; --warning:#f59e0b;
+  --sidebar-w:270px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.75;}
+
+.bg-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(196,255,0,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(196,255,0,0.02) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;animation:gridDrift 24s linear infinite;}
+@keyframes gridDrift{from{transform:translate(0,0)}to{transform:translate(48px,48px)}}
+.bg-vignette{position:fixed;inset:0;background:radial-gradient(ellipse at 25% 15%,rgba(196,255,0,0.04) 0%,transparent 55%),radial-gradient(ellipse at 75% 85%,rgba(0,229,255,0.03) 0%,transparent 55%);pointer-events:none;z-index:0;}
+
+/* SIDEBAR */
+.sidebar{position:fixed;left:0;top:0;width:var(--sidebar-w);height:100vh;background:linear-gradient(180deg,#02050e,#000);border-right:1px solid var(--border);z-index:200;display:flex;flex-direction:column;box-shadow:4px 0 32px rgba(196,255,0,0.05);overflow:hidden;}
+.logo-wrap{padding:18px 16px 16px;border-bottom:1px solid var(--border-dim);background:linear-gradient(180deg,rgba(196,255,0,0.05),transparent);text-align:center;}
+.logo-img{width:170px;height:auto;filter:drop-shadow(0 0 18px rgba(196,255,0,0.45));display:block;margin:0 auto;transition:filter .3s,transform .3s;}
+.logo-img:hover{filter:drop-shadow(0 0 30px rgba(196,255,0,0.7));transform:scale(1.04);}
+.logo-sub{font-size:.65rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:8px;font-family:'JetBrains Mono',monospace;}
+.toc-label{padding:18px 22px 8px;font-family:'Orbitron',sans-serif;font-size:.6rem;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);opacity:.6;}
+.toc-scroll{flex:1;overflow-y:auto;padding:0 12px 20px;scrollbar-width:thin;scrollbar-color:rgba(196,255,0,.3) transparent;}
+.toc-link{display:flex;align-items:center;gap:10px;padding:9px 12px;margin:2px 0;border-radius:7px;color:var(--muted);text-decoration:none;font-size:.82rem;font-weight:500;transition:all .22s;border-left:2px solid transparent;}
+.toc-link .tn{font-size:.9rem;flex-shrink:0;width:20px;}
+.toc-link:hover{background:var(--accent-dim);color:var(--accent);border-left-color:var(--accent);transform:translateX(3px);}
+.toc-link.active{background:rgba(196,255,0,.12);color:var(--accent);border-left-color:var(--accent);}
+.sidebar-nav{padding:14px 12px;border-top:1px solid var(--border-dim);display:flex;flex-direction:column;gap:4px;}
+.sidebar-nav a{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:7px;color:var(--muted);text-decoration:none;font-size:.82rem;font-weight:500;transition:all .2s;}
+.sidebar-nav a:hover{background:var(--accent-dim);color:var(--accent);}
+.sidebar-nav a.active{color:var(--accent);background:var(--accent-dim);}
+
+/* MAIN */
+.main{margin-left:var(--sidebar-w);min-height:100vh;position:relative;z-index:1;}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.88);backdrop-filter:blur(18px);border-bottom:1px solid var(--border);padding:13px 48px;display:flex;align-items:center;justify-content:space-between;}
+.breadcrumb{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.breadcrumb span{color:var(--accent);opacity:.6;}.breadcrumb strong{color:var(--text);}
+.topbar-badge{background:var(--accent-dim);border:1px solid var(--border);color:var(--accent);padding:4px 10px;border-radius:5px;font-size:.72rem;font-family:'JetBrains Mono',monospace;}
+.read-indicator{position:fixed;top:0;left:var(--sidebar-w);right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--cyan));transform-origin:left;transform:scaleX(0);z-index:300;transition:transform .1s;}
+.content{padding:48px 52px 80px;max-width:920px;}
+
+/* HERO */
+.page-hero{margin-bottom:48px;padding:52px 52px;background:linear-gradient(135deg,rgba(196,255,0,0.07) 0%,rgba(0,229,255,0.04) 100%);border:1px solid var(--border);border-radius:16px;position:relative;overflow:hidden;text-align:center;}
+.page-hero::before{content:'🛡️';position:absolute;right:40px;top:50%;transform:translateY(-50%);font-size:9rem;opacity:.04;pointer-events:none;}
+.page-hero::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(196,255,0,0.06),transparent 60%);pointer-events:none;}
+.hero-tag{display:inline-flex;align-items:center;gap:7px;background:var(--accent-dim);border:1px solid var(--border);color:var(--accent);padding:5px 14px;border-radius:5px;font-size:.72rem;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:20px;}
+.hero-tag .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.page-hero h1{font-family:'Orbitron',sans-serif;font-size:2.6rem;font-weight:700;background:linear-gradient(135deg,#fff 30%,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:16px;line-height:1.15;position:relative;z-index:1;}
+.page-hero p{color:var(--muted);font-size:1.05rem;max-width:580px;margin:0 auto;line-height:1.75;position:relative;z-index:1;}
+.hero-cta{margin-top:28px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;position:relative;z-index:1;}
+.btn-primary{padding:12px 28px;background:linear-gradient(135deg,var(--accent),#7fd600);color:#000;border:none;border-radius:8px;font-weight:700;font-size:.9rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .25s;box-shadow:0 0 18px rgba(196,255,0,0.25);text-decoration:none;display:inline-flex;align-items:center;gap:7px;}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 4px 24px rgba(196,255,0,0.45);}
+.btn-outline{padding:12px 24px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;font-weight:600;font-size:.9rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center;gap:7px;}
+.btn-outline:hover{border-color:var(--border-dim);color:var(--text);}
+
+/* SECTION HEAD */
+.s-head{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border-dim);}
+.s-title{font-family:'Orbitron',sans-serif;font-size:.88rem;font-weight:600;color:var(--text);letter-spacing:.5px;display:flex;align-items:center;gap:10px;}
+.s-title::before{content:'';width:14px;height:2px;background:var(--accent);border-radius:1px;flex-shrink:0;}
+
+/* MISSION */
+.mission-card{background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:14px;padding:36px;margin-bottom:22px;position:relative;overflow:hidden;transition:border-color .3s;}
+.mission-card:hover{border-color:rgba(196,255,0,.18);}
+.mission-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:linear-gradient(180deg,var(--accent),transparent);border-radius:14px 0 0 14px;opacity:0;transition:opacity .3s;}
+.mission-card:hover::before{opacity:1;}
+.mission-card p{color:var(--muted);font-size:.95rem;line-height:1.8;margin-bottom:10px;}
+.mission-card p:last-child{margin-bottom:0;}
+.mission-card strong{color:var(--text);}
+.callout{background:rgba(196,255,0,.04);border-left:3px solid var(--accent);padding:14px 18px;border-radius:8px;margin:14px 0;font-size:.88rem;color:var(--muted);}
+.callout strong{color:var(--text);}
+
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+.stat-mini{background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:12px;padding:20px;text-align:center;transition:all .25s;position:relative;overflow:hidden;}
+.stat-mini::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transition:opacity .3s;}
+.stat-mini:hover{transform:translateY(-3px);border-color:rgba(196,255,0,.2);}
+.stat-mini:hover::before{opacity:1;}
+.sm-val{font-family:'Orbitron',sans-serif;font-size:1.7rem;font-weight:700;color:var(--accent);text-shadow:0 0 12px rgba(196,255,0,.3);}
+.sm-lbl{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:5px;}
+
+/* FEATURE GRID */
+.feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:22px;}
+.feature-card{background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:12px;padding:22px 20px;transition:all .25s;}
+.feature-card:hover{border-color:rgba(196,255,0,.2);transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.5);}
+.fc-icon{font-size:1.6rem;margin-bottom:12px;display:block;}
+.fc-title{font-family:'Orbitron',sans-serif;font-size:.78rem;font-weight:600;color:var(--text);margin-bottom:8px;letter-spacing:.3px;}
+.fc-desc{font-size:.82rem;color:var(--muted);line-height:1.65;}
+
+/* TEAM */
+.team-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:22px;}
+.team-card{background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:14px;padding:28px 22px;text-align:center;transition:all .25s;position:relative;overflow:hidden;}
+.team-card:hover{border-color:rgba(196,255,0,.2);transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,.5);}
+.team-avatar{width:68px;height:68px;border-radius:50%;margin:0 auto 14px;border:2px solid rgba(196,255,0,.3);background:var(--panel-light);display:flex;align-items:center;justify-content:center;font-size:1.8rem;box-shadow:0 0 18px rgba(196,255,0,.1);}
+.team-name{font-family:'Orbitron',sans-serif;font-size:.85rem;font-weight:600;color:var(--text);margin-bottom:4px;}
+.team-role{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--accent);letter-spacing:.5px;margin-bottom:10px;}
+.team-bio{font-size:.78rem;color:var(--muted);line-height:1.55;}
+.team-links{display:flex;gap:8px;justify-content:center;margin-top:12px;}
+.team-link{padding:5px 10px;background:var(--panel);border:1px solid var(--border-dim);border-radius:5px;color:var(--muted);text-decoration:none;font-size:.72rem;font-family:'JetBrains Mono',monospace;transition:all .2s;}
+.team-link:hover{color:var(--accent);border-color:rgba(196,255,0,.2);}
+
+/* TECH STACK */
+.stack-grid{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0;}
+.stack-chip{background:var(--panel);border:1px solid var(--border-dim);border-radius:7px;padding:8px 14px;font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--muted);display:flex;align-items:center;gap:7px;transition:all .2s;}
+.stack-chip:hover{border-color:rgba(196,255,0,.2);color:var(--text);}
+.stack-chip .dot{width:6px;height:6px;border-radius:50%;}
+
+/* ROADMAP TIMELINE */
+.timeline{display:flex;flex-direction:column;gap:0;margin:14px 0;}
+.tl-item{display:flex;gap:18px;padding-bottom:24px;position:relative;}
+.tl-item:last-child{padding-bottom:0;}
+.tl-left{display:flex;flex-direction:column;align-items:center;flex-shrink:0;}
+.tl-dot{width:14px;height:14px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px rgba(196,255,0,.4);flex-shrink:0;margin-top:3px;}
+.tl-dot.done{background:var(--accent);}
+.tl-dot.current{background:var(--cyan);box-shadow:0 0 10px rgba(0,229,255,.4);animation:blink 1.5s infinite;}
+.tl-dot.soon{background:var(--panel);border:2px solid var(--border-dim);}
+.tl-line{width:2px;flex:1;background:var(--border-dim);margin-top:4px;}
+.tl-body{flex:1;}
+.tl-label{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+.tl-title{font-size:.95rem;font-weight:600;color:var(--text);margin-bottom:4px;}
+.tl-desc{font-size:.82rem;color:var(--muted);line-height:1.6;}
+.tl-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:.65rem;font-weight:600;margin-left:8px;text-transform:uppercase;}
+.tl-badge.done{background:rgba(196,255,0,.1);color:var(--accent);border:1px solid rgba(196,255,0,.2);}
+.tl-badge.live{background:rgba(0,229,255,.1);color:var(--cyan);border:1px solid rgba(0,229,255,.2);}
+.tl-badge.soon{background:rgba(245,158,11,.1);color:var(--warning);border:1px solid rgba(245,158,11,.2);}
+
+/* CTA SECTION */
+.cta-card{background:linear-gradient(135deg,rgba(196,255,0,.07),rgba(0,229,255,.04));border:1px solid var(--border);border-radius:14px;padding:44px;text-align:center;margin-bottom:22px;}
+.cta-card h2{font-family:'Orbitron',sans-serif;font-size:1.4rem;font-weight:700;background:linear-gradient(135deg,#fff 30%,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:12px;}
+.cta-card p{color:var(--muted);font-size:.93rem;margin-bottom:24px;}
+.cta-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+
+footer{text-align:center;padding:24px 52px;border-top:1px solid var(--border-dim);font-size:.8rem;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+footer a{color:var(--cyan);text-decoration:none;}
+footer a:hover{text-decoration:underline;}
+
+@media(max-width:860px){
+  :root{--sidebar-w:0px;}
+  .sidebar{display:none;}
+  .content{padding:24px 20px 60px;}
+  .topbar{padding:12px 20px;}
+  .stats-row{grid-template-columns:1fr 1fr;}
+  .feature-grid{grid-template-columns:1fr 1fr;}
+  .team-grid{grid-template-columns:1fr;}
+  .page-hero{padding:32px 24px;}
+  .page-hero h1{font-size:1.7rem;}
+}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-vignette"></div>
+<div class="read-indicator" id="readIndicator"></div>
+
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="logo.png" alt="HackForge" class="logo-img">
+    <div class="logo-sub">Cybersecurity Learning</div>
+  </div>
+  <div class="sidebar-nav">
+    <a href="index.html">🏠 Home</a>
+    <a href="roadmap.html">🗺️ Roadmap</a>
+    <a href="contact.html">📬 Contact</a>
+    <a href="privacy.html">🔒 Privacy</a>
+    <a href="about.html" class="active">👥 About</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="breadcrumb"><span>HackForge</span> / <strong>About Us</strong></div>
+    <div class="topbar-badge">About</div>
+  </div>
+
+  <div class="content">
+
+    <!-- HERO -->
+    <div class="page-hero">
+      <div class="hero-tag"><div class="dot"></div>Who We Are</div>
+      <h1>Built by Hackers,<br>For Learners</h1>
+      <p>HackForge is a free cybersecurity learning platform built with one mission — to make world-class ethical hacking education accessible to everyone, everywhere.</p>
+      <div class="hero-cta">
+        <a href="index.html" class="btn-primary">🚀 Start Learning</a>
+        <a href="contact.html" class="btn-outline">📬 Get in Touch</a>
+      </div>
+    </div>
+
+    <!-- MISSION -->
+    <div class="mission-card" id="mission">
+      <div class="s-head"><div class="s-title">Our Mission</div></div>
+      <p>We are a <strong>cybersecurity-focused learning platform</strong> delivering practical, beginner-friendly, and up-to-date security education. Our goal is simple — bridge the skills gap in cybersecurity by providing free, high-quality resources that prepare learners for the real world.</p>
+      <p>From complete beginners learning what an IP address is, to intermediate learners preparing for OSCP or CEH — HackForge meets you where you are and takes you further.</p>
+      <div class="callout">
+        <strong>⚡ Exploit. Learn. Dominate.</strong> — Every piece of content on HackForge exists to help you think like an attacker so you can defend like a pro. All for free.
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div id="stats">
+      <div style="font-family:'Orbitron',sans-serif;font-size:.75rem;letter-spacing:2px;color:var(--accent);opacity:.6;margin-bottom:14px;text-transform:uppercase;">By the Numbers</div>
+      <div class="stats-row">
+        <div class="stat-mini"><div class="sm-val">21+</div><div class="sm-lbl">CTF Challenges</div></div>
+        <div class="stat-mini"><div class="sm-val">8+</div><div class="sm-lbl">Learning Modules</div></div>
+        <div class="stat-mini"><div class="sm-val">100%</div><div class="sm-lbl">Free Forever</div></div>
+        <div class="stat-mini"><div class="sm-val">∞</div><div class="sm-lbl">Dedication</div></div>
+      </div>
+    </div>
+
+    <!-- WHAT WE OFFER -->
+    <div class="mission-card" id="what">
+      <div class="s-head"><div class="s-title">What We Offer</div></div>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <span class="fc-icon">📓</span>
+          <div class="fc-title">Structured Notes</div>
+          <div class="fc-desc">In-depth modules on Networking, OS, Web Security, Cybersecurity 101, and more — written in plain language for beginners.</div>
+        </div>
+        <div class="feature-card">
+          <span class="fc-icon">⚗️</span>
+          <div class="fc-title">Hands-on Labs</div>
+          <div class="fc-desc">Practice real attack techniques in safe, legal lab environments. Learn by doing — not just reading.</div>
+        </div>
+        <div class="feature-card">
+          <span class="fc-icon">🚩</span>
+          <div class="fc-title">CTF Challenges</div>
+          <div class="fc-desc">21+ Capture The Flag challenges spanning cryptography, web exploitation, IDOR, login bypass, and file analysis.</div>
+        </div>
+        <div class="feature-card">
+          <span class="fc-icon">🗺️</span>
+          <div class="fc-title">Learning Roadmap</div>
+          <div class="fc-desc">A structured path from zero to job-ready — covering every domain needed to break into cybersecurity.</div>
+        </div>
+        <div class="feature-card">
+          <span class="fc-icon">📡</span>
+          <div class="fc-title">Cyber News Feed</div>
+          <div class="fc-desc">Live threat intelligence, CVEs, and security news pulled from The Hacker News — updated in real time.</div>
+        </div>
+        <div class="feature-card">
+          <span class="fc-icon">🎓</span>
+          <div class="fc-title">Certificates</div>
+          <div class="fc-desc">Earn verifiable completion certificates for each module to showcase on LinkedIn or your portfolio.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEAM -->
+    <div class="mission-card" id="team">
+      <div class="s-head"><div class="s-title">The Team</div></div>
+      <div class="team-grid">
+        <div class="team-card">
+          <div class="team-avatar">🧑‍💻</div>
+          <div class="team-name">Liger44</div>
+          <div class="team-role">Founder &amp; Lead Developer</div>
+          <div class="team-bio">Cybersecurity enthusiast and self-taught developer. Built HackForge from scratch to share knowledge freely with the security community.</div>
+          <div class="team-links">
+            <a href="mailto:ligerharry44@gmail.com" class="team-link">📧 Email</a>
+            <a href="#" class="team-link">🐙 GitHub</a>
+          </div>
+        </div>
+        <div class="team-card">
+          <div class="team-avatar">🛡️</div>
+          <div class="team-name">Roaster</div>
+          <div class="team-role">Content Contributors</div>
+          <div class="team-bio">HackForge is powered by the cybersecurity community. Learners, hackers, and security professionals who contribute feedback, bug reports, and ideas.</div>
+          <div class="team-links">
+            <a href="contact.html" class="team-link">✉️ Contribute</a>
+          </div>
+        </div>
+        <div class="team-card">
+          <div class="team-avatar">🤖</div>
+          <div class="team-name">You</div>
+          <div class="team-role">Next Contributor?</div>
+          <div class="team-bio">Found a bug? Have a content idea? Want to contribute a challenge? We welcome all contributions from the community.</div>
+          <div class="team-links">
+            <a href="contact.html" class="team-link">🚀 Join Us</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- ROADMAP TIMELINE -->
+    <div class="mission-card" id="roadmap">
+      <div class="s-head"><div class="s-title">Platform Roadmap</div></div>
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-left"><div class="tl-dot done"></div><div class="tl-line"></div></div>
+          <div class="tl-body">
+            <div class="tl-label">Phase 1 · 2025</div>
+            <div class="tl-title">Foundation <span class="tl-badge done">Done</span></div>
+            <div class="tl-desc">Core notes modules, CTF challenges, user auth, progress tracking, and certificate system launched.</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-left"><div class="tl-dot current"></div><div class="tl-line"></div></div>
+          <div class="tl-body">
+            <div class="tl-label">Phase 2 · 2026</div>
+            <div class="tl-title">Expansion <span class="tl-badge live">Live</span></div>
+            <div class="tl-desc">Cyber news feed, daily learning hub, settings overhaul, mobile improvements, and new content modules.</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-left"><div class="tl-dot soon"></div><div class="tl-line"></div></div>
+          <div class="tl-body">
+            <div class="tl-label">Phase 3 · Coming Soon</div>
+            <div class="tl-title">Community <span class="tl-badge soon">Soon</span></div>
+            <div class="tl-desc">Discussion forums, challenge submissions by community, leaderboard, team CTFs, and mentorship program.</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-left"><div class="tl-dot soon"></div></div>
+          <div class="tl-body">
+            <div class="tl-label">Phase 4 · Future</div>
+            <div class="tl-title">Pro Platform <span class="tl-badge soon">Planned</span></div>
+            <div class="tl-desc">Interactive terminal labs, AI-powered learning paths, employer partnerships, and verified certification program.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-card" id="cta">
+      <h2>Ready to Start Your Journey?</h2>
+      <p>Join thousands of learners mastering cybersecurity — completely free, no credit card required.</p>
+      <div class="cta-row">
+        <a href="index.html" class="btn-primary">🚀 Start Learning Now</a>
+        <a href="main.html" class="btn-primary" style="background:linear-gradient(135deg,var(--cyan),#0090cc);">🚩 Try CTF Challenges</a>
+        <a href="contact.html" class="btn-outline">📬 Contact Us</a>
+      </div>
+    </div>
+
+  </div>
+  <footer>© 2026 HackForge · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · <a href="contact.html">Contact</a> · Built by <a href="mailto:ligerharry44@gmail.com">Liger44</a></footer>
+</main>
+
+<script>
+const indicator = document.getElementById('readIndicator');
+window.addEventListener('scroll', () => {
+  const el = document.documentElement;
+  indicator.style.transform = `scaleX(${el.scrollTop / (el.scrollHeight - el.clientHeight)})`;
+});
+const sections = document.querySelectorAll('[id]');
+const tocLinks = document.querySelectorAll('.toc-link');
+const obs = new IntersectionObserver(e => {
+  e.forEach(entry => {
+    if (entry.isIntersecting)
+      tocLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + entry.target.id));
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+sections.forEach(s => obs.observe(s));
+</script>
+</body>
+</html>

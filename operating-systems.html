@@ -1,0 +1,2255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HackProof – Operating System Notes</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ─── VARIABLES ──────────────────────────────────────────── */
+:root {
+  --bg:          #000000;
+  --bg-panel:    #080d16;
+  --panel:       #0d1422;
+  --panel-light: #131c2e;
+  --border:      rgba(196,255,0,0.15);
+  --border-dim:  rgba(196,255,0,0.07);
+  --text:        #dde6f0;
+  --muted:       #7a8fa8;
+  --accent:      #c4ff00;
+  --accent-glow: rgba(196,255,0,0.18);
+  --accent-dim:  rgba(196,255,0,0.08);
+  --danger:      #ff4d4d;
+  --warning:     #f59e0b;
+  --cyan:        #00e5ff;
+  --cyan-dim:    rgba(0,229,255,0.12);
+  --sidebar-w:   270px;
+}
+
+/* ─── RESET ──────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ─── BODY ───────────────────────────────────────────────── */
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  line-height: 1.75;
+  scroll-behavior: smooth;
+}
+
+/* ─── ANIMATED GRID BACKGROUND ───────────────────────────── */
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(196,255,0,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(196,255,0,0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+  animation: gridDrift 24s linear infinite;
+}
+@keyframes gridDrift {
+  from { transform: translate(0,0); }
+  to   { transform: translate(48px,48px); }
+}
+
+/* Radial vignette */
+.bg-vignette {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at 30% 20%, rgba(196,255,0,0.04) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 80%, rgba(0,229,255,0.03) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ─── SIDEBAR ────────────────────────────────────────────── */
+.sidebar {
+  position: fixed;
+  left: 0; top: 0;
+  width: var(--sidebar-w);
+  height: 100vh;
+  background: linear-gradient(180deg, #02050e 0%, #000000 100%);
+  border-right: 1px solid var(--border);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 4px 0 32px rgba(196,255,0,0.06);
+  overflow: hidden;
+}
+
+/* Logo */
+.logo-wrap {
+  padding: 18px 16px 16px;
+  border-bottom: 1px solid var(--border-dim);
+  background: linear-gradient(180deg, rgba(196,255,0,0.05) 0%, transparent 100%);
+  text-align: center;
+}
+
+.logo-img {
+  width: 170px;
+  height: auto;
+  filter: drop-shadow(0 0 18px rgba(196,255,0,0.45));
+  transition: filter 0.3s, transform 0.3s;
+  display: block;
+  margin: 0 auto;
+}
+
+.logo-img:hover {
+  filter: drop-shadow(0 0 30px rgba(196,255,0,0.7));
+  transform: scale(1.04);
+}
+
+.logo-sub {
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: 8px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* TOC Label */
+.toc-label {
+  padding: 18px 22px 8px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: 0.6;
+}
+
+/* TOC links */
+.toc-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 12px 20px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(196,255,0,0.3) transparent;
+}
+
+.toc-scroll::-webkit-scrollbar { width: 4px; }
+.toc-scroll::-webkit-scrollbar-thumb { background: rgba(196,255,0,0.25); border-radius: 2px; }
+
+.toc-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  margin: 2px 0;
+  border-radius: 7px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 500;
+  transition: all 0.22s;
+  border-left: 2px solid transparent;
+  position: relative;
+  line-height: 1.3;
+}
+
+.toc-link .toc-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  color: rgba(196,255,0,0.35);
+  flex-shrink: 0;
+  width: 18px;
+}
+
+.toc-link:hover {
+  background: var(--accent-dim);
+  color: var(--accent);
+  border-left-color: var(--accent);
+  transform: translateX(3px);
+}
+
+.toc-link.active {
+  background: rgba(196,255,0,0.12);
+  color: var(--accent);
+  border-left-color: var(--accent);
+}
+
+/* Nav links at bottom of sidebar */
+.sidebar-nav {
+  padding: 14px 12px;
+  border-top: 1px solid var(--border-dim);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar-nav a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 7px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.sidebar-nav a:hover {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+.sidebar-nav a.active {
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+/* ─── MAIN ───────────────────────────────────────────────── */
+.main {
+  margin-left: var(--sidebar-w);
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── TOP BAR ────────────────────────────────────────────── */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.breadcrumb {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.breadcrumb span { color: var(--accent); opacity: 0.6; }
+.breadcrumb strong { color: var(--text); }
+
+.topbar-badge {
+  background: var(--accent-dim);
+  border: 1px solid var(--border);
+  color: var(--accent);
+  padding: 4px 10px;
+  border-radius: 5px;
+  font-size: 0.72rem;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.5px;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.progress-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--panel);
+  border: 1px solid var(--border-dim);
+  border-radius: 30px;
+  padding: 6px 14px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.progress-pill-bar {
+  width: 80px;
+  height: 5px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-pill-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #7fd600);
+  border-radius: 3px;
+  width: 35%;
+  box-shadow: 0 0 8px rgba(196,255,0,0.5);
+}
+
+.mark-btn {
+  background: linear-gradient(135deg, var(--accent), #7fd600);
+  color: #000;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 7px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-family: 'Orbitron', sans-serif;
+  transition: all 0.25s;
+  box-shadow: 0 0 16px rgba(196,255,0,0.25);
+  letter-spacing: 0.3px;
+}
+
+.mark-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 24px rgba(196,255,0,0.45);
+}
+
+/* ─── CONTENT ────────────────────────────────────────────── */
+.content {
+  padding: 48px 52px 80px;
+  max-width: 920px;
+}
+
+/* ─── HERO ───────────────────────────────────────────────── */
+.page-hero {
+  margin-bottom: 48px;
+  padding: 40px 44px;
+  background: linear-gradient(135deg, rgba(196,255,0,0.06) 0%, rgba(0,229,255,0.04) 100%);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.page-hero::before {
+  content: 'OS';
+  position: absolute;
+  right: 32px; top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 7rem;
+  font-weight: 900;
+  color: rgba(196,255,0,0.04);
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+.hero-tag {
+  display: inline-block;
+  background: var(--accent-dim);
+  border: 1px solid var(--border);
+  color: var(--accent);
+  padding: 4px 12px;
+  border-radius: 5px;
+  font-size: 0.72rem;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.page-hero h1 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #ffffff 30%, var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 12px;
+  line-height: 1.2;
+}
+
+.page-hero p {
+  color: var(--muted);
+  font-size: 0.97rem;
+  max-width: 600px;
+  line-height: 1.7;
+}
+
+.hero-meta {
+  display: flex;
+  gap: 20px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.hero-stat {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.hero-stat .dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+}
+
+/* ─── TOPIC SECTION ──────────────────────────────────────── */
+.topic-section {
+  margin-bottom: 44px;
+  padding: 36px 40px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-dim);
+  border-radius: 14px;
+  position: relative;
+  transition: border-color 0.3s;
+}
+
+.topic-section:hover {
+  border-color: rgba(196,255,0,0.2);
+}
+
+.topic-section::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--accent), transparent);
+  border-radius: 14px 0 0 14px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.topic-section:hover::before { opacity: 1; }
+
+/* Section heading */
+.topic-section .s-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.s-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--accent);
+  opacity: 0.55;
+  flex-shrink: 0;
+}
+
+.topic-section h2 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+
+.s-badge {
+  margin-left: auto;
+  background: var(--accent-dim);
+  border: 1px solid var(--border);
+  color: var(--accent);
+  padding: 3px 9px;
+  border-radius: 5px;
+  font-size: 0.68rem;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+/* Body text */
+.topic-section p {
+  color: var(--muted);
+  font-size: 0.93rem;
+  margin-bottom: 12px;
+  line-height: 1.78;
+}
+
+/* Sub heading */
+.topic-section h3 {
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 20px 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.topic-section h3::before {
+  content: '';
+  width: 14px; height: 2px;
+  background: var(--accent);
+  border-radius: 1px;
+  flex-shrink: 0;
+}
+
+/* Key term inline */
+.kw {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.kw-cyan {
+  color: var(--cyan);
+  font-weight: 600;
+}
+
+/* ─── CONCEPT CARDS (3-col grid) ──────────────────────────── */
+.concept-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin: 20px 0;
+}
+
+.concept-card {
+  background: var(--panel);
+  border: 1px solid var(--border-dim);
+  border-radius: 10px;
+  padding: 18px 16px;
+  transition: all 0.25s;
+}
+
+.concept-card:hover {
+  border-color: var(--border);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+.cc-icon {
+  font-size: 1.6rem;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.cc-label {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 6px;
+  letter-spacing: 0.3px;
+}
+
+.cc-desc {
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ─── PROCESS STATES FLOW ────────────────────────────────── */
+.flow-states {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 22px 0;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.state-node {
+  text-align: center;
+  padding: 14px 18px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  min-width: 110px;
+  transition: all 0.2s;
+}
+
+.state-node:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 16px var(--accent-glow);
+}
+
+.state-node .sn-icon { font-size: 1.4rem; }
+.state-node .sn-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin-top: 6px;
+  letter-spacing: 0.5px;
+}
+.state-node .sn-desc {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.flow-arrow {
+  padding: 0 6px;
+  color: var(--accent);
+  font-size: 1rem;
+  opacity: 0.5;
+}
+
+/* ─── INFO / WARNING CALLOUTS ────────────────────────────── */
+.callout {
+  display: flex;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 10px;
+  margin: 18px 0;
+  align-items: flex-start;
+}
+
+.callout.info {
+  background: rgba(196,255,0,0.05);
+  border: 1px solid rgba(196,255,0,0.15);
+}
+
+.callout.warn {
+  background: rgba(245,158,11,0.06);
+  border: 1px solid rgba(245,158,11,0.2);
+}
+
+.callout.cyan {
+  background: rgba(0,229,255,0.05);
+  border: 1px solid rgba(0,229,255,0.15);
+}
+
+.callout-icon { font-size: 1.2rem; flex-shrink: 0; padding-top: 1px; }
+
+.callout-body { flex: 1; }
+.callout-body strong {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.callout-body p {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.65;
+}
+
+/* ─── CODE / COMMAND ─────────────────────────────────────── */
+code {
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(196,255,0,0.08);
+  border: 1px solid rgba(196,255,0,0.15);
+  color: var(--accent);
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 0.82em;
+}
+
+.code-block {
+  background: #020408;
+  border: 1px solid var(--border-dim);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  color: var(--text);
+  overflow-x: auto;
+  line-height: 1.8;
+  position: relative;
+}
+
+.code-block .cb-label {
+  position: absolute;
+  top: 8px; right: 12px;
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.cb-green { color: var(--accent); }
+.cb-cyan  { color: var(--cyan); }
+.cb-gray  { color: var(--muted); }
+
+/* ─── TABLE ──────────────────────────────────────────────── */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 18px 0;
+  font-size: 0.88rem;
+}
+
+.data-table thead tr {
+  background: rgba(196,255,0,0.07);
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.data-table td {
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border-dim);
+  color: var(--muted);
+  vertical-align: top;
+}
+
+.data-table td:first-child {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.data-table tr:hover td {
+  background: rgba(196,255,0,0.03);
+}
+
+.data-table .tag-win {
+  color: #60a5fa;
+}
+
+.data-table .tag-lin {
+  color: var(--accent);
+}
+
+/* ─── PERM DISPLAY ───────────────────────────────────────── */
+.perm-display {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.1rem;
+  background: #020408;
+  border: 1px solid var(--border-dim);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 14px 0;
+  letter-spacing: 2px;
+  overflow-x: auto;
+}
+
+.pc-type  { color: var(--muted); }
+.pc-own   { color: var(--accent); }
+.pc-grp   { color: var(--cyan); }
+.pc-oth   { color: #f59e0b; }
+.pc-sep   { color: rgba(255,255,255,0.15); margin: 0 4px; }
+
+.perm-legend {
+  display: flex;
+  gap: 20px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.pl-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+}
+
+.pl-dot {
+  width: 8px; height: 8px;
+  border-radius: 2px;
+}
+
+/* ─── SCHEDULING TABLE ───────────────────────────────────── */
+.sched-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.sched-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--panel);
+  border: 1px solid var(--border-dim);
+  border-radius: 9px;
+  transition: all 0.2s;
+}
+
+.sched-item:hover {
+  border-color: var(--border);
+  background: var(--panel-light);
+}
+
+.si-num {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.75rem;
+  color: var(--accent);
+  flex-shrink: 0;
+  padding-top: 2px;
+  opacity: 0.7;
+}
+
+.si-name {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 0.9rem;
+  margin-bottom: 3px;
+}
+
+.si-desc {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* ─── DEADLOCK BOX ───────────────────────────────────────── */
+.deadlock-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 18px 0;
+}
+
+.dl-card {
+  background: var(--panel);
+  border: 1px solid var(--border-dim);
+  border-radius: 10px;
+  padding: 16px;
+  transition: all 0.2s;
+}
+
+.dl-card:hover {
+  border-color: rgba(255,77,77,0.3);
+  box-shadow: 0 4px 16px rgba(255,77,77,0.08);
+}
+
+.dl-head {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--danger);
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+
+.dl-text {
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ─── REGISTRY HIVE ──────────────────────────────────────── */
+.hive-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.hive-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--panel);
+  border: 1px solid var(--border-dim);
+  border-radius: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+}
+
+.hive-key { color: var(--cyan); flex: 1; }
+.hive-val { color: var(--muted); font-size: 0.75rem; text-align: right; }
+
+/* ─── LOG FILES ──────────────────────────────────────────── */
+.log-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.log-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--panel);
+  border: 1px solid var(--border-dim);
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.log-item:hover {
+  border-color: var(--border);
+  transform: translateX(2px);
+}
+
+.log-icon { font-size: 1rem; flex-shrink: 0; }
+.log-path { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--accent); margin-bottom: 3px; }
+.log-desc { font-size: 0.78rem; color: var(--muted); line-height: 1.45; }
+
+/* ─── DIVIDER ────────────────────────────────────────────── */
+.divider {
+  border: none;
+  border-top: 1px solid var(--border-dim);
+  margin: 24px 0;
+}
+
+/* ─── REFERENCE ──────────────────────────────────────────── */
+.ref-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 22px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  transition: all 0.25s;
+}
+
+.ref-card:hover {
+  transform: translateX(5px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  border-color: rgba(196,255,0,0.25);
+}
+
+.ref-icon { font-size: 2rem; }
+
+.ref-body { flex: 1; }
+
+.ref-name {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 0.95rem;
+  margin-bottom: 3px;
+}
+
+.ref-sub { font-size: 0.8rem; color: var(--muted); }
+
+.ref-dl {
+  background: var(--accent);
+  color: #000;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 7px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: 'Orbitron', sans-serif;
+  transition: all 0.2s;
+  display: inline-block;
+  white-space: nowrap;
+  box-shadow: 0 0 12px rgba(196,255,0,0.25);
+}
+
+.ref-dl:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(196,255,0,0.4);
+}
+
+/* ─── COMPLETE BUTTON ─────────────────────────────────────── */
+.complete-wrap {
+  text-align: center;
+  padding: 40px 0 20px;
+}
+
+.complete-btn {
+  background: linear-gradient(135deg, var(--accent), #7fd600);
+  color: #000;
+  border: none;
+  padding: 14px 36px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  cursor: pointer;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 0.5px;
+  transition: all 0.3s;
+  box-shadow: 0 0 24px rgba(196,255,0,0.3);
+}
+
+.complete-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 32px rgba(196,255,0,0.5);
+}
+
+.complete-btn.done {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  box-shadow: 0 0 24px rgba(34,197,94,0.3);
+}
+
+/* ─── FOOTER ─────────────────────────────────────────────── */
+footer {
+  text-align: center;
+  padding: 24px 52px;
+  border-top: 1px solid var(--border-dim);
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.5px;
+}
+
+footer a { color: var(--cyan); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+/* ─── SCROLL INDICATOR ────────────────────────────────────── */
+.read-indicator {
+  position: fixed;
+  top: 0;
+  left: var(--sidebar-w);
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--cyan));
+  transform-origin: left;
+  transform: scaleX(0);
+  z-index: 300;
+  transition: transform 0.1s;
+}
+
+/* ─── MOBILE ─────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  :root { --sidebar-w: 0px; }
+  .sidebar { display: none; }
+  .content { padding: 24px 20px 60px; }
+  .topbar { padding: 12px 20px; }
+  .concept-grid { grid-template-columns: 1fr 1fr; }
+  .deadlock-grid { grid-template-columns: 1fr; }
+  .log-list { grid-template-columns: 1fr; }
+  .flow-states { gap: 4px; }
+  .state-node { min-width: 80px; padding: 10px 12px; }
+  .page-hero h1 { font-size: 1.5rem; }
+}
+
+/* ─── FADE IN ─────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.topic-section {
+  animation: fadeUp 0.4s ease both;
+}
+
+.topic-section:nth-child(1) { animation-delay: 0.05s; }
+.topic-section:nth-child(2) { animation-delay: 0.10s; }
+.topic-section:nth-child(3) { animation-delay: 0.15s; }
+.topic-section:nth-child(4) { animation-delay: 0.20s; }
+.topic-section:nth-child(5) { animation-delay: 0.25s; }
+.topic-section:nth-child(6) { animation-delay: 0.30s; }
+</style>
+</head>
+<body>
+
+<!-- Background layers -->
+<div class="bg-grid"></div>
+<div class="bg-vignette"></div>
+
+<!-- Reading progress bar -->
+<div class="read-indicator" id="readIndicator"></div>
+
+<!-- ═══════════════════════════════ SIDEBAR ═══════════════════════ -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="logo.png" alt="HackForge Logo" class="logo-img">
+    <div class="logo-sub">Cybersecurity Learning</div>
+  </div>
+
+  <div class="toc-label">On this page</div>
+
+  <div class="toc-scroll" id="tocScroll">
+    <a class="toc-link" href="#s1"><span class="toc-num">01</span>Program, Process, Thread</a>
+    <a class="toc-link" href="#s2"><span class="toc-num">02</span>Process States</a>
+    <a class="toc-link" href="#s3"><span class="toc-num">03</span>Context Switching</a>
+    <a class="toc-link" href="#s4"><span class="toc-num">04</span>Memory Management</a>
+    <a class="toc-link" href="#s5"><span class="toc-num">05</span>Virtual Memory</a>
+    <a class="toc-link" href="#s6"><span class="toc-num">06</span>User Mode vs Kernel Mode</a>
+    <a class="toc-link" href="#s7"><span class="toc-num">07</span>File Permissions</a>
+    <a class="toc-link" href="#s8"><span class="toc-num">08</span>CPU Scheduling</a>
+    <a class="toc-link" href="#s9"><span class="toc-num">09</span>Deadlock</a>
+    <a class="toc-link" href="#s10"><span class="toc-num">10</span>Event Viewer</a>
+    <a class="toc-link" href="#s11"><span class="toc-num">11</span>Windows Registry</a>
+    <a class="toc-link" href="#s12"><span class="toc-num">12</span>Linux Logs</a>
+    <a class="toc-link" href="#s13"><span class="toc-num">13</span>Linux Permissions</a>
+    <a class="toc-link" href="#s14"><span class="toc-num">14</span>Windows vs Linux</a>
+    <a class="toc-link" href="#s15"><span class="toc-num">15</span>What is an OS? (Basics)</a>
+    <a class="toc-link" href="#s16"><span class="toc-num">16</span>Types of OS</a>
+    <a class="toc-link" href="#s17"><span class="toc-num">17</span>System Calls</a>
+    <a class="toc-link" href="#s18"><span class="toc-num">18</span>Booting Process</a>
+    <a class="toc-link" href="#s19"><span class="toc-num">19</span>Interprocess Communication</a>
+    <a class="toc-link" href="#s20"><span class="toc-num">20</span>File System Basics</a>
+    <a class="toc-link" href="#s21"><span class="toc-num">21</span>Quick Revision Cheat Sheet</a>
+  </div>
+
+  <div class="sidebar-nav">
+    <a href="index.html">📓 Notes</a>
+    <a href="roadmap.html">🗺️ Roadmap</a>
+    <a href="practice-lab.html" class="active">⚗️ Labs</a>
+  </div>
+</aside>
+
+<!-- ═══════════════════════════════ MAIN ══════════════════════════ -->
+<main class="main">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="breadcrumb">
+        <span>HackProof</span> / <span>Notes</span> / <strong>Operating System</strong>
+      </div>
+      <div class="topbar-badge">MODULE 03</div>
+    </div>
+    <div class="topbar-right">
+      <div class="progress-pill">
+        <span>Progress</span>
+        <div class="progress-pill-bar"><div class="progress-pill-fill"></div></div>
+        <span>35%</span>
+      </div>
+      <button class="mark-btn" id="markBtn" onclick="completeCourse()">✓ Mark Complete</button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- HERO -->
+    <div class="page-hero">
+      <div class="hero-tag">Core Module</div>
+      <h1>Operating System</h1>
+      <p>Understand how modern OS internals work — processes, memory, scheduling, permissions, and the critical differences between Windows and Linux relevant to cybersecurity.</p>
+      <div class="hero-meta">
+        <div class="hero-stat"><div class="dot"></div>21 Topics</div>
+        <div class="hero-stat"><div class="dot" style="background:var(--cyan);box-shadow:0 0 6px var(--cyan);"></div>~75 min read</div>
+        <div class="hero-stat"><div class="dot" style="background:#f59e0b;box-shadow:0 0 6px #f59e0b;"></div>Foundational</div>
+      </div>
+    </div>
+
+    <!-- ── S1: Program, Process, Thread ── -->
+    <div class="topic-section" id="s1">
+      <div class="s-head">
+        <span class="s-num">01</span>
+        <h2>Program, Process &amp; Thread</h2>
+        <span class="s-badge">Core</span>
+      </div>
+
+      <div class="concept-grid">
+        <div class="concept-card">
+          <span class="cc-icon">💾</span>
+          <div class="cc-label">Program</div>
+          <p class="cc-desc">A static file stored on disk. Contains instructions but is <em>not running</em>. Examples: Chrome.exe, python.py</p>
+        </div>
+        <div class="concept-card">
+          <span class="cc-icon">⚙️</span>
+          <div class="cc-label">Process</div>
+          <p class="cc-desc">A running program. Loaded into RAM, assigned a unique <code>PID</code>, and consumes CPU, memory &amp; I/O.</p>
+        </div>
+        <div class="concept-card">
+          <span class="cc-icon">🧵</span>
+          <div class="cc-label">Thread</div>
+          <p class="cc-desc">Smallest unit of execution <em>inside</em> a process. Shares the process memory but runs independently.</p>
+        </div>
+      </div>
+
+      <div class="callout info">
+        <span class="callout-icon">📌</span>
+        <div class="callout-body">
+          <strong>One-liner to remember</strong>
+          <p><span class="kw">Program</span> is static → <span class="kw">Process</span> is running → <span class="kw">Thread</span> is a slice of a process.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── S2: Process States ── -->
+    <div class="topic-section" id="s2">
+      <div class="s-head">
+        <span class="s-num">02</span>
+        <h2>Process States</h2>
+        <span class="s-badge">Core</span>
+      </div>
+
+      <p>A process is never locked in one state. The OS scheduler moves it through a lifecycle based on CPU availability and I/O operations.</p>
+
+      <div class="flow-states">
+        <div class="state-node">
+          <div class="sn-icon">🆕</div>
+          <div class="sn-name">New</div>
+          <div class="sn-desc">Being created</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="state-node">
+          <div class="sn-icon">⏳</div>
+          <div class="sn-name">Ready</div>
+          <div class="sn-desc">Waiting for CPU</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="state-node">
+          <div class="sn-icon">🚀</div>
+          <div class="sn-name">Running</div>
+          <div class="sn-desc">Using the CPU</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="state-node">
+          <div class="sn-icon">💤</div>
+          <div class="sn-name">Waiting</div>
+          <div class="sn-desc">Waiting for I/O</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="state-node">
+          <div class="sn-icon">✅</div>
+          <div class="sn-name">Terminated</div>
+          <div class="sn-desc">Execution done</div>
+        </div>
+      </div>
+
+      <p style="margin-top:14px;">A process in the <span class="kw">Waiting</span> state does <strong>not</strong> consume CPU — it resumes once the I/O operation completes, moving back to <span class="kw">Ready</span>.</p>
+    </div>
+
+    <!-- ── S3: Context Switching ── -->
+    <div class="topic-section" id="s3">
+      <div class="s-head">
+        <span class="s-num">03</span>
+        <h2>Context Switching</h2>
+      </div>
+
+      <p>Since only <span class="kw">one process</span> can use the CPU at a time, the OS rapidly switches between processes to create the illusion of multitasking. This switch is called a <span class="kw">context switch</span>.</p>
+
+      <div class="callout warn">
+        <span class="callout-icon">⚠️</span>
+        <div class="callout-body">
+          <strong>Performance Cost</strong>
+          <p>Every context switch requires saving and restoring CPU registers, program counters, and memory maps. Too many switches = overhead. The OS minimises unnecessary switches.</p>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <span class="cb-label">Context Switch Flow</span>
+        <span class="cb-gray">1. Save state of Process A (registers, PC, stack pointer)</span><br>
+        <span class="cb-green">2. Select next Process B from ready queue</span><br>
+        <span class="cb-gray">3. Restore state of Process B</span><br>
+        <span class="cb-cyan">4. CPU resumes execution of Process B</span>
+      </div>
+    </div>
+
+    <!-- ── S4: Memory Management ── -->
+    <div class="topic-section" id="s4">
+      <div class="s-head">
+        <span class="s-num">04</span>
+        <h2>Memory Management</h2>
+      </div>
+
+      <p>The OS allocates RAM to processes and enforces <span class="kw">memory isolation</span> — no process can read or write another process's memory space (without explicit shared memory).</p>
+
+      <div class="concept-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="concept-card">
+          <span class="cc-icon">📚</span>
+          <div class="cc-label">Stack</div>
+          <p class="cc-desc">Fixed-size. Stores function call frames, local variables. Managed automatically via LIFO. Fast access. <strong>Stack overflow</strong> if too deep.</p>
+        </div>
+        <div class="concept-card">
+          <span class="cc-icon">🗄️</span>
+          <div class="cc-label">Heap</div>
+          <p class="cc-desc">Dynamic allocation at runtime via <code>malloc/new</code>. Larger but slower. Developer-managed. <strong>Memory leaks</strong> occur here.</p>
+        </div>
+      </div>
+
+      <div class="callout cyan">
+        <span class="callout-icon">🔍</span>
+        <div class="callout-body">
+          <strong>Security Note</strong>
+          <p>Buffer overflow attacks exploit stack/heap boundaries. Understanding memory layout is essential for both exploitation and defence.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── S5: Virtual Memory ── -->
+    <div class="topic-section" id="s5">
+      <div class="s-head">
+        <span class="s-num">05</span>
+        <h2>Virtual Memory</h2>
+      </div>
+
+      <p>Virtual memory extends RAM by using disk space (the <span class="kw">swap partition</span> on Linux, <span class="kw">pagefile.sys</span> on Windows) as overflow storage.</p>
+
+      <table class="data-table">
+        <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td>Page</td><td>Fixed-size block of virtual memory (typically 4 KB)</td></tr>
+          <tr><td>Frame</td><td>Corresponding physical RAM block</td></tr>
+          <tr><td>Paging</td><td>Moving pages between RAM and disk</td></tr>
+          <tr><td>Page Fault</td><td>Accessing a page not currently in RAM — OS loads it in</td></tr>
+          <tr><td>Thrashing</td><td>Excessive paging causing severe performance degradation</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── S6: User Mode vs Kernel Mode ── -->
+    <div class="topic-section" id="s6">
+      <div class="s-head">
+        <span class="s-num">06</span>
+        <h2>User Mode vs Kernel Mode</h2>
+        <span class="s-badge">Security Critical</span>
+      </div>
+
+      <p>Modern CPUs provide hardware-enforced privilege rings. The OS uses two primary modes to protect system integrity.</p>
+
+      <table class="data-table">
+        <thead>
+          <tr><th>Attribute</th><th>User Mode</th><th>Kernel Mode</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Hardware Access</td><td>Restricted</td><td>Full access</td></tr>
+          <tr><td>Memory Access</td><td>Own process only</td><td>All memory</td></tr>
+          <tr><td>Crash Impact</td><td>App crashes only</td><td>Entire system (BSOD / Kernel Panic)</td></tr>
+          <tr><td>Runs</td><td>Apps, browsers, games</td><td>OS kernel, drivers</td></tr>
+          <tr><td>Ring Level</td><td>Ring 3</td><td>Ring 0</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout warn">
+        <span class="callout-icon">💀</span>
+        <div class="callout-body">
+          <strong>Privilege Escalation</strong>
+          <p>Attackers often aim to move from user mode to kernel mode. Kernel exploits grant total system control — rootkits operate at this level.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── S7: File Permissions ── -->
+    <div class="topic-section" id="s7">
+      <div class="s-head">
+        <span class="s-num">07</span>
+        <h2>File Permissions</h2>
+      </div>
+
+      <p>Permissions control who can <span class="kw">read</span>, <span class="kw">write</span>, or <span class="kw">execute</span> a file. Misconfigured permissions are a primary attack surface.</p>
+
+      <table class="data-table">
+        <thead><tr><th>Symbol</th><th>Permission</th><th>Octal</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td><code>r</code></td><td>Read</td><td>4</td><td>View file contents</td></tr>
+          <tr><td><code>w</code></td><td>Write</td><td>2</td><td>Modify / delete file</td></tr>
+          <tr><td><code>x</code></td><td>Execute</td><td>1</td><td>Run as program</td></tr>
+          <tr><td><code>-</code></td><td>None</td><td>0</td><td>No access</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── S8: CPU Scheduling ── -->
+    <div class="topic-section" id="s8">
+      <div class="s-head">
+        <span class="s-num">08</span>
+        <h2>CPU Scheduling</h2>
+      </div>
+
+      <p>The scheduler decides which process runs next. Different algorithms optimise for fairness, throughput, or responsiveness.</p>
+
+      <div class="sched-list">
+        <div class="sched-item">
+          <div class="si-num">FCFS</div>
+          <div>
+            <div class="si-name">First Come First Serve</div>
+            <p class="si-desc">Processes are executed in arrival order. Simple but can cause the <em>convoy effect</em> — long jobs block short ones.</p>
+          </div>
+        </div>
+        <div class="sched-item">
+          <div class="si-num">RR</div>
+          <div>
+            <div class="si-name">Round Robin</div>
+            <p class="si-desc">Each process gets a fixed time quantum (e.g. 10ms). Fair and responsive. Used in most modern OS schedulers.</p>
+          </div>
+        </div>
+        <div class="sched-item">
+          <div class="si-num">PRI</div>
+          <div>
+            <div class="si-name">Priority Scheduling</div>
+            <p class="si-desc">Higher priority processes run first. Risk of <em>starvation</em> — low-priority processes may never execute.</p>
+          </div>
+        </div>
+        <div class="sched-item">
+          <div class="si-num">SJF</div>
+          <div>
+            <div class="si-name">Shortest Job First</div>
+            <p class="si-desc">Optimal average wait time but requires knowing process burst times in advance — impractical without estimation.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── S9: Deadlock ── -->
+    <div class="topic-section" id="s9">
+      <div class="s-head">
+        <span class="s-num">09</span>
+        <h2>Deadlock</h2>
+        <span class="s-badge">Important</span>
+      </div>
+
+      <p>A deadlock occurs when two or more processes are each waiting on a resource held by the other — creating a circular wait with <span class="kw" style="color:var(--danger);">no escape</span>.</p>
+
+      <h3>Four Coffman Conditions (all must be true for deadlock)</h3>
+
+      <div class="deadlock-grid">
+        <div class="dl-card">
+          <div class="dl-head">Mutual Exclusion</div>
+          <p class="dl-text">At least one resource must be held in a non-shareable mode.</p>
+        </div>
+        <div class="dl-card">
+          <div class="dl-head">Hold &amp; Wait</div>
+          <p class="dl-text">A process holds resources while waiting to acquire more.</p>
+        </div>
+        <div class="dl-card">
+          <div class="dl-head">No Preemption</div>
+          <p class="dl-text">Resources cannot be forcibly taken — only voluntarily released.</p>
+        </div>
+        <div class="dl-card">
+          <div class="dl-head">Circular Wait</div>
+          <p class="dl-text">A closed chain of processes where each waits for the next.</p>
+        </div>
+      </div>
+
+      <div class="callout info">
+        <span class="callout-icon">🔧</span>
+        <div class="callout-body">
+          <strong>OS Strategies</strong>
+          <p><strong>Prevention</strong> — remove one condition. &nbsp;|&nbsp; <strong>Avoidance</strong> — Banker's Algorithm. &nbsp;|&nbsp; <strong>Detection + Recovery</strong> — kill/rollback processes.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── S10: Event Viewer ── -->
+    <div class="topic-section" id="s10">
+      <div class="s-head">
+        <span class="s-num">10</span>
+        <h2>Event Viewer <span style="font-size:0.75rem;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-left:8px;">Windows</span></h2>
+        <span class="s-badge">Windows</span>
+      </div>
+
+      <p>Event Viewer is Windows' built-in log management tool. Critical for incident response, forensics, and system troubleshooting.</p>
+
+      <table class="data-table">
+        <thead><tr><th>Log Category</th><th>What it records</th></tr></thead>
+        <tbody>
+          <tr><td>Application</td><td>Software errors, crashes, warnings from installed applications</td></tr>
+          <tr><td>System</td><td>OS and hardware events — driver failures, service starts/stops</td></tr>
+          <tr><td>Security</td><td>Login attempts (success/fail), privilege use, audit policy changes</td></tr>
+          <tr><td>Setup</td><td>Installation and update events</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Event Severity Levels</h3>
+      <div class="concept-grid">
+        <div class="concept-card"><span class="cc-icon">ℹ️</span><div class="cc-label">Information</div><p class="cc-desc">Normal operation recorded.</p></div>
+        <div class="concept-card"><span class="cc-icon">⚠️</span><div class="cc-label">Warning</div><p class="cc-desc">Non-critical issue that may become a problem.</p></div>
+        <div class="concept-card"><span class="cc-icon">🔴</span><div class="cc-label">Error / Critical</div><p class="cc-desc">Significant failure requiring attention.</p></div>
+      </div>
+
+      <div class="callout cyan">
+        <span class="callout-icon">🔍</span>
+        <div class="callout-body">
+          <strong>SOC Analyst Tip</strong>
+          <p>Monitor <code>Event ID 4625</code> (failed login) and <code>4672</code> (special privilege logon). Spikes in these often indicate brute-force or lateral movement.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── S11: Registry ── -->
+    <div class="topic-section" id="s11">
+      <div class="s-head">
+        <span class="s-num">11</span>
+        <h2>Windows Registry</h2>
+        <span class="s-badge">Windows</span>
+      </div>
+
+      <p>The Registry is a hierarchical database storing all Windows configuration — hardware, software, user settings, and system policies. Malware frequently modifies it to achieve <span class="kw">persistence</span>.</p>
+
+      <div class="hive-list">
+        <div class="hive-item">
+          <span class="hive-key">HKEY_LOCAL_MACHINE</span>
+          <span class="hive-val">System-wide settings, hardware, drivers</span>
+        </div>
+        <div class="hive-item">
+          <span class="hive-key">HKEY_CURRENT_USER</span>
+          <span class="hive-val">Logged-in user preferences &amp; config</span>
+        </div>
+        <div class="hive-item">
+          <span class="hive-key">HKEY_CLASSES_ROOT</span>
+          <span class="hive-val">File type associations and COM classes</span>
+        </div>
+        <div class="hive-item">
+          <span class="hive-key">HKEY_USERS</span>
+          <span class="hive-val">Profiles for all user accounts</span>
+        </div>
+      </div>
+
+      <div class="callout warn">
+        <span class="callout-icon">🦠</span>
+        <div class="callout-body">
+          <strong>Persistence via Registry</strong>
+          <p>Malware commonly adds entries to <code>HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run</code> to execute at every boot. Always check this key during forensics.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── S12: Linux Logs ── -->
+    <div class="topic-section" id="s12">
+      <div class="s-head">
+        <span class="s-num">12</span>
+        <h2>Linux Logs</h2>
+        <span class="s-badge">Linux</span>
+      </div>
+
+      <p>Linux stores logs as plain text files under <code>/var/log/</code>. Readable with standard CLI tools — no GUI required.</p>
+
+      <div class="log-list">
+        <div class="log-item">
+          <span class="log-icon">📋</span>
+          <div>
+            <div class="log-path">/var/log/syslog</div>
+            <div class="log-desc">General system activity — the main log on Debian/Ubuntu</div>
+          </div>
+        </div>
+        <div class="log-item">
+          <span class="log-icon">🔐</span>
+          <div>
+            <div class="log-path">/var/log/auth.log</div>
+            <div class="log-desc">Authentication events, sudo usage, SSH logins</div>
+          </div>
+        </div>
+        <div class="log-item">
+          <span class="log-icon">⚙️</span>
+          <div>
+            <div class="log-path">/var/log/kern.log</div>
+            <div class="log-desc">Kernel messages — hardware errors, driver events</div>
+          </div>
+        </div>
+        <div class="log-item">
+          <span class="log-icon">🚀</span>
+          <div>
+            <div class="log-path">/var/log/boot.log</div>
+            <div class="log-desc">Boot sequence output — service start/fail messages</div>
+          </div>
+        </div>
+        <div class="log-item">
+          <span class="log-icon">🌐</span>
+          <div>
+            <div class="log-path">/var/log/apache2/</div>
+            <div class="log-desc">Web server access and error logs</div>
+          </div>
+        </div>
+        <div class="log-item">
+          <span class="log-icon">💬</span>
+          <div>
+            <div class="log-path">journalctl</div>
+            <div class="log-desc">systemd unified log viewer — query with flags like <code>-u</code> <code>-f</code> <code>-n</code></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <span class="cb-label">Common Commands</span>
+        <span class="cb-green">tail -f /var/log/auth.log</span>       <span class="cb-gray"># live-follow auth events</span><br>
+        <span class="cb-green">grep "Failed password" /var/log/auth.log</span> <span class="cb-gray"># find failed SSH attempts</span><br>
+        <span class="cb-cyan">journalctl -u ssh --since "1 hour ago"</span><br>
+        <span class="cb-green">less /var/log/syslog</span>              <span class="cb-gray"># paginate through syslog</span>
+      </div>
+    </div>
+
+    <!-- ── S13: Linux Permissions ── -->
+    <div class="topic-section" id="s13">
+      <div class="s-head">
+        <span class="s-num">13</span>
+        <h2>Linux Permissions</h2>
+        <span class="s-badge">Linux</span>
+      </div>
+
+      <p>Linux uses a <span class="kw">rwx</span> permission model across three categories: <span class="kw">Owner</span>, <span class="kw-cyan">Group</span>, and <span style="color:#f59e0b;font-weight:600;">Others</span>.</p>
+
+      <div class="perm-display">
+        <span class="pc-type">-</span>
+        <span class="pc-own">rwx</span>
+        <span class="pc-sep">|</span>
+        <span class="pc-grp">r-x</span>
+        <span class="pc-sep">|</span>
+        <span class="pc-oth">r--</span>
+        <span style="color:var(--muted); margin-left:16px; font-size:0.8rem;"> filename.sh</span>
+      </div>
+
+      <div class="perm-legend">
+        <div class="pl-item"><div class="pl-dot" style="background:var(--accent);"></div><span style="color:var(--accent);">Owner</span> — rwx (7)</div>
+        <div class="pl-item"><div class="pl-dot" style="background:var(--cyan);"></div><span style="color:var(--cyan);">Group</span> — r-x (5)</div>
+        <div class="pl-item"><div class="pl-dot" style="background:#f59e0b;"></div><span style="color:#f59e0b;">Others</span> — r-- (4)</div>
+      </div>
+
+      <hr class="divider">
+
+      <h3>Key Commands</h3>
+
+      <div class="code-block">
+        <span class="cb-label">Permission Commands</span>
+        <span class="cb-green">ls -la</span>               <span class="cb-gray"># list files with permissions</span><br>
+        <span class="cb-green">chmod 755 script.sh</span>  <span class="cb-gray"># set rwxr-xr-x</span><br>
+        <span class="cb-green">chmod +x exploit.sh</span>  <span class="cb-gray"># add execute bit</span><br>
+        <span class="cb-cyan">chown user:group file</span> <span class="cb-gray"># change ownership</span><br>
+        <span class="cb-green">find / -perm -4000</span>    <span class="cb-gray"># find SUID binaries (privesc)</span>
+      </div>
+
+      <div class="callout warn">
+        <span class="callout-icon">🎯</span>
+        <div class="callout-body">
+          <strong>SUID / SGID Exploitation</strong>
+          <p>Files with the SUID bit (<code>chmod +s</code>) run with the owner's privileges regardless of who executes them. Finding world-writable SUID binaries is a classic privilege escalation vector.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── S14: Windows vs Linux ── -->
+    <div class="topic-section" id="s14">
+      <div class="s-head">
+        <span class="s-num">14</span>
+        <h2>Windows vs Linux — Comparison</h2>
+        <span class="s-badge">Summary</span>
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th><span class="tag-win">Windows</span></th>
+            <th><span class="tag-lin">Linux</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Log Storage</td>
+            <td class="tag-win">Event Viewer (GUI + binary)</td>
+            <td class="tag-lin">/var/log/ (plain text)</td>
+          </tr>
+          <tr>
+            <td>Config Storage</td>
+            <td class="tag-win">Registry (hierarchical DB)</td>
+            <td class="tag-lin">Text config files (/etc/)</td>
+          </tr>
+          <tr>
+            <td>Permissions</td>
+            <td class="tag-win">ACL + GUI-based</td>
+            <td class="tag-lin">rwx (owner/group/others)</td>
+          </tr>
+          <tr>
+            <td>Admin Interface</td>
+            <td class="tag-win">GUI-heavy (Control Panel)</td>
+            <td class="tag-lin">CLI-focused (bash, zsh)</td>
+          </tr>
+          <tr>
+            <td>Process Manager</td>
+            <td class="tag-win">Task Manager / tasklist</td>
+            <td class="tag-lin">ps, top, htop</td>
+          </tr>
+          <tr>
+            <td>Package Manager</td>
+            <td class="tag-win">winget / Chocolatey</td>
+            <td class="tag-lin">apt, yum, pacman</td>
+          </tr>
+          <tr>
+            <td>Kernel Access</td>
+            <td class="tag-win">Closed-source (NT kernel)</td>
+            <td class="tag-lin">Open-source (monolithic)</td>
+          </tr>
+          <tr>
+            <td>Pen Test Usage</td>
+            <td class="tag-win">Primary target environment</td>
+            <td class="tag-lin">Primary attacker environment</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── S15: What is an OS ── -->
+    <div class="topic-section" id="s15">
+      <div class="s-head">
+        <span class="s-num">15</span>
+        <h2>What is an Operating System? (Beginner Basics)</h2>
+        <span class="s-badge">Beginner</span>
+      </div>
+
+      <p>Think of the Operating System as the <span class="kw">manager of your computer</span>. Just like a manager in a company handles all the employees and resources — the OS handles all the programs and hardware in your computer.</p>
+
+      <div class="callout info">
+        <span class="callout-icon">💡</span>
+        <div class="callout-body">
+          <strong>Simple Real-Life Analogy</strong>
+          <p>Imagine a restaurant. The <span class="kw">chef</span> = your application (browser, game). The <span class="kw">kitchen manager</span> = the OS. The <span class="kw">kitchen equipment</span> = hardware (CPU, RAM, disk). The kitchen manager decides which chef gets to use which equipment and when.</p>
+        </div>
+      </div>
+
+      <h3>What does the OS actually do?</h3>
+
+      <div class="sched-list">
+        <div class="sched-item">
+          <div class="si-num">①</div>
+          <div>
+            <div class="si-name">Manages Hardware</div>
+            <p class="si-desc">Talks to your keyboard, mouse, screen, hard disk on behalf of applications. Without the OS, your game wouldn't know how to use your graphics card.</p>
+          </div>
+        </div>
+        <div class="sched-item">
+          <div class="si-num">②</div>
+          <div>
+            <div class="si-name">Runs Programs</div>
+            <p class="si-desc">When you double-click an app, the OS loads it into RAM and gives it CPU time to execute. The app itself can't do this — the OS does it for it.</p>
+          </div>
+        </div>
+        <div class="sched-item">
+          <div class="si-num">③</div>
+          <div>
+            <div class="si-name">Manages Files</div>
+            <p class="si-desc">Organises your data into files and folders on the disk. Handles reading, writing, and deleting files safely.</p>
+          </div>
+        </div>
+        <div class="sched-item">
+          <div class="si-num">④</div>
+          <div>
+            <div class="si-name">Provides Security</div>
+            <p class="si-desc">Decides which user or program can access what. Prevents one app from reading another app's private data.</p>
+          </div>
+        </div>
+        <div class="sched-item">
+          <div class="si-num">⑤</div>
+          <div>
+            <div class="si-name">Manages Users</div>
+            <p class="si-desc">Handles login, multiple user accounts, and permissions — so your files stay private from other users on the same machine.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout cyan">
+        <span class="callout-icon">🖥️</span>
+        <div class="callout-body">
+          <strong>Popular Operating Systems</strong>
+          <p><strong>Windows</strong> — most common desktop OS, used in offices worldwide. &nbsp;|&nbsp; <strong>Linux</strong> — used in servers, hacking, and cybersecurity. &nbsp;|&nbsp; <strong>macOS</strong> — Apple computers. &nbsp;|&nbsp; <strong>Android / iOS</strong> — mobile OS.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── S16: Types of OS ── -->
+    <div class="topic-section" id="s16">
+      <div class="s-head">
+        <span class="s-num">16</span>
+        <h2>Types of Operating Systems</h2>
+        <span class="s-badge">Beginner</span>
+      </div>
+
+      <p>There are different types of OS built for different purposes. As a cybersecurity learner, you'll encounter all of these.</p>
+
+      <table class="data-table">
+        <thead><tr><th>Type</th><th>What it means (simple)</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Single-User</td>
+            <td>Only one person can use it at a time</td>
+            <td>Old MS-DOS, early Windows</td>
+          </tr>
+          <tr>
+            <td>Multi-User</td>
+            <td>Many people can log in and use it simultaneously</td>
+            <td>Linux servers, Unix</td>
+          </tr>
+          <tr>
+            <td>Multi-Tasking</td>
+            <td>Can run many programs at the same time</td>
+            <td>Windows 11, Ubuntu</td>
+          </tr>
+          <tr>
+            <td>Real-Time OS (RTOS)</td>
+            <td>Responds to input instantly — used in critical systems</td>
+            <td>Medical devices, car brakes</td>
+          </tr>
+          <tr>
+            <td>Distributed OS</td>
+            <td>Manages multiple computers as if they are one</td>
+            <td>Google's server clusters</td>
+          </tr>
+          <tr>
+            <td>Mobile OS</td>
+            <td>Designed for touchscreen, battery, and sensors</td>
+            <td>Android, iOS</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout info">
+        <span class="callout-icon">🎯</span>
+        <div class="callout-body">
+          <strong>For Cybersecurity — focus on these two</strong>
+          <p><span class="kw">Windows</span> — the most attacked OS in the world. You need to know it to defend it. &nbsp;|&nbsp; <span class="kw">Linux</span> — the OS used by 90%+ of servers and nearly all hacking tools. Essential to master.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── S17: System Calls ── -->
+    <div class="topic-section" id="s17">
+      <div class="s-head">
+        <span class="s-num">17</span>
+        <h2>System Calls — How Apps Talk to the OS</h2>
+        <span class="s-badge">Intermediate</span>
+      </div>
+
+      <p>When your program needs to do something that requires hardware (like reading a file, printing to screen, or sending data over the network), it can't do it directly. Instead, it makes a <span class="kw">system call</span> — basically asking the OS: <em>"Hey, please do this for me."</em></p>
+
+      <div class="callout info">
+        <span class="callout-icon">📞</span>
+        <div class="callout-body">
+          <strong>Analogy</strong>
+          <p>Imagine you're a customer (app) in a restaurant. You don't go into the kitchen yourself — you call the waiter (system call) who carries your request to the kitchen (OS/kernel) and brings back the result.</p>
+        </div>
+      </div>
+
+      <h3>Common System Calls</h3>
+
+      <table class="data-table">
+        <thead><tr><th>Category</th><th>System Call</th><th>What it does (simple)</th></tr></thead>
+        <tbody>
+          <tr><td>Process</td><td><code>fork()</code></td><td>Creates a copy of the current process (child process)</td></tr>
+          <tr><td>Process</td><td><code>exec()</code></td><td>Replaces current process with a new program</td></tr>
+          <tr><td>Process</td><td><code>exit()</code></td><td>Ends the process and frees resources</td></tr>
+          <tr><td>File</td><td><code>open()</code></td><td>Opens a file for reading or writing</td></tr>
+          <tr><td>File</td><td><code>read()</code></td><td>Reads data from a file or input</td></tr>
+          <tr><td>File</td><td><code>write()</code></td><td>Writes data to a file or output</td></tr>
+          <tr><td>File</td><td><code>close()</code></td><td>Closes a file after you're done with it</td></tr>
+          <tr><td>Memory</td><td><code>mmap()</code></td><td>Maps a file or memory into the process address space</td></tr>
+          <tr><td>Network</td><td><code>socket()</code></td><td>Creates a network connection endpoint</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout warn">
+        <span class="callout-icon">🔍</span>
+        <div class="callout-body">
+          <strong>Security Relevance</strong>
+          <p>Malware analysis involves tracing system calls to understand what a suspicious program is doing. Tools like <code>strace</code> (Linux) and <code>Procmon</code> (Windows) capture system calls in real time.</p>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <span class="cb-label">Linux — Trace System Calls</span>
+        <span class="cb-green">strace ls</span>          <span class="cb-gray"># see all syscalls made by 'ls' command</span><br>
+        <span class="cb-green">strace -p 1234</span>     <span class="cb-gray"># attach to running process PID 1234</span><br>
+        <span class="cb-cyan">strace -e trace=file ls</span>  <span class="cb-gray"># show only file-related syscalls</span>
+      </div>
+    </div>
+
+    <!-- ── S18: Booting Process ── -->
+    <div class="topic-section" id="s18">
+      <div class="s-head">
+        <span class="s-num">18</span>
+        <h2>The Booting Process — What Happens When You Press Power</h2>
+        <span class="s-badge">Beginner</span>
+      </div>
+
+      <p>Most beginners never think about what happens between pressing the power button and seeing the desktop. Understanding the boot process is critical for cybersecurity — many attacks (like <span class="kw">bootkits</span>) target this exact sequence.</p>
+
+      <div class="flow-states" style="flex-wrap:wrap; gap:8px;">
+        <div class="state-node">
+          <div class="sn-icon">🔌</div>
+          <div class="sn-name">Power ON</div>
+          <div class="sn-desc">CPU wakes up</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="state-node">
+          <div class="sn-icon">🧩</div>
+          <div class="sn-name">BIOS / UEFI</div>
+          <div class="sn-desc">Hardware check</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="state-node">
+          <div class="sn-icon">🔍</div>
+          <div class="sn-name">POST</div>
+          <div class="sn-desc">Self-test</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="state-node">
+          <div class="sn-icon">💾</div>
+          <div class="sn-name">Bootloader</div>
+          <div class="sn-desc">Finds OS</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="state-node">
+          <div class="sn-icon">⚙️</div>
+          <div class="sn-name">Kernel</div>
+          <div class="sn-desc">OS loads</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="state-node">
+          <div class="sn-icon">🖥️</div>
+          <div class="sn-name">Desktop</div>
+          <div class="sn-desc">Ready to use</div>
+        </div>
+      </div>
+
+      <h3>Each Step Explained Simply</h3>
+
+      <div class="sched-list">
+        <div class="sched-item">
+          <div class="si-num">①</div>
+          <div>
+            <div class="si-name">BIOS / UEFI</div>
+            <p class="si-desc">The first firmware that runs. It lives on a chip on your motherboard. BIOS is old, UEFI is modern. It checks that all hardware (RAM, disk, keyboard) is connected and working.</p>
+          </div>
+        </div>
+        <div class="sched-item">
+          <div class="si-num">②</div>
+          <div>
+            <div class="si-name">POST (Power-On Self Test)</div>
+            <p class="si-desc">A quick self-diagnosis of hardware. If something's wrong (e.g., no RAM), you'll hear beeps or see an error — the OS never even loads.</p>
+          </div>
+        </div>
+        <div class="sched-item">
+          <div class="si-num">③</div>
+          <div>
+            <div class="si-name">Bootloader</div>
+            <p class="si-desc">A small program that finds the OS on your disk and loads it into RAM. Windows uses <code>bootmgr</code>. Linux uses <code>GRUB</code>. This is where dual-boot menus appear.</p>
+          </div>
+        </div>
+        <div class="sched-item">
+          <div class="si-num">④</div>
+          <div>
+            <div class="si-name">Kernel Loads</div>
+            <p class="si-desc">The OS kernel takes over, detects all hardware, loads device drivers, mounts the file system, and starts background services.</p>
+          </div>
+        </div>
+        <div class="sched-item">
+          <div class="si-num">⑤</div>
+          <div>
+            <div class="si-name">User Space / Desktop</div>
+            <p class="si-desc">Login screen appears. After logging in, your desktop environment, taskbar, and startup programs launch. The OS is now fully ready.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout warn">
+        <span class="callout-icon">💀</span>
+        <div class="callout-body">
+          <strong>Bootkit Attacks</strong>
+          <p>Advanced malware called <span class="kw">bootkits</span> infect the bootloader or MBR (Master Boot Record) so they load <em>before</em> the OS and antivirus — making them extremely difficult to detect and remove.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── S19: IPC ── -->
+    <div class="topic-section" id="s19">
+      <div class="s-head">
+        <span class="s-num">19</span>
+        <h2>Interprocess Communication (IPC)</h2>
+        <span class="s-badge">Intermediate</span>
+      </div>
+
+      <p>Processes are isolated from each other (they can't read each other's memory directly). But sometimes they <em>need</em> to share data or coordinate. That's where <span class="kw">IPC (Interprocess Communication)</span> comes in.</p>
+
+      <div class="callout info">
+        <span class="callout-icon">📬</span>
+        <div class="callout-body">
+          <strong>Real-life Analogy</strong>
+          <p>Two people in separate rooms can't talk directly. They communicate via phone (pipe), shared noticeboard (shared memory), or sending letters (message queue). IPC is the same idea for processes.</p>
+        </div>
+      </div>
+
+      <table class="data-table">
+        <thead><tr><th>IPC Method</th><th>How it works (simple)</th><th>Speed</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Pipe</td>
+            <td>One-way channel — output of one process becomes input of another. Used in Linux terminal with <code>|</code> symbol.</td>
+            <td>Fast</td>
+          </tr>
+          <tr>
+            <td>Named Pipe (FIFO)</td>
+            <td>Like a pipe but has a name on the file system — unrelated processes can use it.</td>
+            <td>Fast</td>
+          </tr>
+          <tr>
+            <td>Shared Memory</td>
+            <td>Two processes both access the same section of RAM. Fastest method but needs synchronisation.</td>
+            <td>Fastest</td>
+          </tr>
+          <tr>
+            <td>Message Queue</td>
+            <td>Processes send messages to a queue; others read from it. Like a mailbox.</td>
+            <td>Medium</td>
+          </tr>
+          <tr>
+            <td>Socket</td>
+            <td>Can communicate over a network or locally. Used by browsers, servers, and malware C2.</td>
+            <td>Medium</td>
+          </tr>
+          <tr>
+            <td>Signal</td>
+            <td>Simple notification sent to a process — e.g., <code>SIGKILL</code> to terminate, <code>SIGINT</code> when you press Ctrl+C.</td>
+            <td>Instant</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="code-block">
+        <span class="cb-label">IPC — Linux Examples</span>
+        <span class="cb-green">ls | grep ".txt"</span>       <span class="cb-gray"># pipe: ls output → grep input</span><br>
+        <span class="cb-cyan">kill -9 1234</span>           <span class="cb-gray"># send SIGKILL signal to PID 1234</span><br>
+        <span class="cb-green">ipcs</span>                   <span class="cb-gray"># list shared memory, queues, semaphores</span>
+      </div>
+    </div>
+
+    <!-- ── S20: File System ── -->
+    <div class="topic-section" id="s20">
+      <div class="s-head">
+        <span class="s-num">20</span>
+        <h2>File System Basics</h2>
+        <span class="s-badge">Beginner</span>
+      </div>
+
+      <p>A <span class="kw">file system</span> is how the OS organises and stores data on a disk. Without a file system, the disk is just billions of random bits — the file system gives structure, names, and location to everything.</p>
+
+      <div class="callout info">
+        <span class="callout-icon">📁</span>
+        <div class="callout-body">
+          <strong>Simple Analogy</strong>
+          <p>Your hard disk is like a giant warehouse. The file system is the <em>shelving system</em> — it labels every shelf (directory), knows where every box (file) is, and records who put it there and when.</p>
+        </div>
+      </div>
+
+      <h3>Common File Systems</h3>
+
+      <table class="data-table">
+        <thead><tr><th>File System</th><th>OS</th><th>Key Facts</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>NTFS</code></td>
+            <td class="tag-win">Windows</td>
+            <td>Supports large files, permissions, encryption (EFS), journaling. Default for Windows.</td>
+          </tr>
+          <tr>
+            <td><code>FAT32</code></td>
+            <td class="tag-win">Windows / USB</td>
+            <td>Old, simple, widely compatible. 4 GB max file size limit. No permissions.</td>
+          </tr>
+          <tr>
+            <td><code>exFAT</code></td>
+            <td class="tag-win">USB / SD Cards</td>
+            <td>Like FAT32 but supports large files. Used on flash drives.</td>
+          </tr>
+          <tr>
+            <td><code>ext4</code></td>
+            <td class="tag-lin">Linux</td>
+            <td>Default on most Linux distros. Fast, reliable, supports journaling.</td>
+          </tr>
+          <tr>
+            <td><code>XFS</code></td>
+            <td class="tag-lin">Linux</td>
+            <td>High-performance. Used on Red Hat / CentOS servers.</td>
+          </tr>
+          <tr>
+            <td><code>APFS</code></td>
+            <td>macOS</td>
+            <td>Apple's modern file system. Optimised for SSDs.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Important File System Concepts</h3>
+
+      <div class="concept-grid">
+        <div class="concept-card">
+          <span class="cc-icon">🗂️</span>
+          <div class="cc-label">Inode</div>
+          <p class="cc-desc">A data structure storing file metadata — size, owner, permissions, timestamps. Every file has an inode. The name is stored separately.</p>
+        </div>
+        <div class="concept-card">
+          <span class="cc-icon">📓</span>
+          <div class="cc-label">Journaling</div>
+          <p class="cc-desc">Keeps a log of changes before writing them. If the system crashes mid-write, the journal allows recovery without data corruption.</p>
+        </div>
+        <div class="concept-card">
+          <span class="cc-icon">🔗</span>
+          <div class="cc-label">Hard Links</div>
+          <p class="cc-desc">Multiple filenames pointing to the same inode (same data). Deleting one link doesn't delete the data until all links are gone.</p>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <span class="cb-label">Useful Commands</span>
+        <span class="cb-green">df -h</span>              <span class="cb-gray"># disk space used per file system</span><br>
+        <span class="cb-green">du -sh /home/user</span>  <span class="cb-gray"># size of a specific folder</span><br>
+        <span class="cb-cyan">ls -i</span>              <span class="cb-gray"># show inode numbers</span><br>
+        <span class="cb-green">file secrets.txt</span>  <span class="cb-gray"># identify true file type</span><br>
+        <span class="cb-cyan">stat file.txt</span>     <span class="cb-gray"># full metadata — size, timestamps, inode</span>
+      </div>
+
+      <div class="callout warn">
+        <span class="callout-icon">🔍</span>
+        <div class="callout-body">
+          <strong>Forensics Tip</strong>
+          <p>Even after a file is deleted, the inode and data blocks may still exist on disk until overwritten. Digital forensics tools like <code>Autopsy</code> and <code>Sleuth Kit</code> recover deleted files by scanning for orphaned inodes and data blocks.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── S21: Cheat Sheet ── -->
+    <div class="topic-section" id="s21">
+      <div class="s-head">
+        <span class="s-num">21</span>
+        <h2>⚡ Quick Revision Cheat Sheet</h2>
+        <span class="s-badge">All Topics</span>
+      </div>
+
+      <p>Everything in this module in one fast-scan table. Use this before exams or CTFs.</p>
+
+      <table class="data-table">
+        <thead><tr><th>Concept</th><th>One-Line Summary</th></tr></thead>
+        <tbody>
+          <tr><td>Program</td><td>Static file on disk — not running yet</td></tr>
+          <tr><td>Process</td><td>Running program with its own PID and resources</td></tr>
+          <tr><td>Thread</td><td>Smallest unit inside a process — shares memory</td></tr>
+          <tr><td>Process States</td><td>New → Ready → Running → Waiting → Terminated</td></tr>
+          <tr><td>Context Switch</td><td>OS saves one process state and loads another to share CPU</td></tr>
+          <tr><td>Stack</td><td>Fixed memory for function calls and local variables</td></tr>
+          <tr><td>Heap</td><td>Dynamic memory at runtime — developer manages manually</td></tr>
+          <tr><td>Virtual Memory</td><td>Uses disk as extra RAM — slow but prevents crashes</td></tr>
+          <tr><td>User Mode</td><td>Ring 3 — limited access, apps crash only</td></tr>
+          <tr><td>Kernel Mode</td><td>Ring 0 — full access, crash = BSOD / Kernel Panic</td></tr>
+          <tr><td>rwx</td><td>Read=4, Write=2, Execute=1 — applied to owner/group/others</td></tr>
+          <tr><td>SUID</td><td>File runs as the file owner regardless of who launches it</td></tr>
+          <tr><td>Deadlock</td><td>Circular wait — 4 conditions: Mutual Exclusion, Hold &amp; Wait, No Preemption, Circular Wait</td></tr>
+          <tr><td>Event Viewer</td><td>Windows log tool — ID 4625 = failed login, 4672 = privilege use</td></tr>
+          <tr><td>Registry</td><td>Windows config DB — malware uses Run key for persistence</td></tr>
+          <tr><td>/var/log/auth.log</td><td>Linux auth events — SSH logins, sudo usage</td></tr>
+          <tr><td>Bootloader</td><td>Loads the OS kernel — Windows: bootmgr, Linux: GRUB</td></tr>
+          <tr><td>System Call</td><td>App's request to OS to do hardware operations</td></tr>
+          <tr><td>Pipe ( | )</td><td>Send output of one process as input to another</td></tr>
+          <tr><td>NTFS</td><td>Windows file system — supports permissions and encryption</td></tr>
+          <tr><td>ext4</td><td>Default Linux file system — fast, reliable, journaled</td></tr>
+          <tr><td>Inode</td><td>Stores file metadata (not the filename) — used in forensics</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout cyan">
+        <span class="callout-icon">🏆</span>
+        <div class="callout-body">
+          <strong>You've covered the full OS module!</strong>
+          <p>These concepts appear in certifications like <strong>CompTIA Security+</strong>, <strong>CEH</strong>, <strong>OSCP</strong>, and almost every CTF. Mark it complete and move on to the next module.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- REFERENCE -->
+    <div style="margin-top:44px;">
+      <div style="font-family:'Orbitron',sans-serif;font-size:0.75rem;letter-spacing:2px;color:var(--accent);opacity:0.6;margin-bottom:16px;text-transform:uppercase;">Reference Materials</div>
+      <div class="ref-card">
+        <span class="ref-icon">📄</span>
+        <div class="ref-body">
+          <div class="ref-name">Operating Systems.pdf</div>
+          <div class="ref-sub">Comprehensive guide — covers all topics in this module and beyond</div>
+        </div>
+        <a class="ref-dl" href="Operating Systems.pdf" target="_blank">Download PDF</a>
+      </div>
+    </div>
+
+    <!-- COMPLETE BUTTON -->
+    <div class="complete-wrap">
+      <button class="complete-btn" id="completeBtn">✓ Mark Module as Complete</button>
+    </div>
+
+  </div><!-- /content -->
+
+  <footer>
+    © 2026 HackProof · Built by <a href="mailto:ligerharry44@gmail.com">Liger44</a> · For ethical cybersecurity learning only
+  </footer>
+
+</main>
+
+<!-- ═══════════════════════════════ SCRIPTS ════════════════════════ -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+/* ── Firebase ── */
+const firebaseConfig = {
+  apiKey: "AIzaSyCOEbqMZifKAVoKlZDHmcslXduBUxxb1xU",
+  authDomain: "hackproof-feb59.firebaseapp.com",
+  projectId: "hackproof-feb59",
+  storageBucket: "hackproof-feb59.firebasestorage.app",
+  messagingSenderId: "309682905913",
+  appId: "1:309682905913:web:7e32f772ed2e82672b3ee8"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+/* ── Complete course ── */
+async function completeCourse() {
+  const btn = document.getElementById('completeBtn');
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) {
+      alert('❌ Please login first to track progress.');
+      return;
+    }
+    try {
+      await db.collection('users').doc(user.uid).set({
+        coursesCompleted: firebase.firestore.FieldValue.increment(1),
+        'progress.os': firebase.firestore.FieldValue.increment(10)
+      }, { merge: true });
+      btn.textContent = '✅ Module Completed!';
+      btn.classList.add('done');
+      btn.disabled = true;
+    } catch (e) {
+      console.error(e);
+      alert('❌ Error updating progress. Try again.');
+    }
+  });
+}
+
+/* ── Reading progress bar ── */
+const indicator = document.getElementById('readIndicator');
+window.addEventListener('scroll', () => {
+  const el  = document.documentElement;
+  const pct = el.scrollTop / (el.scrollHeight - el.clientHeight);
+  indicator.style.transform = `scaleX(${pct})`;
+});
+
+/* ── Active TOC link on scroll ── */
+const sections  = document.querySelectorAll('.topic-section[id]');
+const tocLinks  = document.querySelectorAll('.toc-link');
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      tocLinks.forEach(l => {
+        l.classList.toggle('active', l.getAttribute('href') === '#' + id);
+      });
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+
+sections.forEach(s => observer.observe(s));
+
+/* ── Smooth scroll ── */
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const t = document.querySelector(a.getAttribute('href'));
+    if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+</script>
+</body>
+</html>

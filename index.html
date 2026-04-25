@@ -1,0 +1,2201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HackForge</title>
+<link rel="icon" href="logo.png" type="image/png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<style>
+:root{
+  --bg:#000000;
+  --card:#080d16;
+  --card2:#0d1422;
+  --border:#1a2540;
+  --border-accent:rgba(196,255,0,0.18);
+  --text:#dde6f0;
+  --muted:#7a8fa8;
+  --accent:#24c349;
+  --accent-dark:#1cff55;
+  --accent-glow:rgba(196,255,0,0.18);
+  --blue:#00e5ff;
+  --purple:#8b5cf6;
+  --danger:#ff4d4d;
+  --warning:#f59e0b;
+}
+
+/* ── ANIMATED BG GRID ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(196,255,0,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(196,255,0,0.018) 1px, transparent 1px);
+  background-size: 52px 52px;
+  pointer-events: none;
+  z-index: 0;
+  animation: gridDrift 28s linear infinite;
+}
+@keyframes gridDrift { from{transform:translate(0,0)} to{transform:translate(52px,52px)} }
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  font-family:'DM Sans',sans-serif;
+  background: #000000;
+  color:var(--text);
+  position: relative;
+}
+
+/* NAVBAR */
+.navbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px 60px;
+  border-bottom:1px solid rgba(196,255,0,0.12);
+  background:rgba(0,0,0,0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  position:sticky;
+  top:0;
+  z-index:1000;
+  box-shadow: 0 1px 0 rgba(196,255,0,0.06), 0 4px 32px rgba(0,0,0,0.6);
+}
+
+.logo{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.logo img{
+  height:44px;
+  width:auto;
+  filter: drop-shadow(0 0 14px rgba(196,255,0,0.4));
+  transition: filter 0.3s, transform 0.3s;
+}
+.logo img:hover{
+  filter: drop-shadow(0 0 24px rgba(196,255,0,0.7));
+  transform: scale(1.05);
+}
+
+.nav-links a{
+  margin:0 15px;
+  text-decoration:none;
+  color:var(--muted);
+  font-size:13.5px;
+  font-weight:500;
+  letter-spacing:0.3px;
+  position:relative;
+  font-family:'DM Sans',sans-serif;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover{
+  color:#ffffff;
+}
+
+.nav-links a::after{
+  content:"";
+  position:absolute;
+  width:0%;
+  height:2px;
+  background: linear-gradient(90deg, var(--accent), #7fd600);
+  left:0;
+  bottom:-5px;
+  transition:0.3s;
+  border-radius:2px;
+}
+
+.nav-links a:hover::after{
+  width:100%;
+}
+
+.login-btn{
+  padding:9px 20px;
+  background: linear-gradient(135deg, var(--accent), #7fd600);
+  border:none;
+  border-radius:7px;
+  font-weight:700;
+  cursor:pointer;
+  color: #000;
+  font-family:'DM Sans',sans-serif;
+  font-size:13px;
+  letter-spacing:0.3px;
+  transition: all 0.25s;
+  box-shadow: 0 0 16px rgba(196,255,0,0.25);
+}
+
+.login-btn:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(196,255,0,0.45);
+}
+
+.hero-slider {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.slide {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: none;
+}
+
+.slide.active {
+  display: block;
+}
+
+/* Image Styling */
+.slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.5) blur(1px);
+  transform: scale(1.05);
+}
+
+/* DARK OVERLAY FOR TEXT VISIBILITY */
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    rgba(0,0,0,0.8),
+    rgba(0,0,0,0.5),
+    rgba(0,0,0,0.8)
+  );
+}
+
+/* TEXT CONTENT */
+.slide-content {
+  position: absolute;
+  top: 50%;
+  left: 10%;
+  transform: translateY(-50%);
+  color: white;
+  max-width: 600px;
+}
+
+/* HEADING */
+.slide-content h1 {
+  font-size: 58px;
+  font-weight: 800;
+  margin-bottom: 20px;
+  font-family: 'Orbitron', sans-serif;
+  background: linear-gradient(135deg, #ffffff 30%, var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.15;
+  letter-spacing: -0.5px;
+}
+
+/* PARAGRAPH */
+.slide-content p {
+  font-size: 18px;
+  margin-bottom: 25px;
+  color: rgba(255,255,255,0.78);
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+/* BUTTON */
+.hero-btn {
+  background: linear-gradient(135deg, var(--accent), #7fd600);
+  color: #000;
+  padding: 14px 32px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.3px;
+  box-shadow: 0 0 24px rgba(196,255,0,0.35);
+}
+
+.hero-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 32px rgba(196,255,0,0.55);
+}
+
+.buttons{
+  margin-top:30px;
+}
+
+.btn{
+  padding:14px 26px;
+  border-radius:8px;
+  border:none;
+  cursor:pointer;
+  font-weight:600;
+  margin-right:10px;
+  font-family:'DM Sans',sans-serif;
+}
+
+.btn-primary{
+  background: linear-gradient(135deg, var(--accent), #7fd600);
+  color: #000;
+  box-shadow: 0 0 18px rgba(196,255,0,0.3);
+}
+
+.btn-secondary{
+  background: rgba(13,20,34,0.8);
+  border:1px solid rgba(196,255,0,0.2);
+  color:var(--text);
+}
+
+/* FEATURES */
+.section{
+  max-width:1200px;
+  margin:auto;
+  padding:80px 20px;
+}
+
+.section-title{
+  text-align:center;
+  font-size:28px;
+  font-weight:700;
+  margin-bottom:50px;
+  font-family:'Orbitron',sans-serif;
+  background: linear-gradient(135deg, #fff 30%, var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.5px;
+}
+
+.feature-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:25px;
+}
+
+.feature-card{
+  background: var(--card);
+  border:1px solid rgba(196,255,0,0.08);
+  padding:35px;
+  border-radius:16px;
+  transition:all 0.3s;
+}
+
+.feature-card:hover{
+  transform:translateY(-8px);
+  border-color:var(--accent);
+  box-shadow: 0 12px 32px rgba(196,255,0,0.1);
+}
+
+.feature-card i{
+  width:32px;
+  height:32px;
+  color:var(--accent);
+  margin-bottom:15px;
+}
+/* ═══════════════════════════════════════
+   MOBILE RESPONSIVE — complete overhaul
+═══════════════════════════════════════ */
+
+/* ── HAMBURGER BUTTON (hidden on desktop) ── */
+#menuToggle {
+  display: none;
+  background: none;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 7px 10px;
+  cursor: pointer;
+  color: #e5e7eb;
+  font-size: 20px;
+  line-height: 1;
+  transition: border-color 0.2s;
+  flex-shrink: 0;
+}
+#menuToggle:hover { border-color: #22c55e; color: #22c55e; }
+
+/* ─────────────────────────────────────
+   TABLET  ≤ 1024px
+───────────────────────────────────── */
+@media (max-width:1024px) {
+  .navbar { padding: 14px 24px; }
+  .nav-links a { margin: 0 10px; font-size: 13px; }
+  .learning-section { padding: 28px; margin: 40px auto; }
+  .features-section { padding: 0 16px; }
+}
+
+/* ─────────────────────────────────────
+   MOBILE  ≤ 768px
+───────────────────────────────────── */
+@media (max-width:768px) {
+
+  /* NAVBAR */
+  .navbar {
+    padding: 14px 18px;
+    flex-wrap: wrap;
+    gap: 0;
+    position: relative;
+  }
+  #menuToggle { display: flex; align-items: center; }
+
+  .nav-links {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    padding: 12px 0 6px;
+    border-top: 1px solid #1e293b;
+    margin-top: 10px;
+    gap: 2px;
+  }
+  .nav-links.open { display: flex; }
+  .nav-links a {
+    display: block;
+    margin: 0;
+    padding: 10px 6px;
+    font-size: 15px;
+    border-bottom: 1px solid rgba(30,41,59,0.5);
+  }
+  .nav-links a:last-child { border-bottom: none; }
+
+  #navUser {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+  .login-btn { width: 100%; text-align: center; padding: 10px; }
+  .user-nav {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+    width: 100%;
+  }
+  .user-nav button { flex: 1; min-width: 100px; padding: 9px 10px; }
+
+  /* TICKER */
+  .ticker-label { display: none; }
+  .ticker-track  { padding-left: 12px; }
+  .ticker-item   { font-size: 12px; }
+
+  /* HERO SLIDER */
+  .hero-slider { height: 70vw; min-height: 280px; max-height: 480px; }
+  .slide-content { left: 50%; transform: translate(-50%, -50%); text-align: center; width: 90%; max-width: 100%; padding: 0 10px; }
+  .slide-content h1 { font-size: 26px; margin-bottom: 10px; }
+  .slide-content p  { font-size: 14px; margin-bottom: 14px; }
+  .hero-btn { padding: 10px 20px; font-size: 14px; }
+  .nav { font-size: 26px; padding: 8px; }
+  .slide-dots { bottom: 14px; }
+
+  /* LEARNING SECTION */
+  .learning-section {
+    margin: 24px 12px;
+    padding: 20px 16px;
+    border-radius: 14px;
+  }
+  .learning-header h2 { font-size: 22px; padding: 6px 14px; }
+  .learning-header p  { font-size: 13px; }
+
+  /* MODULE SEARCH */
+  .module-search-wrap { padding: 0 4px; }
+  .module-search      { font-size: 13px; padding: 10px 14px 10px 38px; }
+  .search-icon        { font-size: 14px; left: 12px; }
+
+  /* MODULE GRID */
+  .modules-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 20px;
+  }
+  .module-card { padding: 16px 14px; border-radius: 12px; }
+  .module-icon { font-size: 22px; margin-bottom: 8px; }
+  .module-title { font-size: 14px; }
+  .module-desc  { font-size: 12px; }
+
+  /* FEATURES SECTION */
+  .features-section { margin: 0 12px 48px; padding: 0; }
+  .features-title   { font-size: 22px; }
+  .features-sub     { font-size: 13px; margin-bottom: 28px; }
+  .features-grid    { grid-template-columns: 1fr 1fr; gap: 14px; }
+  .feature-item     { padding: 20px 14px; border-radius: 12px; }
+  .feature-icon     { font-size: 26px; margin-bottom: 10px; }
+  .feature-item h4  { font-size: 14px; }
+  .feature-item p   { font-size: 12px; }
+
+  /* STATS */
+  .stats-section    { padding: 28px 12px; }
+  .stats-container  { grid-template-columns: 1fr 1fr; gap: 12px; max-width: 100%; }
+  .stat-box         { padding: 14px 10px; border-radius: 10px; }
+  .stat-box h2      { font-size: 22px; }
+  .stat-box p       { font-size: 12px; }
+  .stat-icon        { font-size: 18px; }
+
+  /* SECTION PADDING */
+  .section { padding: 40px 16px; }
+
+  /* FOOTER */
+  .footer-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 20px 16px;
+  }
+  .footer-links { display: flex; flex-wrap: wrap; gap: 8px; margin-left: 0; }
+  .footer-links a { margin-left: 0; }
+
+  /* TABLE */
+  table { display: block; overflow-x: auto; }
+
+  /* BACK TO TOP */
+  #backToTop { bottom: 92px; right: 16px; width: 38px; height: 38px; font-size: 16px; }
+
+  /* CHATBOT */
+  #chatFab   { bottom: 16px; right: 16px; width: 54px; height: 54px; font-size: 22px; }
+  #chatPanel { width: calc(100vw - 20px); right: 10px; bottom: 82px; height: 72vh; border-radius: 14px; }
+  #chatChips { gap: 5px; padding: 8px 10px 4px; }
+  .chip      { font-size: 10px; padding: 4px 9px; }
+}
+
+/* ─────────────────────────────────────
+   SMALL MOBILE  ≤ 420px
+───────────────────────────────────── */
+@media (max-width:420px) {
+  .slide-content h1    { font-size: 20px; }
+  .modules-grid        { grid-template-columns: 1fr; }
+  .features-grid       { grid-template-columns: 1fr; }
+  .stats-container     { grid-template-columns: 1fr 1fr; }
+  .module-card         { padding: 14px 12px; }
+  .learning-section    { margin: 16px 8px; padding: 16px 12px; }
+  .navbar              { padding: 12px 14px; }
+  #chatPanel           { width: calc(100vw - 12px); right: 6px; }
+}
+/* MODULES */
+.learning-section{
+  max-width:1100px;
+  margin:80px auto;
+  padding:44px;
+  background: rgba(8,13,22,0.7);
+  border:1px solid rgba(196,255,0,0.1);
+  border-radius:20px;
+  box-shadow: 0 0 60px rgba(196,255,0,0.04);
+  backdrop-filter: blur(8px);
+  position: relative;
+  z-index: 1;
+}
+
+.modules-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:28px;
+  margin-top:35px;
+}
+
+.module-card{
+  background: var(--card2);
+  border:1px solid rgba(196,255,0,0.07);
+  padding:24px;
+  border-radius:14px;
+  transition:all 0.25s;
+  cursor:pointer;
+  position:relative;
+  overflow:hidden;
+}
+
+.module-card:hover{
+  transform:translateY(-6px);
+  border-color: rgba(0,229,255,0.4);
+  box-shadow:0 12px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,229,255,0.1);
+}
+
+.module-title{
+  font-size:15.5px;
+  font-weight:700;
+  margin-bottom:6px;
+  color: #e2eaf4;
+  font-family:'DM Sans',sans-serif;
+}
+
+.module-desc{
+  font-size:13px;
+  color:var(--muted);
+  line-height:1.55;
+}
+
+.module-tag{
+  display:inline-block;
+  margin-top:10px;
+  padding:4px 10px;
+  font-size:11px;
+  border-radius:20px;
+  background: rgba(0,229,255,0.06);
+  border:1px solid rgba(0,229,255,0.2);
+  color:var(--blue);
+  font-family:'JetBrains Mono',monospace;
+  letter-spacing:0.3px;
+}
+/* CTA */
+.cta-banner{
+  text-align:center;
+  padding:100px 20px;
+}
+
+.cta-banner h2{
+  font-size:32px;
+  margin-bottom:10px;
+}
+
+.cta-banner p{
+  color:var(--muted);
+  margin-bottom:25px;
+}
+.logo{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-weight:700;
+  color:#22c55e;
+  font-size:18px;
+}
+
+.logo svg{
+  width:20px;
+  height:20px;
+}
+.learning-header{
+  text-align:center;
+  margin-bottom:30px;
+}
+
+.learning-header h2{
+  font-size:30px;
+  margin-bottom:10px;
+  color: var(--accent);
+  display:inline-block;
+  padding:10px 24px;
+  border:1px solid rgba(196,255,0,0.3);
+  border-radius:10px;
+  background: rgba(196,255,0,0.06);
+  font-family:'Orbitron',sans-serif;
+  letter-spacing:0.5px;
+}
+/* FOOTER */
+.simple-footer{
+  background: #000;
+  border-top:1px solid rgba(196,255,0,0.1);
+  margin-top:60px;
+  position: relative;
+  z-index: 1;
+}
+
+.footer-content{
+  max-width:1100px;
+  margin:auto;
+  padding:28px 20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.footer-left h3{
+  color:var(--accent);
+  margin:0;
+  font-family:'Orbitron',sans-serif;
+  font-size:16px;
+  letter-spacing:1px;
+}
+
+.footer-left p{
+  color:var(--muted);
+  font-size:13px;
+  margin-top:5px;
+}
+
+.footer-links a{
+  margin-left:20px;
+  color:var(--muted);
+  text-decoration:none;
+  font-size:13.5px;
+  transition: color 0.2s;
+}
+
+.footer-links a:hover{
+  color:var(--accent);
+}
+
+.footer-bottom{
+  text-align:center;
+  padding:12px;
+  border-top:1px solid rgba(196,255,0,0.07);
+  color:var(--muted);
+  font-size:12px;
+  font-family:'JetBrains Mono',monospace;
+  letter-spacing:0.3px;
+}
+/* HERO SLIDER */
+.hero-slider{
+  position:relative;
+  height:90vh;
+  overflow:hidden;
+}
+
+.slide{
+  position:absolute;
+  width:100%;
+  height:100%;
+  display:none;
+}
+
+.slide img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  filter: brightness(0.38);
+}
+
+.slide.active{
+  display:block;
+}
+
+.overlay{
+  position:absolute;
+  width:100%;
+  height:100%;
+  background: linear-gradient(135deg, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.7) 100%);
+}
+
+.slide-content{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  text-align:center;
+  color:white;
+  max-width: 700px;
+  width: 90%;
+}
+
+.slide-content h1{
+  font-size:56px;
+  margin-bottom:16px;
+  font-family:'Orbitron',sans-serif;
+  font-weight:700;
+  background: linear-gradient(135deg, #ffffff 30%, var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height:1.15;
+}
+
+.slide-content p{
+  color:rgba(255,255,255,0.75);
+  font-size:17px;
+  line-height:1.65;
+}
+
+.hero-btn{
+  margin-top:24px;
+  padding:14px 32px;
+  background: linear-gradient(135deg, var(--accent), #7fd600);
+  border:none;
+  border-radius:8px;
+  font-weight:700;
+  cursor:pointer;
+  color: #000;
+  font-family:'DM Sans',sans-serif;
+  font-size:15px;
+  box-shadow: 0 0 24px rgba(196,255,0,0.35);
+  transition:all 0.3s;
+}
+.hero-btn:hover { transform:translateY(-3px); box-shadow: 0 6px 32px rgba(196,255,0,0.55); }
+
+.nav{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:36px;
+  color:var(--accent);
+  cursor:pointer;
+  padding:12px;
+  background:rgba(0,0,0,0.5);
+  border-radius:6px;
+  transition:all 0.2s;
+  line-height:1;
+}
+.nav:hover { background:rgba(196,255,0,0.1); }
+
+.prev{ left:20px; }
+.next{ right:20px; }
+/* STATS SECTION */
+.stats-section{
+  padding:40px 15px;
+  border-top:1px solid rgba(196,255,0,0.08);
+  border-bottom:1px solid rgba(196,255,0,0.08);
+  position: relative;
+  z-index: 1;
+}
+
+.stats-container{
+  max-width:800px;
+  margin:auto;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:15px;
+  text-align:center;
+}
+
+.stat-box{
+  background: rgba(196,255,0,0.04);
+  border:1px solid rgba(196,255,0,0.12);
+  padding:20px;
+  border-radius:12px;
+  transition:all 0.25s;
+}
+
+.stat-box h2{
+  font-size:26px;
+  color:var(--accent);
+  font-family:'Orbitron',sans-serif;
+  font-weight:700;
+}
+
+.stat-box p{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:5px;
+  letter-spacing:0.3px;
+  font-family:'JetBrains Mono',monospace;
+}
+/* Difficulty Tags */
+.tag-beginner{
+  color: var(--accent);
+  border:1px solid rgba(196,255,0,0.35);
+  padding:4px 10px;
+  border-radius:20px;
+  font-size:11px;
+  display:inline-block;
+  margin-top:8px;
+  font-family:'JetBrains Mono',monospace;
+  background: rgba(196,255,0,0.06);
+}
+
+.tag-intermediate{
+  color:var(--blue);
+  border:1px solid rgba(0,229,255,0.3);
+  padding:4px 10px;
+  border-radius:20px;
+  font-size:11px;
+  display:inline-block;
+  margin-top:8px;
+  font-family:'JetBrains Mono',monospace;
+  background: rgba(0,229,255,0.06);
+}
+
+.tag-advanced{
+  color:var(--danger);
+  border:1px solid rgba(255,77,77,0.3);
+  padding:4px 10px;
+  border-radius:20px;
+  font-size:11px;
+  display:inline-block;
+  margin-top:8px;
+  font-family:'JetBrains Mono',monospace;
+  background: rgba(255,77,77,0.06);
+}
+
+.tag-coming{
+  color:var(--muted);
+  border:1px solid rgba(122,143,168,0.2);
+  padding:4px 10px;
+  border-radius:20px;
+  font-size:11px;
+  display:inline-block;
+  margin-top:8px;
+  font-family:'JetBrains Mono',monospace;
+}
+
+/* Progress Bar */
+.progress-bar{
+  width:100%;
+  height:5px;
+  background: rgba(255,255,255,0.05);
+  border-radius:10px;
+  margin-top:14px;
+  overflow:hidden;
+}
+
+.progress-fill{
+  height:100%;
+  background: linear-gradient(90deg, var(--accent), #7fd600);
+  border-radius:10px;
+  position:relative;
+  transition: width 1.2s cubic-bezier(.4,0,.2,1);
+  box-shadow: 0 0 8px rgba(196,255,0,0.5);
+}
+
+/* ── ANNOUNCEMENT TICKER ── */
+.ticker-wrap {
+  background: linear-gradient(90deg, #000, #080d16, #000);
+  border-bottom: 1px solid rgba(196,255,0,0.1);
+  padding: 9px 0;
+  overflow: hidden;
+  position: relative;
+  z-index: 999;
+}
+.ticker-wrap::before, .ticker-wrap::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0; width: 80px;
+  z-index: 2;
+}
+.ticker-wrap::before { left: 0; background: linear-gradient(90deg, #000, transparent); }
+.ticker-wrap::after  { right: 0; background: linear-gradient(-90deg, #000, transparent); }
+.ticker-label {
+  display: inline-block;
+  background: var(--accent);
+  color: #000;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 10px;
+  border-radius: 4px;
+  letter-spacing: 1.5px;
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  font-family: 'JetBrains Mono', monospace;
+}
+.ticker-track {
+  display: flex;
+  gap: 0;
+  animation: tickerScroll 28s linear infinite;
+  white-space: nowrap;
+  padding-left: 120px;
+}
+.ticker-track:hover { animation-play-state: paused; }
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 52px;
+  font-size: 12.5px;
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+}
+.ticker-item .dot { color: var(--accent); }
+@keyframes tickerScroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ── HERO SLIDE TRANSITION ── */
+.slide {
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+.slide.active {
+  opacity: 1;
+}
+.slide-dots {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 10;
+}
+.slide-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.35);
+  cursor: pointer;
+  transition: background 0.3s, transform 0.3s;
+}
+.slide-dot.active {
+  background: #22c55e;
+  transform: scale(1.3);
+  box-shadow: 0 0 8px rgba(34,197,94,0.7);
+}
+
+/* ── MODULE SEARCH ── */
+.module-search-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 28px;
+}
+.module-search {
+  width: 100%;
+  max-width: 460px;
+  padding: 11px 18px 11px 42px;
+  background: rgba(8,13,22,0.9);
+  border: 1px solid rgba(196,255,0,0.12);
+  border-radius: 10px;
+  color: #e5e7eb;
+  font-size: 13.5px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: 'DM Sans', sans-serif;
+  position: relative;
+}
+.module-search:focus {
+  border-color: rgba(196,255,0,0.4);
+  box-shadow: 0 0 0 3px rgba(196,255,0,0.06);
+}
+.module-search::placeholder { color: #475569; }
+.search-wrap-inner {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+}
+.search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(196,255,0,0.4);
+  font-size: 16px;
+  pointer-events: none;
+}
+
+/* ── FEATURES SECTION ── */
+.features-section {
+  max-width: 1100px;
+  margin: 0 auto 80px;
+  padding: 0 20px;
+  position: relative;
+  z-index: 1;
+}
+.features-title {
+  text-align: center;
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  font-family: 'Orbitron', sans-serif;
+  background: linear-gradient(135deg, #fff 30%, var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.5px;
+}
+.features-sub {
+  text-align: center;
+  color: var(--muted);
+  font-size: 15px;
+  margin-bottom: 44px;
+}
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 22px;
+}
+.feature-item {
+  background: var(--card2);
+  border: 1px solid rgba(196,255,0,0.07);
+  border-radius: 14px;
+  padding: 28px 22px;
+  transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+.feature-item::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--c, var(--accent)), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.feature-item:hover {
+  transform: translateY(-5px);
+  border-color: var(--c, var(--accent));
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 0 1px rgba(196,255,0,0.06);
+}
+.feature-item:hover::before { opacity: 1; }
+.feature-icon {
+  font-size: 32px;
+  margin-bottom: 14px;
+  display: block;
+}
+.feature-item h4 {
+  font-size: 15.5px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #e2eaf4;
+  font-family: 'DM Sans', sans-serif;
+}
+.feature-item p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+/* ── MODULE CARD IMPROVEMENTS ── */
+.module-card {
+  position: relative;
+  overflow: hidden;
+}
+.module-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #38bdf8, transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.module-card:hover::after { opacity: 1; }
+.module-icon {
+  font-size: 26px;
+  margin-bottom: 10px;
+  display: block;
+}
+.module-card.locked-card {
+  opacity: 0.6;
+  cursor: default;
+}
+.module-card.locked-card:hover {
+  transform: none;
+  border-color: #1e293b;
+  box-shadow: none;
+}
+.lock-icon {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  color: #475569;
+  font-size: 16px;
+}
+
+/* ── STAT BOX IMPROVEMENTS ── */
+.stat-box {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+.stat-box:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(196,255,0,0.1);
+  border-color: rgba(196,255,0,0.25);
+}
+.stat-icon {
+  font-size: 22px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+/* ── SCROLL REVEAL ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── BACK TO TOP ── */
+#backToTop {
+  position: fixed;
+  bottom: 102px;
+  right: 28px;
+  width: 42px;
+  height: 42px;
+  background: rgba(8,13,22,0.9);
+  border: 1px solid rgba(196,255,0,0.15);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  z-index: 9997;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s, transform 0.3s, background 0.2s;
+  color: var(--muted);
+  backdrop-filter: blur(8px);
+}
+#backToTop.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+#backToTop:hover {
+  background: rgba(196,255,0,0.08);
+  color: var(--accent);
+  border-color: rgba(196,255,0,0.4);
+}
+
+/* ── FOOTER IMPROVEMENT ── */
+.footer-social {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+.footer-social a {
+  width: 32px; height: 32px;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: #64748b;
+  text-decoration: none;
+  font-size: 15px;
+  transition: border-color 0.2s, color 0.2s;
+}
+.footer-social a:hover { border-color: #22c55e; color: #22c55e; }
+
+/* ── USER NAV ── */
+.user-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.user-nav button {
+  padding: 7px 14px;
+  border-radius: 7px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.2s;
+}
+.user-nav button:first-of-type {
+  background: linear-gradient(135deg, var(--accent), #7fd600);
+  color: #000;
+  box-shadow: 0 0 12px rgba(196,255,0,0.2);
+}
+.user-nav button:first-of-type:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(196,255,0,0.4); }
+.user-nav button:last-of-type {
+  background: transparent;
+  border: 1px solid rgba(196,255,0,0.12);
+  color: var(--muted);
+}
+.user-nav button:last-of-type:hover { border-color: var(--danger); color: var(--danger); }
+/* ===== CHATBOT ===== */
+#chatFab {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  width: 62px;
+  height: 62px;
+  background: linear-gradient(135deg, var(--accent), #7fd600);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  cursor: pointer;
+  box-shadow: 0 6px 28px rgba(196,255,0,0.45);
+  z-index: 9999;
+  animation: fabPulse 2.5s ease-in-out infinite;
+  transition: transform 0.2s;
+  user-select: none;
+}
+#chatFab:hover { transform: scale(1.08); }
+@keyframes fabPulse {
+  0%,100% { box-shadow: 0 6px 28px rgba(196,255,0,0.45), 0 0 0 0 rgba(196,255,0,0.3); }
+  50%      { box-shadow: 0 6px 28px rgba(196,255,0,0.45), 0 0 0 12px rgba(196,255,0,0); }
+}
+
+#chatPanel {
+  position: fixed;
+  bottom: 104px;
+  right: 28px;
+  width: 390px;
+  height: 540px;
+  background: #07111f;
+  border: 1px solid #1e3a5f;
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  z-index: 9998;
+  box-shadow: 0 24px 70px rgba(0,0,0,0.75), 0 0 0 1px rgba(34,197,94,0.1);
+  overflow: hidden;
+  transform: translateY(16px) scale(0.96);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.25s cubic-bezier(.4,0,.2,1), opacity 0.25s;
+}
+#chatPanel.open {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+  pointer-events: all;
+}
+
+#chatTop {
+  padding: 14px 18px;
+  background: #0f1f3d;
+  border-bottom: 1px solid #1e3a5f;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.chat-avatar {
+  width: 34px; height: 34px;
+  background: rgba(34,197,94,0.15);
+  border: 1px solid rgba(34,197,94,0.4);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  box-shadow: 0 0 10px rgba(34,197,94,0.2);
+}
+.chat-head-info { flex: 1; }
+.chat-head-name { font-size: 14px; font-weight: 700; color: #22c55e; }
+.chat-head-status { font-size: 11px; color: #64748b; }
+.chat-head-status::before { content: '● '; color: #22c55e; font-size: 8px; }
+#chatCloseBtn {
+  background: none; border: none; color: #64748b;
+  font-size: 18px; cursor: pointer; padding: 4px 8px;
+  border-radius: 6px; line-height: 1; transition: color 0.2s, background 0.2s;
+}
+#chatCloseBtn:hover { color: #e2e8f0; background: rgba(255,255,255,0.07); }
+
+/* CHIPS */
+#chatChips {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  padding: 10px 14px 4px;
+  border-bottom: 1px solid #1e3a5f;
+}
+.chip {
+  padding: 5px 12px;
+  background: rgba(34,197,94,0.08);
+  border: 1px solid rgba(34,197,94,0.25);
+  border-radius: 20px;
+  font-size: 11px;
+  color: #22c55e;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+.chip:hover { background: rgba(34,197,94,0.18); }
+
+#chatMessages {
+  flex: 1;
+  padding: 14px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: #1e3a5f transparent;
+}
+#chatMessages::-webkit-scrollbar { width: 4px; }
+#chatMessages::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 4px; }
+
+.msg {
+  max-width: 82%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  animation: msgPop 0.2s ease;
+}
+@keyframes msgPop { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+
+.msg.user {
+  align-self: flex-end;
+  background: rgba(34,197,94,0.18);
+  border: 1px solid rgba(34,197,94,0.3);
+  color: #e2e8f0;
+  border-radius: 12px 4px 12px 12px;
+}
+.msg.bot {
+  align-self: flex-start;
+  background: #0f1f3d;
+  border: 1px solid #1e3a5f;
+  color: #e2e8f0;
+  border-radius: 4px 12px 12px 12px;
+}
+.msg.bot code {
+  background: #020617;
+  border: 1px solid #1e3a5f;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 12px;
+  color: #22c55e;
+}
+.msg.bot pre {
+  background: #020617;
+  border: 1px solid #1e3a5f;
+  padding: 10px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #22c55e;
+  font-family: monospace;
+}
+.msg.bot strong { color: #38bdf8; }
+
+/* TYPING DOTS */
+#typingIndicator {
+  display: none;
+  align-self: flex-start;
+  background: #0f1f3d;
+  border: 1px solid #1e3a5f;
+  border-radius: 4px 12px 12px 12px;
+  padding: 12px 16px;
+  gap: 5px;
+  align-items: center;
+}
+#typingIndicator.show { display: flex; }
+.dot {
+  width: 6px; height: 6px;
+  background: #22c55e;
+  border-radius: 50%;
+  animation: dotBounce 1.2s ease-in-out infinite;
+}
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dotBounce {
+  0%,80%,100% { transform: scale(0.6); opacity: 0.4; }
+  40%          { transform: scale(1);   opacity: 1; }
+}
+
+#chatInputArea {
+  display: flex;
+  gap: 8px;
+  padding: 12px 14px;
+  border-top: 1px solid #1e3a5f;
+  background: #0f1f3d;
+}
+#userInput {
+  flex: 1;
+  padding: 10px 13px;
+  background: #020617;
+  border: 1px solid #1e3a5f;
+  border-radius: 8px;
+  color: #e2e8f0;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+#userInput:focus { border-color: rgba(34,197,94,0.5); }
+#userInput::placeholder { color: #475569; }
+#chatInputArea button {
+  background: #22c55e;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+  color: #000;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  font-weight: 700;
+  min-width: 42px;
+}
+#chatInputArea button:hover { background: #16a34a; transform: scale(1.05); }
+
+@media (max-width: 480px) {
+  #chatPanel { width: calc(100vw - 20px); right: 10px; bottom: 90px; height: 70vh; }
+}
+.filter-tabs {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.tab {
+  padding: 8px 18px;
+  border: 1px solid rgba(196,255,0,0.12);
+  border-radius: 7px;
+  cursor: pointer;
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13.5px;
+  transition: all 0.2s;
+  background: rgba(8,13,22,0.6);
+}
+
+.tab:hover { border-color: rgba(196,255,0,0.3); color: var(--accent); }
+
+.tab.active {
+  background: linear-gradient(135deg, var(--accent), #7fd600);
+  color: #000;
+  font-weight: 700;
+  border-color: transparent;
+  box-shadow: 0 0 14px rgba(196,255,0,0.3);
+}
+
+.lab-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.lab-card {
+  background: var(--card2);
+  border: 1px solid rgba(196,255,0,0.07);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+
+.lab-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(196,255,0,0.3);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+}
+
+.lab-header {
+  padding: 22px;
+}
+
+.lab-body {
+  padding: 20px;
+}
+
+.start-btn {
+  width: 100%;
+  padding: 11px;
+  background: linear-gradient(135deg, var(--accent), #7fd600);
+  border: none;
+  border-radius: 7px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #000;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13.5px;
+  transition: all 0.25s;
+  box-shadow: 0 0 14px rgba(196,255,0,0.2);
+}
+.footer-social {
+  display: flex;
+  gap: 12px;
+}
+
+.footer-social a {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #1e293b; /* dark grey */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8; /* light grey icon */
+  font-size: 16px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+/* hover effect */
+.footer-social a:hover {
+  background: #22c55e; /* cyber green */
+  color: #000;
+  transform: translateY(-2px);
+}
+.start-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(196,255,0,0.4); }
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+  <div class="logo">
+  <img src="logo.png" alt="HackForge Logo" height="44">
+</div>
+
+  <button id="menuToggle" onclick="toggleMenu()" aria-label="Toggle menu">☰</button>
+
+  <div class="nav-links" id="navLinks">
+    <a href="learn.html">Learn</a>
+    <a href="awareness.html">Awareness</a>
+    <a href="practice-lab.html">Practice Arena</a>
+    <a href="cyber-news.html">Security Feed</a>
+  </div>
+
+  <div class="nav-right" id="navUser">
+    <button class="login-btn" onclick="location.href='register.html'">Login </button>
+  </div>
+</div>
+
+<!-- ANNOUNCEMENT TICKER -->
+<div class="ticker-wrap">
+  <span class="ticker-label">🔴 LIVE</span>
+  <div class="ticker-track" id="tickerTrack">
+    <span class="ticker-item"><span class="dot">⚡</span> New CTF challenge released — SQL Injection Lab II</span>
+    <span class="ticker-item"><span class="dot">🏅</span> Leaderboard updated — check your rank!</span>
+    <span class="ticker-item"><span class="dot">🌐</span> Web Security module now available</span>
+    <span class="ticker-item"><span class="dot">📢</span> Blue Team module coming soon — stay tuned</span>
+    <span class="ticker-item"><span class="dot">🎓</span> Certificates now available for completed modules</span>
+    <span class="ticker-item"><span class="dot">⚡</span> New CTF challenge released — SQL Injection Lab II</span>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero-slider">
+    <div class="slide active">
+      <img src="https://images.unsplash.com/photo-1541560052-77ec1bbc09f7">
+        <div class="slide-content">
+            <h1>Master Cyber Security</h1>
+            <p>Learn Ethical Hacking, Blue Team, Red Team and CTF Challenges</p>
+            <button onclick="location.href='cybersecurity-101.html'" class="hero-btn">Learn</button>
+        </div>
+    </div>
+
+    <div class="slide">
+        <img src="https://images.unsplash.com/photo-1563206767-5b18f218e8de">
+        <div class="overlay"></div>
+        <div class="slide-content">
+            <h1>Practice With CTF Challenges</h1>
+            <p>Real world labs and hacking challenges</p>
+            <button onclick="location.href='CTF/main.html'" class="hero-btn">Enter CTF</button>
+        </div>
+    </div>
+
+    <div class="slide">
+        <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f">
+        <div class="overlay"></div>
+        <div class="slide-content">
+            <h1>Earn Certificates</h1>
+            <p>Complete modules and earn cybersecurity certificates</p>
+            <button onclick="location.href='certificate.html'" class="hero-btn">View Certificates</button>
+        </div>
+    </div>
+    <div class="nav prev">&#10094;</div>
+    <div class="nav next">&#10095;</div>
+    <div class="slide-dots" id="slideDots"></div>
+</section>
+<section class="learning-section">
+
+  <div class="learning-header">
+    <h2>Cybersecurity Learning Path</h2>
+  </div>
+
+  <div class="module-search-wrap">
+    <div class="search-wrap-inner">
+      <span class="search-icon">🔍</span>
+      <input class="module-search" id="moduleSearch" type="text" placeholder="Search modules... (e.g. XSS, Linux, Networking)" oninput="filterModules()" />
+    </div>
+  </div>
+
+  <div class="modules-grid" id="modulesGrid">
+<!-- Cybersecurity 101 -->
+<div class="module-card reveal" onclick="openPage('cybersecurity-101.html')">
+  <span class="module-icon">🛡️</span>
+  <div class="module-title">Cybersecurity 101</div>
+  <div class="module-desc">Security basics, CIA triad, threats, risk.</div>
+  <div class="tag-beginner">Beginner</div>
+  <div class="progress-bar">
+    <div class="progress-fill" style="width:30%"></div>
+  </div>
+</div>
+
+<!-- Networking -->
+<div class="module-card reveal" onclick="openPage('networking.html')">
+  <span class="module-icon">🌐</span>
+  <div class="module-title">Networking</div>
+  <div class="module-desc">OSI model, TCP/IP, DNS, HTTP, Firewalls.</div>
+  <div class="tag-beginner">Beginner</div>
+  <div class="progress-bar">
+    <div class="progress-fill" style="width:20%"></div>
+  </div>
+</div>
+
+<!-- Operating Systems -->
+<div class="module-card reveal" onclick="openPage('operating-systems.html')">
+  <span class="module-icon">💻</span>
+  <div class="module-title">Operating Systems</div>
+  <div class="module-desc">Windows, Linux, logs, permissions.</div>
+  <div class="tag-intermediate">Intermediate</div>
+  <div class="progress-bar">
+    <div class="progress-fill" style="width:15%"></div>
+  </div>
+</div>
+
+<!-- Linux -->
+<div class="module-card reveal" onclick="openPage('linux-cheatsheet.html')">
+  <span class="module-icon">🐧</span>
+  <div class="module-title">Linux</div>
+  <div class="module-desc">Linux commands, file system, networking tools.</div>
+  <div class="tag-intermediate">Intermediate</div>
+  <div class="progress-bar">
+    <div class="progress-fill" style="width:40%"></div>
+  </div>
+</div>
+
+<!-- Web Security -->
+<div class="module-card reveal" onclick="openPage('WebFundamentals.html')">
+  <span class="module-icon">🔒</span>
+  <div class="module-title">Web Security</div>
+  <div class="module-desc">HTTP, cookies, XSS, SQL Injection.</div>
+  <div class="tag-intermediate">Intermediate</div>
+  <div class="progress-bar">
+    <div class="progress-fill" style="width:10%"></div>
+  </div>
+</div>
+
+<!-- Blue Team -->
+<div class="module-card locked-card reveal">
+  <span class="lock-icon">🔒</span>
+  <span class="module-icon">🔵</span>
+  <div class="module-title">Blue Team</div>
+  <div class="module-desc">SOC, SIEM, Incident Response.</div>
+  <div class="tag-coming">Coming Soon</div>
+</div>
+
+<!-- Red Team -->
+<div class="module-card locked-card reveal">
+  <span class="lock-icon">🔒</span>
+  <span class="module-icon">🔴</span>
+  <div class="module-title">Red Team</div>
+  <div class="module-desc">Pentesting, exploitation, attacks.</div>
+  <div class="tag-coming">Coming Soon</div>
+</div>
+
+<!-- Cloud Security -->
+<div class="module-card locked-card reveal">
+  <span class="lock-icon">🔒</span>
+  <span class="module-icon">☁️</span>
+  <div class="module-title">Cloud Security</div>
+  <div class="module-desc">AWS, Azure, IAM, Cloud attacks.</div>
+  <div class="tag-coming">Coming Soon</div>
+</div>
+
+<!-- Malware Analysis -->
+<div class="module-card locked-card reveal">
+  <span class="lock-icon">🔒</span>
+  <span class="module-icon">🦠</span>
+  <div class="module-title">Malware Analysis</div>
+  <div class="module-desc">Static & Dynamic malware analysis.</div>
+  <div class="tag-coming">Coming Soon</div>
+</div>
+</section>
+
+<!-- WHY HACKPROOF FEATURES -->
+<section class="features-section reveal">
+  <h2 class="features-title">Why <span style="color:#22c55e">HackForge?</span></h2>
+  <p class="features-sub">Everything you need to go from zero to ethical hacker</p>
+  <div class="features-grid">
+    <div class="feature-item" style="--c:#22c55e">
+      <span class="feature-icon"></span>
+      <h4>Hands-On Labs</h4>
+      <p>Practice in real browser-based labs — no setup required. Break things safely.</p>
+    </div>
+    <div class="feature-item" style="--c:#38bdf8">
+      <span class="feature-icon"></span>
+      <h4>CTF Challenges</h4>
+      <p>Solve real Capture The Flag challenges across web, binary, crypto and forensics.</p>
+    </div>
+    <div class="feature-item" style="--c:#a855f7">
+      <span class="feature-icon"></span>
+      <h4>Track Progress</h4>
+      <p>Earn XP, level up, and see exactly where you stand on the global leaderboard.</p>
+    </div>
+    <div class="feature-item" style="--c:#f97316">
+      <span class="feature-icon"></span>
+      <h4>Earn Certificates</h4>
+      <p>Complete modules and receive verifiable certificates to showcase your skills.</p>
+    </div>
+    <div class="feature-item" style="--c:#ef4444">
+      <span class="feature-icon"></span>
+      <h4>AI Learning Assistant</h4>
+      <p>Get instant help with our built-in HackForge AI — hints, explanations, and guidance.</p>
+    </div>
+    <div class="feature-item" style="--c:#22c55e">
+      <span class="feature-icon"></span>
+      <h4>Structured Roadmap</h4>
+      <p>Follow a clear, curated path from beginner fundamentals to advanced exploitation.</p>
+    </div>
+  </div>
+</section>
+</section>
+<section class="stats-section">
+  <div class="stats-container">
+    <div class="stat-box reveal">
+      <span class="stat-icon"></span>
+      <h2 class="counter" data-target="50">0</h2>
+      <p>Students</p>
+    </div>
+    <div class="stat-box reveal">
+      <span class="stat-icon"></span>
+      <h2 class="counter" data-target="10">0</h2>
+      <p>Labs</p>
+    </div>
+    <div class="stat-box reveal">
+      <span class="stat-icon"></span>
+      <h2 class="counter" data-target="10">0</h2>
+      <p>CTF Challenges</p>
+    </div>
+    <div class="stat-box reveal">
+      <span class="stat-icon"></span>
+      <h2 class="counter" data-target="5">0</h2>
+      <p>Certificates</p>
+    </div>
+  </div>
+</section>
+
+<footer class="simple-footer">
+  <div class="footer-content">
+    <!-- LEFT SIDE -->
+    <div class="footer-left">
+      <h3>HackForge</h3>
+      <p>Cybersecurity Learning Platform</p>
+    </div>
+    <!-- SOCIAL ICONS -->
+    <div class="footer-social">
+      <a href="#"><i class="fab fa-linkedin-in"></i></a>
+      <a href="#"><i class="fab fa-discord"></i></a>
+      <a href="#"><i class="fab fa-facebook-f"></i></a>
+      <a href="#"><i class="fab fa-youtube"></i></a>
+      <a href="https://www.instagram.com/hackforge2/" target="_blank"><i class="fab fa-instagram"></i></a>
+      <a href="#"><i class="fab fa-pinterest-p"></i></a>
+    </div>
+    <!-- LINKS -->
+    <div class="footer-links">
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="terms.html">Terms</a>
+    </div>
+  </div>
+  <!-- BOTTOM -->
+  <div class="footer-bottom">
+    © 2026 HackForge Cybersecurity Platform
+  </div>
+</footer>
+<!-- BACK TO TOP -->
+<div id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</div>
+
+<script>
+function openPage(page){ window.location.href = page; }
+lucide.createIcons();
+
+// ── HAMBURGER MENU ──
+function toggleMenu() {
+  const links = document.getElementById('navLinks');
+  const btn   = document.getElementById('menuToggle');
+  const open  = links.classList.toggle('open');
+  btn.textContent = open ? '✕' : '☰';
+}
+// Close menu when a link is tapped
+document.getElementById('navLinks').querySelectorAll('a').forEach(a => {
+  a.addEventListener('click', () => {
+    document.getElementById('navLinks').classList.remove('open');
+    document.getElementById('menuToggle').textContent = '☰';
+  });
+});
+</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCOEbqMZifKAVoKlZDHmcslXduBUxxb1xU",
+  authDomain: "hackproof-feb59.firebaseapp.com",
+  projectId: "hackproof-feb59",
+  storageBucket: "hackproof-feb59.firebasestorage.app",
+  messagingSenderId: "309682905913",
+  appId: "1:309682905913:web:7e32f772ed2e82672b3ee8",
+  measurementId: "G-PKSRE0Z6CC"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+
+onAuthStateChanged(auth, (user) => {
+  if(user){
+    console.log("User logged in:", user.uid);
+    
+    // Change login button to Dashboard or Logout
+    document.querySelector(".login-btn").innerText = "Dashboard";
+    document.querySelector(".login-btn").onclick = () => {
+      window.location.href = "dashboard.html";
+    };
+
+  } else {
+    console.log("No user logged in");
+  }
+});
+</script>
+
+
+
+<script>
+// ── COUNTER (trigger on scroll) ──
+function runCounters() {
+  document.querySelectorAll('.counter:not(.counted)').forEach(counter => {
+    const rect = counter.getBoundingClientRect();
+    if (rect.top < window.innerHeight - 60) {
+      counter.classList.add('counted');
+      const target = +counter.getAttribute('data-target');
+      let c = 0;
+      const step = Math.max(1, Math.ceil(target / 80));
+      const t = setInterval(() => {
+        c = Math.min(c + step, target);
+        counter.innerText = c < target ? c : target + '+';
+        if (c >= target) clearInterval(t);
+      }, 20);
+    }
+  });
+}
+
+// ── SCROLL REVEAL ──
+function revealOnScroll() {
+  document.querySelectorAll('.reveal:not(.visible)').forEach((el, i) => {
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight - 40) {
+      setTimeout(() => el.classList.add('visible'), i * 60);
+    }
+  });
+}
+
+// ── BACK TO TOP ──
+const btt = document.getElementById('backToTop');
+window.addEventListener('scroll', () => {
+  btt.classList.toggle('show', window.scrollY > 400);
+  revealOnScroll();
+  runCounters();
+});
+revealOnScroll();
+runCounters();
+
+// ── SLIDE DOTS ──
+const slides = document.querySelectorAll('.slide');
+const dotsWrap = document.getElementById('slideDots');
+let slideIndex = 0;
+
+slides.forEach((_, i) => {
+  const dot = document.createElement('div');
+  dot.className = 'slide-dot' + (i === 0 ? ' active' : '');
+  dot.onclick = () => { slideIndex = i; showSlide(i); };
+  dotsWrap.appendChild(dot);
+});
+
+function showSlide(i) {
+  slides.forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.slide-dot').forEach(d => d.classList.remove('active'));
+  slides[i].classList.add('active');
+  dotsWrap.querySelectorAll('.slide-dot')[i]?.classList.add('active');
+}
+
+document.querySelector('.next').onclick = () => {
+  slideIndex = (slideIndex + 1) % slides.length;
+  showSlide(slideIndex);
+};
+document.querySelector('.prev').onclick = () => {
+  slideIndex = (slideIndex - 1 + slides.length) % slides.length;
+  showSlide(slideIndex);
+};
+setInterval(() => {
+  slideIndex = (slideIndex + 1) % slides.length;
+  showSlide(slideIndex);
+}, 5000);
+
+// ── MODULE SEARCH ──
+function filterModules() {
+  const q = document.getElementById('moduleSearch').value.toLowerCase();
+  document.querySelectorAll('#modulesGrid .module-card').forEach(card => {
+    const text = card.innerText.toLowerCase();
+    card.style.display = text.includes(q) ? '' : 'none';
+  });
+}
+</script>
+<script type="module">
+import { auth } from "./firebase-config.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+onAuthStateChanged(auth, (user)=>{
+  if(!user){
+    window.location.href = "login.html";
+  }
+});
+</script>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+
+<script>
+auth.onAuthStateChanged(async (user)=>{
+  if(user){
+    const doc = await db.collection("users").doc(user.uid).get();
+    const data = doc.data();
+
+    document.getElementById("navUser").innerHTML = `
+      <div class="user-nav">
+        <span>👤 ${data.username}</span>
+        <button onclick="location.href='dashboard.html'">Dashboard</button>
+        <button onclick="logout()">Logout</button>
+      </div>
+    `;
+  }
+});
+
+function logout(){
+  auth.signOut();
+  window.location.reload();
+}
+</script>
+<!-- ===== CHATBOT FAB ===== -->
+<div id="chatFab" title="Ask HackForge AI">🤖</div>
+
+<!-- ===== CHAT PANEL ===== -->
+<div id="chatPanel">
+
+  <!-- Header -->
+  <div id="chatTop">
+    <div class="chat-avatar">🤖</div>
+    <div class="chat-head-info">
+      <div class="chat-head-name">HackForge AI</div>
+      <div class="chat-head-status">Online — Ask me anything</div>
+    </div>
+    <button id="chatCloseBtn" title="Close">✕</button>
+  </div>
+
+  <!-- Quick suggestion chips -->
+  <div id="chatChips">
+    <span class="chip" onclick="chipAsk('What is XSS?')">What is XSS?</span>
+    <span class="chip" onclick="chipAsk('Explain SQL Injection')">SQL Injection</span>
+    <span class="chip" onclick="chipAsk('How does nmap work?')">nmap basics</span>
+    <span class="chip" onclick="chipAsk('CTF beginner tips')">CTF tips</span>
+    <span class="chip" onclick="chipAsk('What is a buffer overflow?')">Buffer overflow</span>
+  </div>
+
+  <!-- Messages -->
+  <div id="chatMessages"></div>
+
+  <!-- Typing indicator -->
+  <div id="typingIndicator">
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+  </div>
+
+  <!-- Input -->
+  <div id="chatInputArea">
+    <input id="userInput" placeholder="Ask about CTF, hacking, tools..." onkeydown="if(event.key==='Enter') sendMessage()" />
+    <button onclick="sendMessage()">➤</button>
+  </div>
+
+</div>
+<!-- ===== HACKPROOF AI CHATBOT (Claude-powered) ===== -->
+<script>
+const chatFab      = document.getElementById("chatFab");
+const chatPanel    = document.getElementById("chatPanel");
+const chatMessages = document.getElementById("chatMessages");
+const typingEl     = document.getElementById("typingIndicator");
+const inputEl      = document.getElementById("userInput");
+
+let history  = [];
+let greeted  = false;
+
+/* Toggle open/close */
+chatFab.onclick = () => toggleChat();
+document.getElementById("chatCloseBtn").onclick = () => toggleChat(false);
+
+function toggleChat(forceOpen) {
+  const open = forceOpen !== undefined ? forceOpen : !chatPanel.classList.contains("open");
+  chatPanel.classList.toggle("open", open);
+  if (open && !greeted) {
+    greeted = true;
+    const name = document.getElementById("navUser")?.querySelector("span")?.innerText?.replace("👤 ","") || "Hacker";
+    addMsg("bot", `Hey ${name}! 👋 I'm <strong>HackForge AI</strong> — your cybersecurity learning assistant.<br>Ask me anything: CTF hints, tool explanations, hacking concepts, career paths, and more.`);
+  }
+  if (open) setTimeout(() => inputEl.focus(), 200);
+}
+
+/* Quick chip click */
+function chipAsk(text) {
+  inputEl.value = text;
+  sendMessage();
+}
+
+/* Render simple markdown-like formatting */
+function formatReply(text) {
+  return text
+    .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/\n/g, '<br>');
+}
+
+/* Add message bubble */
+function addMsg(role, html) {
+  const div = document.createElement("div");
+  div.className = "msg " + role;
+  div.innerHTML = html;
+  chatMessages.appendChild(div);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+/* Page context for smarter answers */
+function getPageContext() {
+  const url = window.location.href.toLowerCase();
+  if (url.includes("sql"))      return "The user is on the SQL Injection module.";
+  if (url.includes("xss"))      return "The user is on the XSS module.";
+  if (url.includes("password")) return "The user is on the Password Cracking module.";
+  if (url.includes("linux"))    return "The user is on the Linux module.";
+  if (url.includes("network"))  return "The user is on the Networking module.";
+  return "The user is on the HackProof homepage browsing the learning modules.";
+}
+
+/* Send message */
+async function sendMessage() {
+  const msg = inputEl.value.trim();
+  if (!msg) return;
+  inputEl.value = "";
+
+  addMsg("user", msg);
+  history.push({ role: "user", content: msg });
+
+  typingEl.classList.add("show");
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        system: `You are HackForge AI, an expert cybersecurity learning assistant embedded in the HackProof platform.
+
+${getPageContext()}
+
+Your role:
+- Explain cybersecurity concepts clearly (XSS, SQLi, buffer overflow, etc.)
+- Give CTF hints — guide step by step, don't just give full answers
+- Explain tools: nmap, Burp Suite, Metasploit, Wireshark, hashcat, etc.
+- Help with Linux commands, networking, web security
+- Suggest learning paths and career advice
+- Use code blocks for commands and payloads
+- Be concise, practical, hacker-friendly, and encouraging
+- Never assist with illegal or unethical real-world attacks`,
+        messages: history
+      })
+    });
+
+    typingEl.classList.remove("show");
+
+    const data = await res.json();
+
+    if (data.error) {
+      addMsg("bot", `⚠️ <strong>API Error:</strong> ${data.error.message}<br><small>Make sure your Anthropic API key is configured.</small>`);
+      history.pop();
+      return;
+    }
+
+    const reply = data.content.filter(b => b.type === "text").map(b => b.text).join("\n");
+    history.push({ role: "assistant", content: reply });
+    addMsg("bot", formatReply(reply));
+
+  } catch (err) {
+  typingEl.classList.remove("show");
+
+  const q = msg.toLowerCase();
+  let fallback = "🔌 Can't reach the AI right now. Try: check your API key or search on HackTricks.";
+
+  // 🔐 Web Security
+  if (q.includes("xss")) 
+    fallback = "💡 XSS: Try <code>&lt;script&gt;alert(1)&lt;/script&gt;</code>. Check reflected vs stored vs DOM XSS.";
+
+  else if (q.includes("sql")) 
+    fallback = "💡 SQLi: Try <code>' OR '1'='1</code>. Use <code>sqlmap -u URL --dbs</code>.";
+
+  else if (q.includes("csrf")) 
+    fallback = "💡 CSRF: Check if request works without token. Try changing POST requests via Burp.";
+
+  else if (q.includes("idor")) 
+    fallback = "💡 IDOR: Change user ID in URL like <code>/profile?id=2</code> → access other accounts.";
+
+  else if (q.includes("file upload")) 
+    fallback = "💡 File Upload: Try uploading <code>.php</code> shells. Bypass with <code>.phtml</code> or double extensions.";
+
+  else if (q.includes("lfi") || q.includes("rfi")) 
+    fallback = "💡 LFI/RFI: Try <code>../../../../etc/passwd</code>. Look for file inclusion parameters.";
+
+  // 🌐 Networking
+  else if (q.includes("nmap")) 
+    fallback = "💡 Nmap: <code>nmap -sC -sV target</code>. Use <code>-p-</code> for full scan.";
+
+  else if (q.includes("port")) 
+    fallback = "💡 Ports: 80 (HTTP), 443 (HTTPS), 21 (FTP), 22 (SSH), 3306 (MySQL). Always scan open ports.";
+
+  else if (q.includes("dns")) 
+    fallback = "💡 DNS: Use <code>nslookup</code>, <code>dig</code>, or <code>dnsenum</code> for enumeration.";
+
+  // 🐧 Linux & Commands
+  else if (q.includes("linux")) 
+    fallback = "💡 Linux: Use <code>ls</code>, <code>cd</code>, <code>cat</code>, <code>grep</code>. Combine commands with pipes.";
+
+  else if (q.includes("permission")) 
+    fallback = "💡 Permissions: <code>chmod 755 file</code>, <code>chmod +x script.sh</code>.";
+
+  // 🔑 Password & Cracking
+  else if (q.includes("password") || q.includes("hash")) 
+    fallback = "💡 Hash cracking: <code>hashcat -m 0 hash.txt rockyou.txt</code>. Identify hash type first.";
+
+  else if (q.includes("bruteforce")) 
+    fallback = "💡 Brute Force: Use <code>hydra -l admin -P rockyou.txt target http-post-form</code>.";
+
+  // 🛠 Tools
+  else if (q.includes("burp")) 
+    fallback = "💡 Burp Suite: Intercept requests, modify parameters, test vulnerabilities manually.";
+
+  else if (q.includes("wireshark")) 
+    fallback = "💡 Wireshark: Capture packets. Filter with <code>http</code>, <code>tcp</code>, <code>dns</code>.";
+
+  else if (q.includes("metasploit")) 
+    fallback = "💡 Metasploit: <code>search exploit</code> → <code>use</code> → <code>set RHOST</code> → <code>exploit</code>.";
+
+  // 🧠 CTF & General
+  else if (q.includes("ctf")) 
+    fallback = "💡 CTF: Start with recon. Check source, headers, cookies, parameters.";
+
+  else if (q.includes("recon")) 
+    fallback = "💡 Recon: Use <code>whois</code>, <code>theHarvester</code>, <code>amass</code>, <code>subfinder</code>.";
+
+  else if (q.includes("osint")) 
+    fallback = "💡 OSINT: Use Google dorks, social media, public records. Tools: Maltego, Recon-ng.";
+
+  // 🔒 Security Concepts
+  else if (q.includes("encryption")) 
+    fallback = "💡 Encryption: Symmetric (AES), Asymmetric (RSA). Hashing ≠ encryption.";
+
+  else if (q.includes("phishing")) 
+    fallback = "💡 Phishing: Check sender email, fake domains, urgency tricks.";
+
+  else if (q.includes("malware")) 
+    fallback = "💡 Malware: Types include trojan, ransomware, spyware. Analyze in sandbox.";
+
+  else if (q.includes("firewall")) 
+    fallback = "💡 Firewall: Filters traffic based on rules. Helps block unauthorized access.";
+
+  else if (q.includes("vpn")) 
+    fallback = "💡 VPN: Encrypts traffic and hides IP. Useful but not full anonymity.";
+
+  addMsg("bot", fallback);
+  console.error("Chatbot error:", err);
+}
+}
+</script>
+</body>
+</html>

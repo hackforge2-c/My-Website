@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /admin-portal/
+Disallow: /backup-data/
+
+# crawler-note: cm9ib3RzX2Vhc3l9
