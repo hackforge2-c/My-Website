@@ -2,333 +2,443 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>HackProof | Awareness</title>
+<title>Cybersecurity Awareness | HackForge</title>
+<link rel="icon" href="logo.png" type="image/png">  
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-
-/* ===== ROOT ===== */
+/* ─── VARIABLES ──────────────────────────────────────────── */
 :root {
-  --bg: #f8fafc;
-  --card: #ffffff;
-  --text: #0f172a;
-  --subtext: #64748b;
-  --border: #e5e7eb;
-  --accent: #22c55e;
+  --bg:#000;--bg-panel:#080d16;--panel:#0d1422;--panel-light:#131c2e;
+  --border:rgba(196,255,0,0.15);--border-dim:rgba(196,255,0,0.07);
+  --text:#dde6f0;--muted:#7a8fa8;--accent:#c4ff00;
+  --accent-dim:rgba(196,255,0,0.08);--accent-glow:rgba(196,255,0,0.2);
+  --cyan:#00e5ff;--cyan-dim:rgba(0,229,255,0.1);
+  --purple:#8b5cf6;--danger:#ff4d4d;--warning:#f59e0b;
+  --sidebar-w:270px;
 }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.75;}
 
-/* ===== GLOBAL ===== */
-body {
-  margin: 0;
-  font-family: 'JetBrains Mono', monospace;
-  background: var(--bg);
-  color: var(--text);
+/* ─── GRID ───────────────────────────────────────────────── */
+.bg-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(196,255,0,0.022) 1px,transparent 1px),linear-gradient(90deg,rgba(196,255,0,0.022) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;animation:gridDrift 24s linear infinite;}
+@keyframes gridDrift{from{transform:translate(0,0)}to{transform:translate(48px,48px)}}
+.bg-vignette{position:fixed;inset:0;background:radial-gradient(ellipse at 25% 15%,rgba(196,255,0,0.05) 0%,transparent 55%),radial-gradient(ellipse at 75% 85%,rgba(0,229,255,0.03) 0%,transparent 55%);pointer-events:none;z-index:0;}
+
+/* ─── SIDEBAR ────────────────────────────────────────────── */
+.sidebar{position:fixed;left:0;top:0;width:var(--sidebar-w);height:100vh;background:linear-gradient(180deg,#02050e,#000);border-right:1px solid var(--border);z-index:200;display:flex;flex-direction:column;box-shadow:4px 0 32px rgba(196,255,0,0.06);overflow:hidden;}
+.logo-wrap{padding:18px 16px 16px;border-bottom:1px solid var(--border-dim);background:linear-gradient(180deg,rgba(196,255,0,0.05),transparent);text-align:center;}
+.logo-img{width:170px;height:auto;filter:drop-shadow(0 0 18px rgba(196,255,0,0.45));display:block;margin:0 auto;transition:filter .3s,transform .3s;}
+.logo-img:hover{filter:drop-shadow(0 0 30px rgba(196,255,0,0.7));transform:scale(1.04);}
+.logo-sub{font-size:.65rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:8px;font-family:'JetBrains Mono',monospace;}
+.toc-label{padding:18px 22px 8px;font-family:'Orbitron',sans-serif;font-size:.6rem;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);opacity:.6;}
+.toc-scroll{flex:1;overflow-y:auto;padding:0 12px 20px;scrollbar-width:thin;scrollbar-color:rgba(196,255,0,.3) transparent;}
+.toc-scroll::-webkit-scrollbar{width:4px;}.toc-scroll::-webkit-scrollbar-thumb{background:rgba(196,255,0,.25);border-radius:2px;}
+.toc-link{display:flex;align-items:center;gap:10px;padding:9px 12px;margin:2px 0;border-radius:7px;color:var(--muted);text-decoration:none;font-size:.82rem;font-weight:500;transition:all .22s;border-left:2px solid transparent;line-height:1.3;}
+.toc-link .tn{font-size:.85rem;flex-shrink:0;width:20px;}
+.toc-link:hover{background:var(--accent-dim);color:var(--accent);border-left-color:var(--accent);transform:translateX(3px);}
+.toc-link.active{background:rgba(196,255,0,.12);color:var(--accent);border-left-color:var(--accent);}
+.sidebar-nav{padding:14px 12px;border-top:1px solid var(--border-dim);display:flex;flex-direction:column;gap:4px;}
+.sidebar-nav a{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:7px;color:var(--muted);text-decoration:none;font-size:.82rem;font-weight:500;transition:all .2s;}
+.sidebar-nav a:hover{background:var(--accent-dim);color:var(--accent);}
+.sidebar-nav a.active{color:var(--accent);background:var(--accent-dim);}
+
+/* ─── MAIN ───────────────────────────────────────────────── */
+.main{margin-left:var(--sidebar-w);min-height:100vh;position:relative;z-index:1;}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.88);backdrop-filter:blur(18px);border-bottom:1px solid var(--border);padding:13px 48px;display:flex;align-items:center;justify-content:space-between;}
+.breadcrumb{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.breadcrumb span{color:var(--accent);opacity:.6;}.breadcrumb strong{color:var(--text);}
+.topbar-badge{background:var(--accent-dim);border:1px solid var(--border);color:var(--accent);padding:4px 10px;border-radius:5px;font-size:.72rem;font-family:'JetBrains Mono',monospace;letter-spacing:.5px;}
+.read-indicator{position:fixed;top:0;left:var(--sidebar-w);right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--cyan));transform-origin:left;transform:scaleX(0);z-index:300;transition:transform .1s;}
+.content{padding:44px 52px 80px;max-width:960px;}
+
+/* ─── HERO ───────────────────────────────────────────────── */
+.page-hero{margin-bottom:44px;padding:40px 48px;background:linear-gradient(135deg,rgba(196,255,0,0.06),rgba(0,229,255,0.04));border:1px solid var(--border);border-radius:16px;position:relative;overflow:hidden;}
+.page-hero::before{content:'🛡️';position:absolute;right:36px;top:50%;transform:translateY(-50%);font-size:8rem;opacity:.04;pointer-events:none;}
+.hero-tag{display:inline-block;background:var(--accent-dim);border:1px solid var(--border);color:var(--accent);padding:4px 12px;border-radius:5px;font-size:.72rem;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;}
+.page-hero h1{font-family:'Orbitron',sans-serif;font-size:2rem;font-weight:700;background:linear-gradient(135deg,#fff 30%,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:10px;}
+.page-hero p{color:var(--muted);font-size:.95rem;max-width:580px;line-height:1.7;}
+.hero-meta{display:flex;gap:20px;margin-top:18px;flex-wrap:wrap;}
+.hm-stat{display:flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--muted);}
+.hm-dot{width:7px;height:7px;border-radius:50%;}
+
+/* ─── SECTION CARD ───────────────────────────────────────── */
+.section-card{background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:14px;padding:32px 36px;margin-bottom:22px;position:relative;transition:border-color .3s;}
+.section-card:hover{border-color:rgba(196,255,0,.18);}
+.section-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:linear-gradient(180deg,var(--accent),transparent);border-radius:14px 0 0 14px;opacity:0;transition:opacity .3s;}
+.section-card:hover::before{opacity:1;}
+.s-head{display:flex;align-items:center;gap:14px;margin-bottom:22px;padding-bottom:14px;border-bottom:1px solid var(--border-dim);}
+.s-num{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--accent);opacity:.55;flex-shrink:0;}
+.section-card h2{font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:600;color:#fff;letter-spacing:.5px;}
+.s-badge{margin-left:auto;padding:3px 9px;border-radius:5px;font-size:.68rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
+.sb-green{background:var(--accent-dim);border:1px solid var(--border);color:var(--accent);}
+.sb-cyan{background:var(--cyan-dim);border:1px solid rgba(0,229,255,.2);color:var(--cyan);}
+.sb-purple{background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.2);color:var(--purple);}
+.sb-red{background:rgba(255,77,77,.1);border:1px solid rgba(255,77,77,.2);color:var(--danger);}
+.sb-warn{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:var(--warning);}
+
+.section-card p{color:var(--muted);font-size:.9rem;line-height:1.78;margin-bottom:10px;}
+.section-card strong{color:var(--text);}
+.section-card a{color:var(--cyan);text-decoration:none;}
+.section-card a:hover{text-decoration:underline;}
+
+/* ─── ITEM GRID ──────────────────────────────────────────── */
+.item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:16px 0;}
+.item-chip{background:var(--panel);border:1px solid var(--border-dim);border-radius:9px;padding:12px 16px;display:flex;align-items:center;gap:10px;transition:all .22s;cursor:default;}
+.item-chip:hover{border-color:rgba(196,255,0,.2);background:var(--panel-light);transform:translateY(-2px);}
+.chip-icon{font-size:1.2rem;flex-shrink:0;}
+.chip-text{font-size:.85rem;font-weight:500;color:var(--text);}
+.chip-sub{font-size:.72rem;color:var(--muted);margin-top:2px;font-family:'JetBrains Mono',monospace;}
+
+/* coloured left border variants */
+.item-chip.green{border-left:3px solid var(--accent);}
+.item-chip.cyan{border-left:3px solid var(--cyan);}
+.item-chip.purple{border-left:3px solid var(--purple);}
+.item-chip.red{border-left:3px solid var(--danger);}
+.item-chip.warn{border-left:3px solid var(--warning);}
+
+/* ─── DETAIL CARDS (2-col) ───────────────────────────────── */
+.detail-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:16px 0;}
+.detail-card{background:var(--panel);border:1px solid var(--border-dim);border-radius:10px;padding:18px;transition:all .22s;}
+.detail-card:hover{border-color:rgba(196,255,0,.18);transform:translateY(-2px);}
+.dc-icon{font-size:1.5rem;margin-bottom:8px;}
+.dc-title{font-size:.88rem;font-weight:700;color:var(--text);margin-bottom:5px;}
+.dc-desc{font-size:.8rem;color:var(--muted);line-height:1.6;}
+
+/* ─── FRAMEWORK TABLE ────────────────────────────────────── */
+.fw-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.88rem;}
+.fw-table thead tr{background:rgba(196,255,0,.07);border-bottom:1px solid var(--border);}
+.fw-table th{padding:11px 14px;text-align:left;font-family:'Orbitron',monospace;font-size:.63rem;color:var(--accent);letter-spacing:.8px;text-transform:uppercase;}
+.fw-table td{padding:10px 14px;border-bottom:1px solid var(--border-dim);color:var(--muted);}
+.fw-table td:first-child{color:var(--text);font-weight:600;}
+.fw-table tr:hover td{background:rgba(196,255,0,.03);}
+
+/* ─── MORE INFO BTN ──────────────────────────────────────── */
+.more-link{display:inline-flex;align-items:center;gap:7px;margin-top:14px;padding:9px 18px;background:var(--accent-dim);border:1px solid rgba(196,255,0,.2);color:var(--accent);border-radius:8px;text-decoration:none;font-family:'JetBrains Mono',monospace;font-size:.75rem;letter-spacing:.5px;transition:all .2s;}
+.more-link:hover{background:rgba(196,255,0,.14);transform:translateX(4px);}
+
+/* ─── CALLOUT ────────────────────────────────────────────── */
+.callout{background:rgba(196,255,0,.04);border-left:3px solid var(--accent);padding:14px 18px;border-radius:8px;margin:16px 0;font-size:.88rem;color:var(--muted);}
+.callout strong{color:var(--text);}
+.callout.warn{background:rgba(245,158,11,.05);border-left-color:var(--warning);}
+.callout.red{background:rgba(255,77,77,.05);border-left-color:var(--danger);}
+
+/* ─── ATTACK SEVERITY ────────────────────────────────────── */
+.attack-list{display:flex;flex-direction:column;gap:10px;margin:14px 0;}
+.attack-row{display:flex;align-items:center;gap:14px;padding:12px 16px;background:var(--panel);border:1px solid var(--border-dim);border-radius:9px;transition:all .2s;}
+.attack-row:hover{border-color:var(--border);transform:translateX(3px);}
+.attack-icon{font-size:1.3rem;flex-shrink:0;}
+.attack-name{font-weight:600;color:var(--text);font-size:.9rem;flex:1;}
+.attack-desc{font-size:.78rem;color:var(--muted);}
+.sev-chip{padding:3px 10px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:.65rem;font-weight:700;text-transform:uppercase;flex-shrink:0;letter-spacing:.5px;}
+.sev-critical{background:rgba(255,77,77,.12);color:var(--danger);border:1px solid rgba(255,77,77,.25);}
+.sev-high{background:rgba(245,158,11,.12);color:var(--warning);border:1px solid rgba(245,158,11,.25);}
+.sev-medium{background:rgba(196,255,0,.08);color:var(--accent);border:1px solid rgba(196,255,0,.2);}
+
+footer{text-align:center;padding:22px 52px;border-top:1px solid var(--border-dim);font-size:.8rem;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+footer a{color:var(--cyan);text-decoration:none;}
+
+@media(max-width:860px){
+  :root{--sidebar-w:0px;}
+  .sidebar{display:none;}
+  .content{padding:24px 16px 60px;}
+  .topbar{padding:12px 20px;}
+  .detail-grid{grid-template-columns:1fr;}
+  .item-grid{grid-template-columns:repeat(2,1fr);}
+  .page-hero{padding:28px 22px;}
+  .page-hero h1{font-size:1.5rem;}
 }
-
-/* ===== NAVBAR ===== */
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 40px;
-  background: var(--card);
-  border-bottom: 1px solid var(--border);
-}
-
-.logo {
-  font-size: 20px;
-  font-weight: 700;
-}
-
-.nav-links a {
-  margin: 0 12px;
-  text-decoration: none;
-  color: var(--subtext);
-  font-size: 14px;
-}
-
-.nav-links a:hover {
-  color: var(--text);
-}
-
-/* ===== DARK BUTTON ===== */
-.dark-btn {
-  padding: 6px 12px;
-  border: none;
-  background: var(--accent);
-  color: white;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-/* ===== HEADER ===== */
-.page-header {
-  padding: 50px 60px 30px;
-  border-bottom: 1px solid var(--border);
-  background: linear-gradient(to right, #ffffff, #f8fafc);
-}
-
-.page-header h1 {
-  margin: 0;
-  font-size: 32px;
-  color: var(--accent);
-}
-
-.page-header h1::after {
-  content: "";
-  display: block;
-  width: 60px;
-  height: 3px;
-  background: var(--accent);
-  margin-top: 8px;
-}
-
-.page-header p {
-  margin-top: 10px;
-  color: var(--subtext);
-  font-size: 14px;
-}
-
-/* ===== LAYOUT ===== */
-.wrapper {
-  display: flex;
-}
-
-/* ===== SIDEBAR ===== */
-.sidebar {
-  width: 240px;
-  background: #020617;
-  color: white;
-  padding: 20px;
-  min-height: 100vh;
-}
-
-.sidebar a {
-  display: block;
-  padding: 10px;
-  color: #94a3b8;
-  text-decoration: none;
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-.sidebar a:hover {
-  background: #1e293b;
-  color: white;
-}
-
-/* ===== CONTENT ===== */
-.content {
-  flex: 1;
-  padding: 40px 60px;
-  max-width: 1000px;
-}
-
-/* ===== SECTION ===== */
-.section {
-  margin-bottom: 50px;
-}
-
-.section h2 {
-  color: var(--accent);
-  font-size: 20px;
-  margin-bottom: 15px;
-}
-
-/* ===== LIST ===== */
-.list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 10px;
-}
-
-.list div {
-  padding: 10px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-/* ===== BUTTON ===== */
-.btn {
-  display: inline-block;
-  margin-top: 15px;
-  font-size: 13px;
-  color: var(--accent);
-  text-decoration: none;
-}
-
-.btn:hover {
-  text-decoration: underline;
-}
-
-/* ===== DARK MODE ===== */
-.dark {
-  --bg: #020617;
-  --card: #0f172a;
-  --text: #e2e8f0;
-  --subtext: #94a3b8;
-  --border: #1e293b;
-}
-
-.dark .navbar {
-  background: #020617;
-}
-
-.dark .page-header {
-  background: #020617;
-}
-
-.dark .sidebar {
-  background: #020617;
-}
-
-.dark .list div {
-  background: #0f172a;
-}
-
-/* ===== MOBILE ===== */
-@media (max-width:768px){
-  .wrapper {
-    flex-direction: column;
-  }
-
-  .sidebar {
-    width: 100%;
-  }
-
-  .content {
-    padding: 20px;
-  }
-}
-
 </style>
 </head>
-
 <body>
+<div class="bg-grid"></div>
+<div class="bg-vignette"></div>
+<div class="read-indicator" id="readIndicator"></div>
 
-<!-- NAVBAR -->
-<nav class="navbar">
-  <div class="logo"> HackProof</div>
-
-  <div class="nav-links">
-    <a href="index.html">Notes</a>
-    <a href="roadmap.html">Roadmap</a>
-    <a href="practice-lab.html">Labs</a>
-    <a href="awareness.html">Awareness</a>
-    <a href="tools.html">Tools</a>
-    <a href="news.html">News</a>
-    <a href="quiz.html">Quiz</a>
+<!-- ══════════════════ SIDEBAR ════════════════════════════ -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="logo.png" alt="HackForge" class="logo-img">
+    <div class="logo-sub">Cybersecurity Learning</div>
   </div>
 
-  <button onclick="toggleDarkMode()" class="dark-btn">Dark</button>
-</nav>
+  <div class="toc-label">On this page</div>
+  <div class="toc-scroll">
+    <a class="toc-link active" href="#domains">    <span class="tn">🌐</span>Domains</a>
+    <a class="toc-link"        href="#operations"> <span class="tn">🔭</span>Security Operations</a>
+    <a class="toc-link"        href="#technical">  <span class="tn">🛡️</span>Technical Awareness</a>
+    <a class="toc-link"        href="#attacks">    <span class="tn">💥</span>Common Attacks</a>
+    <a class="toc-link"        href="#frameworks"> <span class="tn">📋</span>Frameworks</a>
+    <a class="toc-link"        href="#redblue">    <span class="tn">⚔️</span>Red vs Blue Team</a>
+    <a class="toc-link"        href="#bestprac">   <span class="tn">✅</span>Best Practices</a>
+  </div>
 
-<!-- HEADER -->
-<div class="page-header">
-  <h1>Cybersecurity Awareness</h1>
-  <p>Understand domains, operations, threats, and security practices in one place.</p>
-</div>
+  <div class="sidebar-nav">
+    <a href="index.html">📓 Notes</a>
+    <a href="roadmap.html">🗺️ Roadmap</a>
+    <a href="practice-lab.html">⚗️ Labs</a>
+    <a href="cyber-news.html">📡 Cyber News</a>
+    <a href="Awareness.html" class="active">🛡️ Awareness</a>
+  </div>
+</aside>
 
-<div class="wrapper">
+<!-- ══════════════════ MAIN ════════════════════════════════ -->
+<main class="main">
+  <div class="topbar">
+    <div class="breadcrumb"><span>HackForge</span> / <strong>Cybersecurity Awareness</strong></div>
+    <div class="topbar-badge">Awareness Hub</div>
+  </div>
 
-<!-- SIDEBAR -->
-<div class="sidebar">
-  <a href="#domains">Domains</a>
-  <a href="#operations">Security Operations</a>
-  <a href="#technical">Technical Awareness</a>
-  <a href="#attacks">Common Attacks</a>
-  <a href="#frameworks">Frameworks</a>
-</div>
+  <div class="content">
 
-<!-- CONTENT -->
-<div class="content">
+    <!-- HERO -->
+    <div class="page-hero">
+      <div class="hero-tag">🛡️ Security Awareness</div>
+      <h1>Cybersecurity Awareness</h1>
+      <p>Understand domains, operations, threats, and security practices in one place. Your complete reference guide to the cybersecurity landscape.</p>
+      <div class="hero-meta">
+        <div class="hm-stat"><div class="hm-dot" style="background:var(--accent);box-shadow:0 0 6px var(--accent);"></div>15 Domains</div>
+        <div class="hm-stat"><div class="hm-dot" style="background:var(--cyan);box-shadow:0 0 6px var(--cyan);"></div>10 SOC Operations</div>
+        <div class="hm-stat"><div class="hm-dot" style="background:var(--danger);box-shadow:0 0 6px var(--danger);"></div>6 Attack Types</div>
+        <div class="hm-stat"><div class="hm-dot" style="background:var(--purple);box-shadow:0 0 6px var(--purple);"></div>4 Frameworks</div>
+      </div>
+    </div>
 
-<div class="section" id="domains">
-<h2>Cybersecurity Domains</h2>
-<div class="list">
-<div>Network Security</div>
-<div>Web Security</div>
-<div>Application Security</div>
-<div>Cloud Security</div>
-<div>Endpoint Security</div>
-<div>Mobile Security</div>
-<div>IoT Security</div>
-<div>Identity & Access Management</div>
-<div>Cryptography</div>
-<div>Digital Forensics</div>
-<div>Malware Analysis</div>
-<div>Threat Intelligence</div>
-<div>Security Operations (SOC)</div>
-<div>Governance Risk Compliance</div>
-<div>DevSecOps</div>
-</div>
-</div>
+    <!-- ── DOMAINS ── -->
+    <div class="section-card" id="domains">
+      <div class="s-head"><span class="s-num">01</span><h2>Cybersecurity Domains</h2><span class="s-badge sb-green">15 Domains</span></div>
+      <p>Cybersecurity is divided into specialised domains. Understanding all of them gives you the full picture of how organisations protect their digital assets.</p>
+      <div class="item-grid">
+        <div class="item-chip green"><span class="chip-icon">🌐</span><div><div class="chip-text">Network Security</div><div class="chip-sub">Firewalls, IDS/IPS</div></div></div>
+        <div class="item-chip green"><span class="chip-icon">🕸️</span><div><div class="chip-text">Web Security</div><div class="chip-sub">OWASP, WAF</div></div></div>
+        <div class="item-chip green"><span class="chip-icon">📱</span><div><div class="chip-text">Application Security</div><div class="chip-sub">SAST, DAST</div></div></div>
+        <div class="item-chip cyan"><span class="chip-icon">☁️</span><div><div class="chip-text">Cloud Security</div><div class="chip-sub">AWS, Azure, GCP</div></div></div>
+        <div class="item-chip cyan"><span class="chip-icon">💻</span><div><div class="chip-text">Endpoint Security</div><div class="chip-sub">EDR, AV</div></div></div>
+        <div class="item-chip cyan"><span class="chip-icon">📲</span><div><div class="chip-text">Mobile Security</div><div class="chip-sub">iOS, Android</div></div></div>
+        <div class="item-chip purple"><span class="chip-icon">🏠</span><div><div class="chip-text">IoT Security</div><div class="chip-sub">Smart devices</div></div></div>
+        <div class="item-chip purple"><span class="chip-icon">🔑</span><div><div class="chip-text">Identity & Access Mgmt</div><div class="chip-sub">SSO, MFA, PAM</div></div></div>
+        <div class="item-chip purple"><span class="chip-icon">🔐</span><div><div class="chip-text">Cryptography</div><div class="chip-sub">AES, RSA, TLS</div></div></div>
+        <div class="item-chip warn"><span class="chip-icon">🔍</span><div><div class="chip-text">Digital Forensics</div><div class="chip-sub">Evidence, DFIR</div></div></div>
+        <div class="item-chip warn"><span class="chip-icon">🦠</span><div><div class="chip-text">Malware Analysis</div><div class="chip-sub">Static, Dynamic</div></div></div>
+        <div class="item-chip warn"><span class="chip-icon">🕵️</span><div><div class="chip-text">Threat Intelligence</div><div class="chip-sub">IOCs, TTP</div></div></div>
+        <div class="item-chip red"><span class="chip-icon">🖥️</span><div><div class="chip-text">Security Operations</div><div class="chip-sub">SOC, SIEM</div></div></div>
+        <div class="item-chip red"><span class="chip-icon">📊</span><div><div class="chip-text">Governance Risk &amp; Compliance</div><div class="chip-sub">GRC, ISO, GDPR</div></div></div>
+        <div class="item-chip red"><span class="chip-icon">🔧</span><div><div class="chip-text">DevSecOps</div><div class="chip-sub">CI/CD, SAST</div></div></div>
+      </div>
+    </div>
 
-<div class="section" id="operations">
-<h2>Security Operations</h2>
-<div class="list">
-<div>SIEM Monitoring</div>
-<div>Threat Hunting</div>
-<div>Incident Response</div>
-<div>Digital Forensics</div>
-<div>Vulnerability Assessment</div>
-<div>Penetration Testing</div>
-<div>Red Team</div>
-<div>Blue Team</div>
-<div>EDR/XDR</div>
-<div>NDR</div>
-</div>
-<a href="cybersecurity-activities.html" class="btn">View Full Activities →</a>
-</div>
+    <!-- ── SECURITY OPERATIONS ── -->
+    <div class="section-card" id="operations">
+      <div class="s-head"><span class="s-num">02</span><h2>Security Operations</h2><span class="s-badge sb-cyan">SOC</span></div>
+      <p>Security Operations is the heart of an organisation's defence. These are the day-to-day activities performed by security teams to detect, respond to, and recover from threats.</p>
 
-<div class="section" id="technical">
-<h2>Technical Awareness</h2>
-<div class="list">
-<div>Phishing</div>
-<div>Identity Security</div>
-<div>Endpoint Security</div>
-<div>Cloud Security</div>
-<div>API Security</div>
-<div>Threat Intelligence</div>
-<div>Backup & Recovery</div>
-</div>
-<a href="technical-awareness.html" class="btn">Explore Full Awareness →</a>
-</div>
+      <div class="detail-grid">
+        <div class="detail-card"><div class="dc-icon">📊</div><div class="dc-title">SIEM Monitoring</div><div class="dc-desc">Collect and correlate logs from all systems. Detect anomalies in real-time. Tools: Splunk, Microsoft Sentinel, QRadar.</div></div>
+        <div class="detail-card"><div class="dc-icon">🕵️</div><div class="dc-title">Threat Hunting</div><div class="dc-desc">Proactively search for threats that evade automated detection. Hypothesis-driven investigation using TTPs.</div></div>
+        <div class="detail-card"><div class="dc-icon">🚨</div><div class="dc-title">Incident Response</div><div class="dc-desc">Detect → Contain → Eradicate → Recover → Learn. The structured process to handle security breaches.</div></div>
+        <div class="detail-card"><div class="dc-icon">🔍</div><div class="dc-title">Digital Forensics</div><div class="dc-desc">Collect and preserve digital evidence. Analyse artefacts from disk, memory, and network captures.</div></div>
+        <div class="detail-card"><div class="dc-icon">⚠️</div><div class="dc-title">Vulnerability Assessment</div><div class="dc-desc">Systematic scanning of systems to identify weaknesses before attackers do. Tools: Nessus, OpenVAS.</div></div>
+        <div class="detail-card"><div class="dc-icon">💀</div><div class="dc-title">Penetration Testing</div><div class="dc-desc">Authorised simulated attacks to evaluate security posture. Black-box, white-box, and grey-box approaches.</div></div>
+        <div class="detail-card"><div class="dc-icon">🔴</div><div class="dc-title">Red Team</div><div class="dc-desc">Offensive security team that simulates real-world attackers to test the organisation's defences.</div></div>
+        <div class="detail-card"><div class="dc-icon">🔵</div><div class="dc-title">Blue Team</div><div class="dc-desc">Defensive security team. Monitors, detects, and responds to attacks. Works with SIEM, EDR, and IPS.</div></div>
+        <div class="detail-card"><div class="dc-icon">🖥️</div><div class="dc-title">EDR / XDR</div><div class="dc-desc">Endpoint Detection and Response. Extended Detection and Response adds network, cloud, and email telemetry.</div></div>
+        <div class="detail-card"><div class="dc-icon">📡</div><div class="dc-title">NDR</div><div class="dc-desc">Network Detection and Response. Analyses traffic patterns to detect lateral movement and C2 communication.</div></div>
+      </div>
 
-<div class="section" id="attacks">
-<h2>Common Cyber Attacks</h2>
-<div class="list">
-<div>Phishing</div>
-<div>Ransomware</div>
-<div>SQL Injection</div>
-<div>XSS</div>
-<div>DoS/DDoS</div>
-<div>Brute Force</div>
-</div>
-</div>
+      <a href="cybersecurity-activities.html" class="more-link">View Full Activities →</a>
+    </div>
 
-<div class="section" id="frameworks">
-<h2>Security Frameworks</h2>
-<div class="list">
-<div>ISO 27001</div>
-<div>NIST</div>
-<div>MITRE ATT&CK</div>
-<div>OWASP Top 10</div>
-</div>
-</div>
+    <!-- ── TECHNICAL AWARENESS ── -->
+    <div class="section-card" id="technical">
+      <div class="s-head"><span class="s-num">03</span><h2>Technical Awareness</h2><span class="s-badge sb-purple">Defence</span></div>
+      <p>Technical awareness covers the specific areas where organisations must apply security controls to protect their assets and data.</p>
+      <div class="item-grid">
+        <div class="item-chip warn"><span class="chip-icon">🎣</span><div><div class="chip-text">Phishing</div><div class="chip-sub">Email, SMS, Voice</div></div></div>
+        <div class="item-chip warn"><span class="chip-icon">🔑</span><div><div class="chip-text">Identity Security</div><div class="chip-sub">MFA, Zero Trust</div></div></div>
+        <div class="item-chip green"><span class="chip-icon">💻</span><div><div class="chip-text">Endpoint Security</div><div class="chip-sub">AV, EDR, Patch</div></div></div>
+        <div class="item-chip cyan"><span class="chip-icon">☁️</span><div><div class="chip-text">Cloud Security</div><div class="chip-sub">CASB, CSPM</div></div></div>
+        <div class="item-chip purple"><span class="chip-icon">🔗</span><div><div class="chip-text">API Security</div><div class="chip-sub">Auth, Rate limit</div></div></div>
+        <div class="item-chip red"><span class="chip-icon">🕵️</span><div><div class="chip-text">Threat Intelligence</div><div class="chip-sub">IOC, STIX/TAXII</div></div></div>
+        <div class="item-chip green"><span class="chip-icon">💾</span><div><div class="chip-text">Backup &amp; Recovery</div><div class="chip-sub">3-2-1 rule, BCP</div></div></div>
+      </div>
 
-</div>
-</div>
+      <div class="callout"><strong>💡 Zero Trust Principle:</strong> Never trust, always verify. Every user and device must be authenticated and authorised — regardless of whether they are inside or outside the network perimeter.</div>
+
+      <a href="technical-awareness.html" class="more-link">Explore Full Awareness →</a>
+    </div>
+
+    <!-- ── COMMON ATTACKS ── -->
+    <div class="section-card" id="attacks">
+      <div class="s-head"><span class="s-num">04</span><h2>Common Cyber Attacks</h2><span class="s-badge sb-red">Threats</span></div>
+      <p>Understanding how attackers operate is the first step in building effective defences. These are the most common attack types every security professional must know.</p>
+
+      <div class="attack-list">
+        <div class="attack-row">
+          <span class="attack-icon">🎣</span>
+          <div>
+            <div class="attack-name">Phishing</div>
+            <div class="attack-desc">Fraudulent emails/messages designed to steal credentials or deliver malware. #1 initial access vector.</div>
+          </div>
+          <span class="sev-chip sev-critical">Critical</span>
+        </div>
+        <div class="attack-row">
+          <span class="attack-icon">🔐</span>
+          <div>
+            <div class="attack-name">Ransomware</div>
+            <div class="attack-desc">Malware that encrypts victim files and demands payment for decryption. Can cripple entire organisations.</div>
+          </div>
+          <span class="sev-chip sev-critical">Critical</span>
+        </div>
+        <div class="attack-row">
+          <span class="attack-icon">💉</span>
+          <div>
+            <div class="attack-name">SQL Injection</div>
+            <div class="attack-desc">Inserting malicious SQL into input fields to manipulate databases. Leads to data theft and authentication bypass.</div>
+          </div>
+          <span class="sev-chip sev-high">High</span>
+        </div>
+        <div class="attack-row">
+          <span class="attack-icon">⚡</span>
+          <div>
+            <div class="attack-name">Cross-Site Scripting (XSS)</div>
+            <div class="attack-desc">Injecting malicious JavaScript into web pages viewed by other users. Steals session cookies and credentials.</div>
+          </div>
+          <span class="sev-chip sev-high">High</span>
+        </div>
+        <div class="attack-row">
+          <span class="attack-icon">💥</span>
+          <div>
+            <div class="attack-name">DoS / DDoS</div>
+            <div class="attack-desc">Overwhelming a server with traffic to make services unavailable. DDoS uses botnets of thousands of infected machines.</div>
+          </div>
+          <span class="sev-chip sev-high">High</span>
+        </div>
+        <div class="attack-row">
+          <span class="attack-icon">🔑</span>
+          <div>
+            <div class="attack-name">Brute Force</div>
+            <div class="attack-desc">Systematically trying all possible passwords until one works. Countered by account lockouts and MFA.</div>
+          </div>
+          <span class="sev-chip sev-medium">Medium</span>
+        </div>
+      </div>
+
+      <div class="callout red"><strong>⚠️ Remember:</strong> 91% of cyberattacks begin with a phishing email. User awareness training is your first line of defence.</div>
+    </div>
+
+    <!-- ── FRAMEWORKS ── -->
+    <div class="section-card" id="frameworks">
+      <div class="s-head"><span class="s-num">05</span><h2>Security Frameworks &amp; Standards</h2><span class="s-badge sb-warn">Standards</span></div>
+      <p>Security frameworks provide structured guidelines for building, maintaining, and improving an organisation's security posture. They are referenced in certifications, compliance requirements, and pen testing methodology.</p>
+
+      <table class="fw-table">
+        <thead>
+          <tr><th>Framework</th><th>Purpose</th><th>Used By</th><th>Key Concepts</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>ISO 27001</td>
+            <td>Information Security Management System (ISMS)</td>
+            <td>Enterprises, Compliance</td>
+            <td>Risk assessment, Controls, Audit</td>
+          </tr>
+          <tr>
+            <td>NIST CSF</td>
+            <td>Cybersecurity risk management framework</td>
+            <td>Government, Enterprise</td>
+            <td>Identify · Protect · Detect · Respond · Recover</td>
+          </tr>
+          <tr>
+            <td>MITRE ATT&amp;CK</td>
+            <td>Adversary tactics and techniques knowledge base</td>
+            <td>SOC, Red/Blue Teams</td>
+            <td>TTPs, Kill Chain, Matrices</td>
+          </tr>
+          <tr>
+            <td>OWASP Top 10</td>
+            <td>Top web application security risks</td>
+            <td>Developers, Pen Testers</td>
+            <td>SQLi, XSS, SSRF, IDOR, Broken Auth</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── RED VS BLUE TEAM ── -->
+    <div class="section-card" id="redblue">
+      <div class="s-head"><span class="s-num">06</span><h2>Red Team vs Blue Team vs Purple Team</h2><span class="s-badge sb-red">Operations</span></div>
+      <p>Cybersecurity teams are often organised into red, blue, and purple functions — each playing a different but essential role in protecting an organisation.</p>
+
+      <div class="detail-grid">
+        <div class="detail-card" style="border-left:3px solid var(--danger);">
+          <div class="dc-icon">🔴</div>
+          <div class="dc-title" style="color:var(--danger);">Red Team — Attackers</div>
+          <div class="dc-desc">Simulates real-world adversaries. Performs penetration testing, phishing campaigns, physical intrusion tests. Goal: find what Blue Team misses.</div>
+        </div>
+        <div class="detail-card" style="border-left:3px solid var(--cyan);">
+          <div class="dc-icon">🔵</div>
+          <div class="dc-title" style="color:var(--cyan);">Blue Team — Defenders</div>
+          <div class="dc-desc">Monitors networks and systems, detects intrusions, responds to incidents. Operates SIEM, EDR, and firewall rules. Goal: detect and stop attackers.</div>
+        </div>
+        <div class="detail-card" style="border-left:3px solid var(--purple);">
+          <div class="dc-icon">🟣</div>
+          <div class="dc-title" style="color:var(--purple);">Purple Team — Collaboration</div>
+          <div class="dc-desc">Bridge between Red and Blue. Red shares attack techniques; Blue improves detection. Together they close security gaps faster.</div>
+        </div>
+        <div class="detail-card" style="border-left:3px solid var(--warning);">
+          <div class="dc-icon">🟡</div>
+          <div class="dc-title" style="color:var(--warning);">Yellow Team — Builders</div>
+          <div class="dc-desc">Developers and architects who build secure systems. Work with DevSecOps to embed security in the SDLC from the start.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── BEST PRACTICES ── -->
+    <div class="section-card" id="bestprac">
+      <div class="s-head"><span class="s-num">07</span><h2>Security Best Practices</h2><span class="s-badge sb-green">Essential</span></div>
+      <p>These practices form the baseline security hygiene every individual and organisation should follow regardless of their size or industry.</p>
+
+      <div class="item-grid">
+        <div class="item-chip green"><span class="chip-icon">🔐</span><div><div class="chip-text">Use Strong Passwords</div><div class="chip-sub">16+ chars, unique per site</div></div></div>
+        <div class="item-chip green"><span class="chip-icon">📱</span><div><div class="chip-text">Enable MFA Everywhere</div><div class="chip-sub">Blocks 99.9% of attacks</div></div></div>
+        <div class="item-chip cyan"><span class="chip-icon">🔄</span><div><div class="chip-text">Keep Software Updated</div><div class="chip-sub">Patch known CVEs</div></div></div>
+        <div class="item-chip cyan"><span class="chip-icon">💾</span><div><div class="chip-text">Regular Backups</div><div class="chip-sub">3-2-1 rule</div></div></div>
+        <div class="item-chip purple"><span class="chip-icon">🔒</span><div><div class="chip-text">Encrypt Sensitive Data</div><div class="chip-sub">At rest and in transit</div></div></div>
+        <div class="item-chip purple"><span class="chip-icon">👁️</span><div><div class="chip-text">Monitor &amp; Log</div><div class="chip-sub">SIEM, audit logs</div></div></div>
+        <div class="item-chip warn"><span class="chip-icon">🧩</span><div><div class="chip-text">Least Privilege</div><div class="chip-sub">Minimum access needed</div></div></div>
+        <div class="item-chip warn"><span class="chip-icon">🎣</span><div><div class="chip-text">Phishing Awareness</div><div class="chip-sub">Train users regularly</div></div></div>
+        <div class="item-chip red"><span class="chip-icon">🔥</span><div><div class="chip-text">Firewall &amp; IDS</div><div class="chip-sub">Network perimeter</div></div></div>
+        <div class="item-chip red"><span class="chip-icon">🚨</span><div><div class="chip-text">Incident Response Plan</div><div class="chip-sub">Know before it happens</div></div></div>
+      </div>
+
+      <div class="callout"><strong>🎯 Key Rule:</strong> Security is not a product you buy — it is a continuous process. The strongest organisations build a security-first culture across every team and department.</div>
+    </div>
+
+  </div><!-- /content -->
+
+  <footer>
+    © 2026 HackForge · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · Built by <a href="mailto:ligerharry44@gmail.com">Liger44</a> · For ethical cybersecurity learning only.
+  </footer>
+</main>
 
 <script>
-function toggleDarkMode() {
-  document.body.classList.toggle("dark");
-}
-</script>
+/* ── READ PROGRESS ── */
+const indicator = document.getElementById('readIndicator');
+window.addEventListener('scroll', () => {
+  const el = document.documentElement;
+  indicator.style.transform = `scaleX(${el.scrollTop / (el.scrollHeight - el.clientHeight)})`;
+});
 
+/* ── ACTIVE TOC ── */
+const sections = document.querySelectorAll('.section-card[id]');
+const tocLinks  = document.querySelectorAll('.toc-link');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting)
+      tocLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + e.target.id));
+  });
+}, { rootMargin: '-25% 0px -65% 0px' });
+sections.forEach(s => obs.observe(s));
+</script>
 </body>
 </html>
