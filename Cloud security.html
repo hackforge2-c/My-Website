@@ -1,0 +1,1917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HackForge | Cloud Security</title>
+<link rel="icon" href="logo.png" type="image/png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ─── VARIABLES ─────────────────────────────────────────── */
+:root {
+  --bg:#000; --bg-panel:#060a0e; --panel:#0a1018; --panel-light:#0f1620;
+  --border:rgba(0,220,255,0.16); --border-dim:rgba(0,220,255,0.07);
+  --text:#d8eaf5; --muted:#5a8090;
+  --accent:#00dcff;
+  --accent-glow:rgba(0,220,255,0.2); --accent-dim:rgba(0,220,255,0.08);
+  --accent2:#c4ff00;
+  --danger:#ff4455; --warning:#f59e0b; --green:#22c55e;
+  --purple:#8b5cf6; --orange:#f97316;
+  --cyan-dim:rgba(0,220,255,0.09);
+  --sidebar-w:272px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.75;}
+
+/* ─── BG ── */
+.bg-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(0,220,255,0.022) 1px,transparent 1px),linear-gradient(90deg,rgba(0,220,255,0.022) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;animation:gridDrift 26s linear infinite;}
+@keyframes gridDrift{from{transform:translate(0,0)}to{transform:translate(48px,48px)}}
+.bg-vignette{position:fixed;inset:0;background:radial-gradient(ellipse at 20% 10%,rgba(0,220,255,0.05) 0%,transparent 55%),radial-gradient(ellipse at 80% 90%,rgba(0,180,255,0.03) 0%,transparent 55%);pointer-events:none;z-index:0;}
+
+/* ─── SIDEBAR ── */
+.sidebar{position:fixed;left:0;top:0;width:var(--sidebar-w);height:100vh;background:linear-gradient(180deg,#020810,#000);border-right:1px solid var(--border);z-index:200;display:flex;flex-direction:column;overflow:hidden;box-shadow:4px 0 32px rgba(0,220,255,0.06);}
+.logo-wrap{padding:18px 16px 16px;border-bottom:1px solid var(--border-dim);background:linear-gradient(180deg,rgba(0,220,255,0.06),transparent);text-align:center;}
+.logo-img{width:160px;height:auto;filter:drop-shadow(0 0 18px rgba(0,220,255,0.5));display:block;margin:0 auto;transition:filter .3s,transform .3s;}
+.logo-img:hover{filter:drop-shadow(0 0 30px rgba(0,220,255,0.8));transform:scale(1.04);}
+.logo-sub{font-size:.65rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:8px;font-family:'JetBrains Mono',monospace;}
+.lab-progress-box{margin:12px 12px 0;background:rgba(0,220,255,0.05);border:1px solid rgba(0,220,255,0.12);border-radius:10px;padding:12px 14px;}
+.lpb-label{font-family:'JetBrains Mono',monospace;font-size:.62rem;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
+.lpb-bar-track{height:5px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden;}
+.lpb-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),#00b4ff);border-radius:3px;width:0%;transition:width .8s ease;box-shadow:0 0 8px rgba(0,220,255,.5);}
+.lpb-pct{font-family:'Orbitron',sans-serif;font-size:.85rem;color:var(--accent);margin-top:5px;text-align:right;}
+.toc-label{padding:14px 22px 7px;font-family:'Orbitron',sans-serif;font-size:.58rem;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);opacity:.6;}
+.toc-scroll{flex:1;overflow-y:auto;padding:0 12px 12px;scrollbar-width:thin;scrollbar-color:rgba(0,220,255,.3) transparent;}
+.toc-scroll::-webkit-scrollbar{width:4px;}.toc-scroll::-webkit-scrollbar-thumb{background:rgba(0,220,255,.25);border-radius:2px;}
+.toc-link{display:flex;align-items:center;gap:10px;padding:8px 12px;margin:2px 0;border-radius:7px;color:var(--muted);text-decoration:none;font-size:.79rem;font-weight:500;transition:all .22s;border-left:2px solid transparent;line-height:1.3;}
+.toc-link .tn{font-family:'JetBrains Mono',monospace;font-size:.63rem;color:rgba(0,220,255,.4);flex-shrink:0;width:20px;}
+.toc-link:hover{background:var(--accent-dim);color:var(--accent);border-left-color:var(--accent);transform:translateX(3px);}
+.toc-link.active{background:rgba(0,220,255,.11);color:var(--accent);border-left-color:var(--accent);}
+.sidebar-nav{padding:10px 12px;border-top:1px solid var(--border-dim);display:flex;flex-direction:column;gap:3px;}
+.sidebar-nav a{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:7px;color:var(--muted);text-decoration:none;font-size:.79rem;font-weight:500;transition:all .2s;}
+.sidebar-nav a:hover{background:var(--accent-dim);color:var(--accent);}
+
+/* ─── MAIN ── */
+.main{margin-left:var(--sidebar-w);min-height:100vh;position:relative;z-index:1;}
+.read-indicator{position:fixed;top:0;left:var(--sidebar-w);right:0;height:2px;background:linear-gradient(90deg,var(--accent),#00b4ff);transform-origin:left;transform:scaleX(0);z-index:300;transition:transform .1s;}
+
+/* ─── TOPBAR ── */
+.topbar{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.9);backdrop-filter:blur(18px);border-bottom:1px solid var(--border);padding:12px 48px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.topbar-left{display:flex;align-items:center;gap:14px;}
+.breadcrumb{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.breadcrumb span{color:var(--accent);opacity:.7;}.breadcrumb strong{color:var(--text);}
+.difficulty-badge{padding:4px 12px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:rgba(0,220,255,.1);border:1px solid rgba(0,220,255,.25);color:var(--accent);}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.progress-pill{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--border-dim);border-radius:30px;padding:6px 14px;font-size:.78rem;color:var(--muted);}
+.progress-pill-bar{width:80px;height:5px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden;}
+.progress-pill-fill{height:100%;background:linear-gradient(90deg,var(--accent),#00b4ff);border-radius:3px;width:0%;box-shadow:0 0 8px rgba(0,220,255,.5);transition:width 1s ease;}
+.mark-btn{background:linear-gradient(135deg,var(--accent),#00b4ff);color:#000;border:none;padding:9px 18px;border-radius:7px;font-weight:700;font-size:.8rem;cursor:pointer;font-family:'Orbitron',sans-serif;transition:all .25s;box-shadow:0 0 16px rgba(0,220,255,.25);letter-spacing:.3px;}
+.mark-btn:hover{transform:translateY(-2px);box-shadow:0 4px 24px rgba(0,220,255,.45);}
+.mark-btn.done{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;box-shadow:0 0 16px rgba(34,197,94,.3);}
+
+/* ─── CONTENT ── */
+.content{padding:40px 52px 80px;max-width:980px;}
+
+/* ─── HERO ── */
+.page-hero{margin-bottom:36px;padding:40px 48px;background:linear-gradient(135deg,rgba(0,220,255,0.07),rgba(0,180,255,0.04));border:1px solid var(--border);border-radius:16px;position:relative;overflow:hidden;}
+.page-hero::before{content:'☁️';position:absolute;right:36px;top:50%;transform:translateY(-50%);font-size:8rem;opacity:.05;pointer-events:none;}
+.hero-tag{display:inline-flex;align-items:center;gap:7px;background:rgba(0,220,255,.08);border:1px solid rgba(0,220,255,.2);color:var(--accent);padding:4px 12px;border-radius:5px;font-size:.72rem;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;}
+.page-hero h1{font-family:'Orbitron',sans-serif;font-size:2rem;font-weight:700;background:linear-gradient(135deg,#fff 30%,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:10px;line-height:1.2;}
+.page-hero p{color:var(--muted);font-size:.93rem;max-width:660px;line-height:1.7;}
+.hero-meta{display:flex;gap:14px;margin-top:18px;flex-wrap:wrap;}
+.hm-chip{display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--muted);background:var(--panel);border:1px solid var(--border-dim);padding:5px 12px;border-radius:6px;}
+.hm-chip .dot{width:6px;height:6px;border-radius:50%;}
+
+/* ─── SECTION CARDS ── */
+.lab-section{background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:14px;padding:32px 36px;margin-bottom:20px;position:relative;transition:border-color .3s;animation:fadeUp .4s ease both;}
+.lab-section:hover{border-color:rgba(0,220,255,.2);}
+.lab-section::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:linear-gradient(180deg,var(--accent),transparent);border-radius:14px 0 0 14px;opacity:0;transition:opacity .3s;}
+.lab-section:hover::before{opacity:1;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.lab-section:nth-child(1){animation-delay:.05s}.lab-section:nth-child(2){animation-delay:.1s}
+.lab-section:nth-child(3){animation-delay:.15s}.lab-section:nth-child(4){animation-delay:.2s}
+.lab-section:nth-child(5){animation-delay:.25s}.lab-section:nth-child(6){animation-delay:.3s}
+.lab-section:nth-child(7){animation-delay:.35s}
+.s-head{display:flex;align-items:center;gap:14px;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border-dim);}
+.s-num{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--accent);opacity:.55;flex-shrink:0;}
+.lab-section h2{font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:600;color:#fff;letter-spacing:.5px;}
+.s-badge{margin-left:auto;padding:3px 9px;border-radius:5px;font-size:.66rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
+.sb-cyan{background:var(--cyan-dim);border:1px solid rgba(0,220,255,.22);color:var(--accent);}
+.sb-warn{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:var(--warning);}
+.sb-green{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);color:var(--green);}
+.sb-purple{background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.25);color:var(--purple);}
+.sb-red{background:rgba(255,68,85,.1);border:1px solid rgba(255,68,85,.25);color:var(--danger);}
+.sb-orange{background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.25);color:var(--orange);}
+.sb-lime{background:rgba(196,255,0,.07);border:1px solid rgba(196,255,0,.18);color:var(--accent2);}
+
+/* ─── TEXT STYLES ── */
+.lab-section p{color:var(--muted);font-size:.9rem;margin-bottom:12px;line-height:1.8;}
+.lab-section h3{font-size:.98rem;font-weight:600;color:var(--text);margin:20px 0 8px;display:flex;align-items:center;gap:8px;}
+.lab-section h3::before{content:'';width:14px;height:2px;background:var(--accent);border-radius:1px;flex-shrink:0;}
+.lab-section h4{font-size:.85rem;font-weight:600;color:var(--accent);margin:16px 0 6px;font-family:'JetBrains Mono',monospace;letter-spacing:.3px;}
+.lab-section ul,.lab-section ol{margin:8px 0 12px 20px;color:var(--muted);font-size:.88rem;}
+.lab-section li{margin:5px 0;padding-left:4px;line-height:1.65;}
+.lab-section li strong{color:var(--text);}
+
+/* ─── BOXES ── */
+.info-box{background:rgba(0,220,255,.05);border-left:3px solid var(--accent);padding:14px 18px;margin:14px 0;border-radius:8px;color:var(--muted);font-size:.88rem;line-height:1.65;}
+.info-box strong{color:var(--text);}
+.warning-box{background:rgba(245,158,11,.06);border-left:3px solid var(--warning);padding:14px 18px;margin:14px 0;border-radius:8px;color:var(--muted);font-size:.88rem;line-height:1.65;}
+.warning-box strong{color:var(--text);}
+.note-box{background:rgba(139,92,246,.06);border-left:3px solid var(--purple);padding:14px 18px;margin:14px 0;border-radius:8px;color:var(--muted);font-size:.88rem;line-height:1.65;}
+.note-box strong{color:var(--text);}
+.success-box{background:rgba(34,197,94,.05);border-left:3px solid var(--green);padding:14px 18px;margin:14px 0;border-radius:8px;color:var(--muted);font-size:.88rem;line-height:1.65;}
+.success-box strong{color:var(--text);}
+.danger-box{background:rgba(255,68,85,.05);border-left:3px solid var(--danger);padding:14px 18px;margin:14px 0;border-radius:8px;color:var(--muted);font-size:.88rem;line-height:1.65;}
+.danger-box strong{color:var(--text);}
+
+/* ─── DIAGRAM ── */
+.diagram-container{background:#020608;border:1px solid var(--border-dim);border-radius:12px;padding:24px;margin:18px 0;}
+.diagram-title{font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;}
+
+/* ─── TABLE ── */
+.lab-section table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.87rem;}
+.lab-section thead tr{background:rgba(0,220,255,.07);border-bottom:1px solid var(--border);}
+.lab-section th{padding:11px 14px;text-align:left;font-family:'Orbitron',sans-serif;font-size:.63rem;font-weight:600;color:var(--accent);letter-spacing:.8px;text-transform:uppercase;}
+.lab-section td{padding:10px 14px;border-bottom:1px solid var(--border-dim);color:var(--muted);vertical-align:top;}
+.lab-section td:first-child{color:var(--text);font-weight:500;}
+.lab-section tr:hover td{background:rgba(0,220,255,.03);}
+
+/* ─── CODE ── */
+code{font-family:'JetBrains Mono',monospace;background:rgba(0,220,255,.08);border:1px solid rgba(0,220,255,.15);color:var(--accent);padding:2px 7px;border-radius:4px;font-size:.82em;}
+pre{background:#010508;border:1px solid var(--border-dim);border-radius:10px;padding:18px 20px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:.82rem;color:#a0c8d8;margin:14px 0;line-height:1.75;}
+pre .c{color:#2a4a5a;} pre .k{color:var(--accent);} pre .s{color:var(--warning);}
+pre .g{color:var(--green);} pre .r{color:var(--danger);}
+
+/* ─── CLOUD PROVIDER CARDS ── */
+.provider-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:20px 0;}
+@media(max-width:700px){.provider-grid{grid-template-columns:1fr;}}
+.provider-card{border-radius:12px;padding:20px 18px;position:relative;overflow:hidden;transition:transform .25s,box-shadow .25s;}
+.provider-card:hover{transform:translateY(-4px);}
+.pc-logo{font-size:2rem;margin-bottom:10px;}
+.pc-name{font-family:'Orbitron',sans-serif;font-size:.82rem;font-weight:700;margin-bottom:8px;}
+.pc-desc{font-size:.8rem;color:var(--muted);line-height:1.6;margin-bottom:10px;}
+.pc-ul{list-style:none;margin:0;padding:0;}
+.pc-ul li{font-size:.78rem;color:var(--muted);padding:3px 0;display:flex;align-items:flex-start;gap:6px;border-bottom:1px solid rgba(255,255,255,.04);}
+.pc-ul li:last-child{border:none;}
+.pc-ul li::before{content:'›';color:var(--accent);font-weight:700;flex-shrink:0;}
+.pc-aws{background:rgba(255,153,0,.06);border:1px solid rgba(255,153,0,.18);}.pc-aws .pc-name{color:#ff9900;}
+.pc-aws:hover{box-shadow:0 8px 30px rgba(255,153,0,.12);}
+.pc-azure{background:rgba(0,120,212,.07);border:1px solid rgba(0,120,212,.2);}.pc-azure .pc-name{color:#0078d4;}
+.pc-azure:hover{box-shadow:0 8px 30px rgba(0,120,212,.12);}
+.pc-gcp{background:rgba(66,133,244,.06);border:1px solid rgba(66,133,244,.18);}.pc-gcp .pc-name{color:#4285f4;}
+.pc-gcp:hover{box-shadow:0 8px 30px rgba(66,133,244,.1);}
+
+/* ─── RESPONSIBILITY TABLE VISUAL ── */
+.resp-table{width:100%;margin:18px 0;border-radius:10px;overflow:hidden;border:1px solid var(--border-dim);}
+.resp-hdr{display:grid;grid-template-columns:1.8fr 1fr 1fr 1fr;background:rgba(0,220,255,.07);border-bottom:1px solid var(--border);}
+.resp-row{display:grid;grid-template-columns:1.8fr 1fr 1fr 1fr;border-bottom:1px solid var(--border-dim);}
+.resp-row:last-child{border-bottom:none;}
+.resp-row:hover{background:rgba(0,220,255,.02);}
+.rh,.rc{padding:10px 14px;font-size:.8rem;}
+.rh{font-family:'JetBrains Mono',monospace;font-size:.62rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent);}
+.rc{color:var(--muted);}
+.rc-label{color:var(--text);font-weight:500;}
+.chip-csp{display:inline-flex;padding:2px 8px;border-radius:4px;font-size:.62rem;font-family:'JetBrains Mono',monospace;font-weight:600;}
+.csp-you{background:rgba(34,197,94,.12);color:#22c55e;border:1px solid rgba(34,197,94,.25);}
+.csp-aws{background:rgba(255,153,0,.1);color:#ff9900;border:1px solid rgba(255,153,0,.2);}
+.csp-shared{background:rgba(139,92,246,.1);color:var(--purple);border:1px solid rgba(139,92,246,.2);}
+
+/* ─── FLOW STEPS ── */
+.flow-steps{display:flex;flex-direction:column;gap:11px;margin:16px 0;}
+.flow-step{display:flex;align-items:flex-start;gap:16px;background:var(--panel);border:1px solid var(--border-dim);border-radius:10px;padding:14px 18px;transition:border-color .3s;}
+.flow-step:hover{border-color:rgba(0,220,255,.2);}
+.fs-num{font-family:'Orbitron',sans-serif;font-size:1.1rem;font-weight:900;color:var(--accent);opacity:.55;flex-shrink:0;width:28px;}
+.fs-body h4{font-size:.88rem;font-weight:600;color:var(--text);margin-bottom:4px;}
+.fs-body p{font-size:.82rem;color:var(--muted);line-height:1.6;margin:0;}
+
+/* ─── ATTACK SCENARIO ── */
+.attack-chain{display:flex;flex-direction:column;gap:0;margin:18px 0;position:relative;}
+.attack-chain::before{content:'';position:absolute;left:20px;top:20px;bottom:20px;width:2px;background:linear-gradient(180deg,var(--accent),rgba(0,220,255,.1));border-radius:1px;}
+.ac-step{display:flex;align-items:flex-start;gap:16px;position:relative;padding-left:8px;margin-bottom:12px;}
+.ac-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;margin-top:4px;z-index:1;}
+.ac-dot.c1{background:var(--purple);box-shadow:0 0 8px rgba(139,92,246,.5);}
+.ac-dot.c2{background:var(--warning);box-shadow:0 0 8px rgba(245,158,11,.5);}
+.ac-dot.c3{background:var(--orange);box-shadow:0 0 8px rgba(249,115,22,.5);}
+.ac-dot.c4{background:var(--danger);box-shadow:0 0 8px rgba(255,68,85,.5);}
+.ac-dot.c5{background:#ff2255;box-shadow:0 0 10px rgba(255,34,85,.6);}
+.ac-body{background:var(--panel);border:1px solid var(--border-dim);border-radius:9px;padding:12px 16px;flex:1;}
+.ac-phase{font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
+.ac-title{font-size:.88rem;font-weight:600;color:var(--text);margin-bottom:4px;}
+.ac-desc{font-size:.8rem;color:var(--muted);line-height:1.55;}
+.ac-cmd{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--accent);background:rgba(0,220,255,.06);border:1px solid rgba(0,220,255,.12);border-radius:5px;padding:5px 9px;margin-top:7px;display:block;word-break:break-all;}
+
+/* ─── MISCONFIG LAB ── */
+.misconfig-quiz{background:var(--panel);border:1px solid var(--border-dim);border-radius:12px;padding:22px;margin:18px 0;}
+.mq-title{font-family:'Orbitron',sans-serif;font-size:.82rem;font-weight:700;color:var(--accent);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;}
+.mq-score-wrap{font-size:.72rem;font-family:'JetBrains Mono',monospace;color:var(--muted);}
+.config-snippet{background:#020608;border:1px solid var(--border-dim);border-radius:8px;padding:14px 16px;font-family:'JetBrains Mono',monospace;font-size:.78rem;color:#a0c8d8;margin:12px 0;line-height:1.7;position:relative;}
+.config-snippet .vuln{background:rgba(255,68,85,.15);color:#ff8090;text-decoration:underline wavy var(--danger);cursor:help;}
+.config-snippet .safe-val{color:var(--green);}
+.mq-question{font-size:.88rem;color:var(--text);margin:10px 0 12px;line-height:1.6;font-weight:500;}
+.mq-opts{display:flex;flex-direction:column;gap:7px;}
+.mq-opt{background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:8px;padding:10px 14px;font-size:.83rem;color:var(--muted);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:10px;}
+.mq-opt:hover{border-color:rgba(0,220,255,.3);color:var(--accent);}
+.mq-opt.correct{border-color:var(--green);background:rgba(34,197,94,.07);color:var(--green);}
+.mq-opt.wrong{border-color:var(--danger);background:rgba(255,68,85,.07);color:var(--danger);}
+.mq-feedback{margin-top:10px;padding:10px 14px;border-radius:8px;font-size:.82rem;display:none;}
+.mq-feedback.ok{background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);color:var(--green);}
+.mq-feedback.bad{background:rgba(255,68,85,.06);border:1px solid rgba(255,68,85,.2);color:var(--danger);}
+.mq-next{margin-top:10px;background:var(--accent-dim);border:1px solid var(--border);color:var(--accent);padding:7px 16px;border-radius:7px;font-size:.75rem;font-family:'JetBrains Mono',monospace;cursor:pointer;display:none;transition:all .2s;}
+.mq-next:hover{background:rgba(0,220,255,.15);}
+
+/* ─── IAM SIMULATOR ── */
+.iam-sim{background:var(--panel);border:1px solid var(--border-dim);border-radius:12px;overflow:hidden;margin:18px 0;}
+.iam-sim-hdr{background:rgba(0,220,255,.06);border-bottom:1px solid var(--border-dim);padding:11px 16px;display:flex;align-items:center;gap:8px;}
+.iam-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);animation:pulse 2s ease infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.iam-sim-hdr span{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+.iam-body{padding:18px;}
+.iam-row{display:flex;gap:10px;margin-bottom:12px;align-items:center;flex-wrap:wrap;}
+.iam-select{background:rgba(0,0,0,.4);border:1px solid var(--border-dim);color:var(--text);padding:8px 12px;border-radius:7px;font-family:'JetBrains Mono',monospace;font-size:.78rem;outline:none;cursor:pointer;}
+.iam-select option{background:#020608;}
+.iam-run-btn{background:var(--accent-dim);border:1px solid var(--border);color:var(--accent);padding:8px 18px;border-radius:7px;font-family:'JetBrains Mono',monospace;font-size:.75rem;cursor:pointer;transition:all .2s;}
+.iam-run-btn:hover{background:rgba(0,220,255,.15);border-color:rgba(0,220,255,.4);}
+.iam-output{background:#020608;border:1px solid var(--border-dim);border-radius:8px;padding:14px 16px;font-family:'JetBrains Mono',monospace;font-size:.76rem;min-height:80px;color:var(--muted);line-height:1.75;}
+.iam-line{display:block;animation:lineIn .25s ease both;}
+@keyframes lineIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:translateX(0)}}
+.il-ok{color:var(--green);}
+.il-deny{color:var(--danger);}
+.il-warn{color:var(--warning);}
+.il-info{color:var(--accent);}
+.il-dim{color:#2a4a5a;}
+
+/* ─── THREAT MATRIX GRID ── */
+.threat-matrix{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0;}
+@media(max-width:700px){.threat-matrix{grid-template-columns:1fr 1fr;}}
+.tm-card{background:var(--panel);border-radius:10px;padding:16px;border:1px solid var(--border-dim);transition:all .25s;}
+.tm-card:hover{border-color:rgba(0,220,255,.22);transform:translateY(-2px);}
+.tm-icon{font-size:1.6rem;margin-bottom:8px;}
+.tm-title{font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:600;color:var(--text);margin-bottom:5px;}
+.tm-desc{font-size:.75rem;color:var(--muted);line-height:1.55;}
+.tm-badge{display:inline-block;margin-top:8px;font-size:.6rem;padding:2px 8px;border-radius:3px;font-family:'JetBrains Mono',monospace;font-weight:700;text-transform:uppercase;}
+.tm-crit{background:rgba(255,68,85,.12);color:var(--danger);border:1px solid rgba(255,68,85,.2);}
+.tm-high{background:rgba(249,115,22,.1);color:var(--orange);border:1px solid rgba(249,115,22,.2);}
+.tm-med{background:rgba(245,158,11,.1);color:var(--warning);border:1px solid rgba(245,158,11,.2);}
+
+/* ─── ZERO TRUST STEPS ── */
+.zt-pillars{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:18px 0;}
+.zt-pillar{background:var(--panel);border:1px solid var(--border-dim);border-radius:10px;padding:18px 16px;text-align:center;transition:all .25s;}
+.zt-pillar:hover{border-color:rgba(0,220,255,.22);transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.4);}
+.zt-icon{font-size:2rem;margin-bottom:10px;}
+.zt-name{font-family:'Orbitron',sans-serif;font-size:.72rem;font-weight:700;color:var(--accent);margin-bottom:7px;letter-spacing:.5px;}
+.zt-desc{font-size:.76rem;color:var(--muted);line-height:1.55;}
+
+/* ─── TOOLS GRID ── */
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:16px 0;}
+.tool-card{background:var(--panel);border:1px solid var(--border-dim);border-radius:10px;padding:16px;transition:all .25s;}
+.tool-card:hover{border-color:rgba(0,220,255,.22);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.4);}
+.tc-name{font-family:'Orbitron',sans-serif;font-size:.75rem;font-weight:700;color:var(--accent);margin-bottom:6px;}
+.tc-desc{font-size:.79rem;color:var(--muted);line-height:1.55;margin-bottom:7px;}
+.tc-tag{display:inline-block;font-size:.6rem;font-family:'JetBrains Mono',monospace;padding:2px 7px;border-radius:3px;background:rgba(0,220,255,.07);border:1px solid rgba(0,220,255,.15);color:var(--muted);}
+
+/* ─── CERT TIMELINE ── */
+.cert-timeline{display:flex;gap:0;overflow-x:auto;padding-bottom:10px;margin:18px 0;}
+.cert-step{flex-shrink:0;width:160px;text-align:center;position:relative;padding:0 8px;}
+.cert-step::after{content:'→';position:absolute;right:-8px;top:28px;color:var(--border);font-size:1rem;}
+.cert-step:last-child::after{display:none;}
+.cs-badge{font-size:.62rem;font-family:'JetBrains Mono',monospace;padding:4px 10px;border-radius:5px;display:inline-block;margin-bottom:8px;font-weight:600;}
+.cs-b1{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2);}
+.cs-b2{background:rgba(0,220,255,.1);color:var(--accent);border:1px solid rgba(0,220,255,.2);}
+.cs-b3{background:rgba(139,92,246,.1);color:var(--purple);border:1px solid rgba(139,92,246,.2);}
+.cs-b4{background:rgba(255,68,85,.1);color:var(--danger);border:1px solid rgba(255,68,85,.2);}
+.cs-name{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--text);font-weight:600;margin-bottom:4px;}
+.cs-cost{font-size:.66rem;color:var(--muted);}
+
+/* ─── VIVA ── */
+.viva-section{background:var(--panel);border:2px solid rgba(0,220,255,.14);border-radius:14px;padding:28px 32px;margin-top:30px;position:relative;overflow:hidden;}
+.viva-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(0,220,255,.05),transparent 70%);pointer-events:none;}
+.viva-locked-overlay{text-align:center;padding:32px 20px;}
+.lock-icon{font-size:2.8rem;margin-bottom:12px;}
+.lock-msg{font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--muted);line-height:1.7;}
+.viva-timer{font-family:'Orbitron',sans-serif;font-size:2.2rem;font-weight:700;color:var(--accent);text-align:center;margin:10px 0 20px;letter-spacing:3px;text-shadow:0 0 20px rgba(0,220,255,.5);}
+.quiz-q{background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:10px;padding:16px 18px;margin-bottom:12px;}
+.quiz-q p{font-size:.9rem;color:var(--text);margin-bottom:12px;font-weight:500;}
+.quiz-q label{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:7px;color:var(--muted);font-size:.85rem;cursor:pointer;transition:background .2s;}
+.quiz-q label:hover{background:rgba(0,220,255,.05);}
+.quiz-q input[type=radio]{accent-color:var(--accent);width:15px;height:15px;flex-shrink:0;}
+.submit-quiz{background:linear-gradient(135deg,var(--accent),#00b4ff);color:#000;border:none;padding:12px 32px;border-radius:9px;font-weight:700;font-size:.88rem;cursor:pointer;font-family:'Orbitron',sans-serif;letter-spacing:.4px;margin-top:12px;transition:all .3s;box-shadow:0 0 20px rgba(0,220,255,.2);}
+.submit-quiz:hover{transform:translateY(-2px);box-shadow:0 4px 28px rgba(0,220,255,.4);}
+.quiz-result{margin-top:16px;padding:18px 22px;border-radius:10px;text-align:center;display:none;}
+.qr-pass{background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.25);}
+.qr-fail{background:rgba(255,68,85,.07);border:1px solid rgba(255,68,85,.25);}
+.qr-score{font-family:'Orbitron',sans-serif;font-size:2.5rem;font-weight:900;margin-bottom:8px;}
+.qr-msg{font-size:.88rem;color:var(--muted);}
+
+/* ─── COMPLETE ── */
+.complete-wrap{text-align:center;padding:40px 0 20px;}
+.complete-btn{background:linear-gradient(135deg,var(--accent),#00b4ff);color:#000;border:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:.92rem;cursor:pointer;font-family:'Orbitron',sans-serif;letter-spacing:.5px;transition:all .3s;box-shadow:0 0 24px rgba(0,220,255,.3);}
+.complete-btn:hover{transform:translateY(-3px);box-shadow:0 6px 32px rgba(0,220,255,.5);}
+.complete-btn.done{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;}
+
+/* ─── REF CARDS ── */
+.ref-card{display:flex;align-items:center;gap:16px;padding:16px 20px;background:var(--bg-panel);border:1px solid var(--border);border-radius:12px;margin-bottom:12px;transition:all .25s;text-decoration:none;}
+.ref-card:hover{transform:translateX(5px);box-shadow:0 4px 20px rgba(0,0,0,.4);border-color:rgba(0,220,255,.3);}
+.ref-icon{font-size:1.8rem;}.ref-body{flex:1;}
+.ref-name{font-weight:600;color:var(--text);font-size:.93rem;margin-bottom:3px;}
+.ref-sub{font-size:.79rem;color:var(--muted);}
+.ref-arrow{color:var(--accent);font-size:1.2rem;}
+
+/* ─── FOOTER ── */
+footer{text-align:center;padding:24px 52px;border-top:1px solid var(--border-dim);font-size:.8rem;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:.5px;}
+footer a{color:var(--accent);text-decoration:none;}
+
+/* ─── MOBILE ── */
+@media(max-width:860px){
+  :root{--sidebar-w:0px;}.sidebar{display:none;}
+  .content{padding:24px 20px 60px;}.topbar{padding:12px 20px;}
+  .page-hero{padding:24px 20px;}.page-hero h1{font-size:1.5rem;}
+  .lab-section{padding:20px 16px;}
+  .provider-grid{grid-template-columns:1fr;}
+  .threat-matrix{grid-template-columns:1fr 1fr;}
+  .cert-timeline{flex-direction:column;gap:12px;}
+  .cert-step{width:100%;text-align:left;}.cert-step::after{display:none;}
+}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-vignette"></div>
+<div class="read-indicator" id="readIndicator"></div>
+
+<!-- ══════════ SIDEBAR ══════════ -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="logo.png" alt="HackForge" class="logo-img">
+    <div class="logo-sub">Cloud Security Module</div>
+  </div>
+  <div class="lab-progress-box">
+    <div class="lpb-label">Module Progress</div>
+    <div class="lpb-bar-track"><div class="lpb-bar-fill" id="lpbFill"></div></div>
+    <div class="lpb-pct" id="lpbPct">0%</div>
+  </div>
+  <div class="toc-label">Sections</div>
+  <div class="toc-scroll">
+    <a class="toc-link" href="#s1"><span class="tn">01</span>What is Cloud Security?</a>
+    <a class="toc-link" href="#s2"><span class="tn">02</span>Cloud Service Models</a>
+    <a class="toc-link" href="#s3"><span class="tn">03</span>Shared Responsibility</a>
+    <a class="toc-link" href="#s4"><span class="tn">04</span>☁️ AWS · Azure · GCP</a>
+    <a class="toc-link" href="#s5"><span class="tn">05</span>IAM — Identity & Access</a>
+    <a class="toc-link" href="#s6"><span class="tn">06</span>🧪 IAM Policy Lab</a>
+    <a class="toc-link" href="#s7"><span class="tn">07</span>Cloud Networking Security</a>
+    <a class="toc-link" href="#s8"><span class="tn">08</span>Data Security & Encryption</a>
+    <a class="toc-link" href="#s9"><span class="tn">09</span>🧪 Misconfiguration Lab</a>
+    <a class="toc-link" href="#s10"><span class="tn">10</span>Cloud Threat Landscape</a>
+    <a class="toc-link" href="#s11"><span class="tn">11</span>☠️ Attack Chain: SSRF→Breach</a>
+    <a class="toc-link" href="#s12"><span class="tn">12</span>Zero Trust Architecture</a>
+    <a class="toc-link" href="#s13"><span class="tn">13</span>Cloud Monitoring & SIEM</a>
+    <a class="toc-link" href="#s14"><span class="tn">14</span>Container & K8s Security</a>
+    <a class="toc-link" href="#s15"><span class="tn">15</span>Serverless Security</a>
+    <a class="toc-link" href="#s16"><span class="tn">16</span>Compliance Frameworks</a>
+    <a class="toc-link" href="#s17"><span class="tn">17</span>Incident Response in Cloud</a>
+    <a class="toc-link" href="#s18"><span class="tn">18</span>Cloud Pentest Techniques</a>
+    <a class="toc-link" href="#s19"><span class="tn">19</span>Tools Arsenal</a>
+    <a class="toc-link" href="#s20"><span class="tn">20</span>Career Path</a>
+    <a class="toc-link" href="#s21"><span class="tn">📝</span>🎓 Final Viva</a>
+  </div>
+  <div class="sidebar-nav">
+    <a href="index.html">🏠 Home</a>
+    <a href="blue-team.html">🛡️ Blue Team</a>
+    <a href="red-team.html">⚔️ Red Team</a>
+    <a href="roadmap.html">🗺️ Roadmap</a>
+  </div>
+</aside>
+
+<!-- ══════════ MAIN ══════════ -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="breadcrumb"><span>HackForge</span> / <span>Cloud Security</span> / <strong>Full Module</strong></div>
+      <div class="difficulty-badge">MODULE 08</div>
+    </div>
+    <div class="topbar-right">
+      <div class="progress-pill">
+        <span>Progress</span>
+        <div class="progress-pill-bar"><div class="progress-pill-fill" id="pillFill"></div></div>
+        <span id="pillPct">0%</span>
+      </div>
+      <button class="mark-btn" id="markBtn" onclick="completeCourse()">✓ Mark Complete</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- HERO -->
+    <div class="page-hero">
+      <div class="hero-tag">☁️ Cloud Security · AWS · Azure · GCP</div>
+      <h1>☁️ Cloud Security — Complete Guide</h1>
+      <p>Master cloud security from shared responsibility to Zero Trust. Learn to secure AWS, Azure, and GCP environments, detect misconfigurations, investigate real attack chains, and defend modern cloud-native architectures.</p>
+      <div class="hero-meta">
+        <div class="hm-chip"><div class="dot" style="background:var(--accent);box-shadow:0 0 5px var(--accent)"></div>20 Sections</div>
+        <div class="hm-chip"><div class="dot" style="background:var(--warning);box-shadow:0 0 5px var(--warning)"></div>~90 min read</div>
+        <div class="hm-chip"><div class="dot" style="background:var(--green);box-shadow:0 0 5px var(--green)"></div>Intermediate</div>
+        <div class="hm-chip"><div class="dot" style="background:var(--purple);box-shadow:0 0 5px var(--purple)"></div>+250 XP on pass</div>
+      </div>
+    </div>
+
+
+    <!-- ═══ S1: WHAT IS CLOUD SECURITY ═══ -->
+    <div class="lab-section" id="s1">
+      <div class="s-head"><span class="s-num">01</span><h2>What is Cloud Security?</h2><span class="s-badge sb-cyan">Foundation</span></div>
+
+      <p>Cloud security is the set of practices, technologies, and controls designed to protect cloud-based systems, data, and infrastructure from threats. As organizations move workloads from on-premise data centers to the cloud, security responsibilities and threat models fundamentally change.</p>
+
+      <div class="info-box"><strong>💡 The Core Shift:</strong> Traditional security built walls around a physical perimeter (firewall → everything inside is trusted). Cloud security abandons the perimeter model entirely. In the cloud, <em>identity is the new perimeter</em> — you must assume any user, device, or service could be compromised, and verify everything continuously.</div>
+
+      <div class="diagram-container">
+        <div class="diagram-title">Traditional vs Cloud Security Model</div>
+        <svg width="100%" viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="ca1" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1L6 3.5L1 6" fill="none" stroke="#2a4a5a" stroke-width="1.5"/></marker></defs>
+          <!-- Traditional -->
+          <rect x="10" y="20" width="300" height="160" rx="10" fill="rgba(245,158,11,.04)" stroke="rgba(245,158,11,.2)" stroke-width="1.5"/>
+          <text x="160" y="42" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="600">Traditional On-Premise</text>
+          <!-- firewall -->
+          <rect x="25" y="52" width="270" height="28" rx="5" fill="rgba(245,158,11,.08)" stroke="rgba(245,158,11,.3)" stroke-width="1.5"/>
+          <text x="160" y="70" text-anchor="middle" fill="#f59e0b" font-size="10" font-weight="600">🔥 FIREWALL (Hard Perimeter)</text>
+          <!-- inside -->
+          <text x="60" y="100" text-anchor="middle" fill="#5a8090" font-size="9">🖥 Server</text>
+          <text x="160" y="100" text-anchor="middle" fill="#5a8090" font-size="9">🗄 Database</text>
+          <text x="260" y="100" text-anchor="middle" fill="#5a8090" font-size="9">💻 Workstation</text>
+          <text x="160" y="128" text-anchor="middle" fill="#2a4a5a" font-size="9">Everything inside = TRUSTED</text>
+          <text x="160" y="144" text-anchor="middle" fill="#2a4a5a" font-size="9">Everything outside = BLOCKED</text>
+          <text x="160" y="165" text-anchor="middle" fill="#f59e0b" font-size="8" font-style="italic">Problem: Attacker who gets inside owns everything</text>
+
+          <!-- VS -->
+          <text x="350" y="105" text-anchor="middle" fill="#2a4a5a" font-size="18" font-weight="700">VS</text>
+
+          <!-- Cloud -->
+          <rect x="390" y="20" width="300" height="160" rx="10" fill="rgba(0,220,255,.04)" stroke="rgba(0,220,255,.2)" stroke-width="1.5"/>
+          <text x="540" y="42" text-anchor="middle" fill="#00dcff" font-size="11" font-weight="600">Cloud — Zero Trust Model</text>
+          <!-- no single perimeter -->
+          <text x="540" y="65" text-anchor="middle" fill="#2a4a5a" font-size="9">No single perimeter — Identity is the control plane</text>
+          <rect x="405" y="72" width="80" height="22" rx="4" fill="rgba(34,197,94,.08)" stroke="rgba(34,197,94,.2)" stroke-width="1"/>
+          <text x="445" y="86" text-anchor="middle" fill="#22c55e" font-size="8">☁️ AWS IAM</text>
+          <rect x="495" y="72" width="85" height="22" rx="4" fill="rgba(0,120,212,.08)" stroke="rgba(0,120,212,.2)" stroke-width="1"/>
+          <text x="537" y="86" text-anchor="middle" fill="#0078d4" font-size="8">☁️ Azure AD</text>
+          <rect x="590" y="72" width="85" height="22" rx="4" fill="rgba(66,133,244,.08)" stroke="rgba(66,133,244,.2)" stroke-width="1"/>
+          <text x="632" y="86" text-anchor="middle" fill="#4285f4" font-size="8">☁️ GCP IAM</text>
+          <text x="540" y="115" text-anchor="middle" fill="#00dcff" font-size="9" font-weight="600">Every request: Verify Identity → Check Policy → Allow/Deny</text>
+          <text x="540" y="132" text-anchor="middle" fill="#2a4a5a" font-size="9">Least Privilege · MFA · Audit Logs · Encryption</text>
+          <text x="540" y="148" text-anchor="middle" fill="#2a4a5a" font-size="9">Assume breach · Verify explicitly · Micro-segment</text>
+          <text x="540" y="168" text-anchor="middle" fill="#22c55e" font-size="8" font-style="italic">Benefit: Compromise of one resource ≠ owning everything</text>
+        </svg>
+      </div>
+
+      <h3>Why Cloud Security is Different</h3>
+      <table>
+        <thead><tr><th>Aspect</th><th>On-Premise</th><th>Cloud</th></tr></thead>
+        <tbody>
+          <tr><td>Perimeter</td><td>Physical firewall, DMZ</td><td>Identity and IAM policies</td></tr>
+          <tr><td>Infrastructure control</td><td>Full control — you own hardware</td><td>Shared — CSP manages physical layer</td></tr>
+          <tr><td>Scaling</td><td>Fixed, slow to change</td><td>Dynamic — new resources in seconds</td></tr>
+          <tr><td>Main threats</td><td>Network intrusion, insider</td><td>Misconfigurations, IAM abuse, data exposure</td></tr>
+          <tr><td>Visibility</td><td>Limited — your own logs</td><td>Rich — CloudTrail, Audit Logs, Monitor</td></tr>
+          <tr><td>Biggest mistake</td><td>Unpatched systems</td><td>Over-permissive IAM roles & exposed storage</td></tr>
+        </tbody>
+      </table>
+
+      <div class="warning-box"><strong>⚠️ The #1 Cloud Security Fact:</strong> According to Gartner, <strong>99% of cloud security failures through 2025 are the customer's fault</strong> — not the cloud provider. The cloud itself is highly secure. The danger is in how customers configure it.</div>
+    </div>
+
+
+    <!-- ═══ S2: SERVICE MODELS ═══ -->
+    <div class="lab-section" id="s2">
+      <div class="s-head"><span class="s-num">02</span><h2>Cloud Service Models — IaaS, PaaS, SaaS</h2><span class="s-badge sb-cyan">Core Concept</span></div>
+
+      <p>Cloud services are delivered in three models. Understanding which model you're using is critical because <strong>the service model determines who is responsible for what security controls</strong>.</p>
+
+      <div class="diagram-container">
+        <div class="diagram-title">Service Model Stack — What You Control vs What CSP Controls</div>
+        <svg width="100%" viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg">
+          <!-- Labels -->
+          <text x="100" y="18" text-anchor="middle" fill="#5a8090" font-size="10" font-family="monospace">On-Premise</text>
+          <text x="285" y="18" text-anchor="middle" fill="#ff9900" font-size="10" font-family="monospace">IaaS</text>
+          <text x="460" y="18" text-anchor="middle" fill="#0078d4" font-size="10" font-family="monospace">PaaS</text>
+          <text x="630" y="18" text-anchor="middle" fill="#4285f4" font-size="10" font-family="monospace">SaaS</text>
+
+          <!-- Layer definitions -->
+          <g id="layers">
+            <!-- Row 1: Applications -->
+            <text x="5" y="42" fill="#2a4a5a" font-size="8.5" font-family="monospace">Applications</text>
+            <rect x="55" y="28" width="90" height="22" rx="4" fill="rgba(34,197,94,.15)" stroke="rgba(34,197,94,.3)" stroke-width="1"/>
+            <text x="100" y="43" text-anchor="middle" fill="#22c55e" font-size="8">YOU</text>
+            <rect x="240" y="28" width="90" height="22" rx="4" fill="rgba(34,197,94,.15)" stroke="rgba(34,197,94,.3)" stroke-width="1"/>
+            <text x="285" y="43" text-anchor="middle" fill="#22c55e" font-size="8">YOU</text>
+            <rect x="415" y="28" width="90" height="22" rx="4" fill="rgba(34,197,94,.15)" stroke="rgba(34,197,94,.3)" stroke-width="1"/>
+            <text x="460" y="43" text-anchor="middle" fill="#22c55e" font-size="8">YOU</text>
+            <rect x="590" y="28" width="90" height="22" rx="4" fill="rgba(0,220,255,.1)" stroke="rgba(0,220,255,.2)" stroke-width="1"/>
+            <text x="635" y="43" text-anchor="middle" fill="#00dcff" font-size="8">CSP</text>
+
+            <!-- Row 2: Data -->
+            <text x="5" y="65" fill="#2a4a5a" font-size="8.5" font-family="monospace">Data</text>
+            <rect x="55" y="51" width="90" height="22" rx="4" fill="rgba(34,197,94,.15)" stroke="rgba(34,197,94,.3)" stroke-width="1"/>
+            <text x="100" y="66" text-anchor="middle" fill="#22c55e" font-size="8">YOU</text>
+            <rect x="240" y="51" width="90" height="22" rx="4" fill="rgba(34,197,94,.15)" stroke="rgba(34,197,94,.3)" stroke-width="1"/>
+            <text x="285" y="66" text-anchor="middle" fill="#22c55e" font-size="8">YOU</text>
+            <rect x="415" y="51" width="90" height="22" rx="4" fill="rgba(34,197,94,.15)" stroke="rgba(34,197,94,.3)" stroke-width="1"/>
+            <text x="460" y="66" text-anchor="middle" fill="#22c55e" font-size="8">YOU</text>
+            <rect x="590" y="51" width="90" height="22" rx="4" fill="rgba(0,220,255,.1)" stroke="rgba(0,220,255,.2)" stroke-width="1"/>
+            <text x="635" y="66" text-anchor="middle" fill="#00dcff" font-size="8">CSP</text>
+
+            <!-- Row 3: Runtime -->
+            <text x="5" y="88" fill="#2a4a5a" font-size="8.5" font-family="monospace">Runtime</text>
+            <rect x="55" y="74" width="90" height="22" rx="4" fill="rgba(34,197,94,.15)" stroke="rgba(34,197,94,.3)" stroke-width="1"/>
+            <text x="100" y="89" text-anchor="middle" fill="#22c55e" font-size="8">YOU</text>
+            <rect x="240" y="74" width="90" height="22" rx="4" fill="rgba(34,197,94,.15)" stroke="rgba(34,197,94,.3)" stroke-width="1"/>
+            <text x="285" y="89" text-anchor="middle" fill="#22c55e" font-size="8">YOU</text>
+            <rect x="415" y="74" width="90" height="22" rx="4" fill="rgba(0,220,255,.1)" stroke="rgba(0,220,255,.2)" stroke-width="1"/>
+            <text x="460" y="89" text-anchor="middle" fill="#00dcff" font-size="8">CSP</text>
+            <rect x="590" y="74" width="90" height="22" rx="4" fill="rgba(0,220,255,.1)" stroke="rgba(0,220,255,.2)" stroke-width="1"/>
+            <text x="635" y="89" text-anchor="middle" fill="#00dcff" font-size="8">CSP</text>
+
+            <!-- Row 4: Middleware/OS -->
+            <text x="5" y="111" fill="#2a4a5a" font-size="8.5" font-family="monospace">OS / Middleware</text>
+            <rect x="55" y="97" width="90" height="22" rx="4" fill="rgba(34,197,94,.15)" stroke="rgba(34,197,94,.3)" stroke-width="1"/>
+            <text x="100" y="112" text-anchor="middle" fill="#22c55e" font-size="8">YOU</text>
+            <rect x="240" y="97" width="90" height="22" rx="4" fill="rgba(34,197,94,.15)" stroke="rgba(34,197,94,.3)" stroke-width="1"/>
+            <text x="285" y="112" text-anchor="middle" fill="#22c55e" font-size="8">YOU</text>
+            <rect x="415" y="97" width="90" height="22" rx="4" fill="rgba(0,220,255,.1)" stroke="rgba(0,220,255,.2)" stroke-width="1"/>
+            <text x="460" y="112" text-anchor="middle" fill="#00dcff" font-size="8">CSP</text>
+            <rect x="590" y="97" width="90" height="22" rx="4" fill="rgba(0,220,255,.1)" stroke="rgba(0,220,255,.2)" stroke-width="1"/>
+            <text x="635" y="112" text-anchor="middle" fill="#00dcff" font-size="8">CSP</text>
+
+            <!-- Row 5: Virtualization -->
+            <text x="5" y="134" fill="#2a4a5a" font-size="8.5" font-family="monospace">Virtualization</text>
+            <rect x="55" y="120" width="90" height="22" rx="4" fill="rgba(34,197,94,.15)" stroke="rgba(34,197,94,.3)" stroke-width="1"/>
+            <text x="100" y="135" text-anchor="middle" fill="#22c55e" font-size="8">YOU</text>
+            <rect x="240" y="120" width="90" height="22" rx="4" fill="rgba(0,220,255,.1)" stroke="rgba(0,220,255,.2)" stroke-width="1"/>
+            <text x="285" y="135" text-anchor="middle" fill="#00dcff" font-size="8">CSP</text>
+            <rect x="415" y="120" width="90" height="22" rx="4" fill="rgba(0,220,255,.1)" stroke="rgba(0,220,255,.2)" stroke-width="1"/>
+            <text x="460" y="135" text-anchor="middle" fill="#00dcff" font-size="8">CSP</text>
+            <rect x="590" y="120" width="90" height="22" rx="4" fill="rgba(0,220,255,.1)" stroke="rgba(0,220,255,.2)" stroke-width="1"/>
+            <text x="635" y="135" text-anchor="middle" fill="#00dcff" font-size="8">CSP</text>
+
+            <!-- Row 6: Servers/Storage/Network -->
+            <text x="5" y="180" fill="#2a4a5a" font-size="8.5" font-family="monospace">Servers / Storage</text>
+            <text x="5" y="193" fill="#2a4a5a" font-size="8.5" font-family="monospace">Networking</text>
+            <rect x="55" y="143" width="90" height="44" rx="4" fill="rgba(34,197,94,.15)" stroke="rgba(34,197,94,.3)" stroke-width="1"/>
+            <text x="100" y="168" text-anchor="middle" fill="#22c55e" font-size="8">YOU</text>
+            <rect x="240" y="143" width="90" height="44" rx="4" fill="rgba(0,220,255,.1)" stroke="rgba(0,220,255,.2)" stroke-width="1"/>
+            <text x="285" y="168" text-anchor="middle" fill="#00dcff" font-size="8">CSP</text>
+            <rect x="415" y="143" width="90" height="44" rx="4" fill="rgba(0,220,255,.1)" stroke="rgba(0,220,255,.2)" stroke-width="1"/>
+            <text x="460" y="168" text-anchor="middle" fill="#00dcff" font-size="8">CSP</text>
+            <rect x="590" y="143" width="90" height="44" rx="4" fill="rgba(0,220,255,.1)" stroke="rgba(0,220,255,.2)" stroke-width="1"/>
+            <text x="635" y="168" text-anchor="middle" fill="#00dcff" font-size="8">CSP</text>
+          </g>
+
+          <!-- Legend -->
+          <rect x="55" y="200" width="12" height="12" rx="2" fill="rgba(34,197,94,.2)" stroke="rgba(34,197,94,.4)" stroke-width="1"/>
+          <text x="72" y="210" fill="#22c55e" font-size="9" font-family="monospace">You manage</text>
+          <rect x="160" y="200" width="12" height="12" rx="2" fill="rgba(0,220,255,.12)" stroke="rgba(0,220,255,.25)" stroke-width="1"/>
+          <text x="177" y="210" fill="#00dcff" font-size="9" font-family="monospace">CSP manages</text>
+
+          <text x="350" y="240" text-anchor="middle" fill="#2a4a5a" font-size="9" font-family="monospace">IaaS examples: AWS EC2, Azure VMs, GCP Compute Engine</text>
+          <text x="350" y="254" text-anchor="middle" fill="#2a4a5a" font-size="9" font-family="monospace">PaaS examples: AWS Lambda, Azure App Service, GCP App Engine</text>
+        </svg>
+      </div>
+
+      <div class="info-box"><strong>💡 The Security Implication:</strong> The more managed the service (SaaS > PaaS > IaaS), the less you control — but the CSP secures more. With IaaS (like EC2), <em>you are responsible for patching the OS, securing the application, and configuring the firewall</em>. With SaaS (like Office 365), you only manage user access and data.</div>
+    </div>
+
+
+    <!-- ═══ S3: SHARED RESPONSIBILITY ═══ -->
+    <div class="lab-section" id="s3">
+      <div class="s-head"><span class="s-num">03</span><h2>Shared Responsibility Model</h2><span class="s-badge sb-warn">Critical Framework</span></div>
+
+      <p>The <strong>Shared Responsibility Model</strong> defines the security boundary between the Cloud Service Provider (CSP) and the customer. This is the most important concept in cloud security. <strong>Every major cloud breach involves a failure to understand this boundary.</strong></p>
+
+      <div class="info-box"><strong>🎯 Simple Rule:</strong> CSPs are responsible for "Security <em>OF</em> the Cloud" — the hardware, global network, and hypervisor. You are responsible for "Security <em>IN</em> the Cloud" — what you put there, how you configure it, and who can access it.</div>
+
+      <h3>Responsibility Matrix</h3>
+      <div class="resp-table">
+        <div class="resp-hdr">
+          <div class="rh">Layer</div>
+          <div class="rh">IaaS</div>
+          <div class="rh">PaaS</div>
+          <div class="rh">SaaS</div>
+        </div>
+        <div class="resp-row">
+          <div class="rc rc-label">Physical Infrastructure</div>
+          <div class="rc"><span class="chip-csp csp-aws">CSP</span></div>
+          <div class="rc"><span class="chip-csp csp-aws">CSP</span></div>
+          <div class="rc"><span class="chip-csp csp-aws">CSP</span></div>
+        </div>
+        <div class="resp-row">
+          <div class="rc rc-label">Network Infrastructure</div>
+          <div class="rc"><span class="chip-csp csp-aws">CSP</span></div>
+          <div class="rc"><span class="chip-csp csp-aws">CSP</span></div>
+          <div class="rc"><span class="chip-csp csp-aws">CSP</span></div>
+        </div>
+        <div class="resp-row">
+          <div class="rc rc-label">Hypervisor / Host OS</div>
+          <div class="rc"><span class="chip-csp csp-aws">CSP</span></div>
+          <div class="rc"><span class="chip-csp csp-aws">CSP</span></div>
+          <div class="rc"><span class="chip-csp csp-aws">CSP</span></div>
+        </div>
+        <div class="resp-row">
+          <div class="rc rc-label">Guest OS & Patching</div>
+          <div class="rc"><span class="chip-csp csp-you">YOU</span></div>
+          <div class="rc"><span class="chip-csp csp-aws">CSP</span></div>
+          <div class="rc"><span class="chip-csp csp-aws">CSP</span></div>
+        </div>
+        <div class="resp-row">
+          <div class="rc rc-label">Application Code</div>
+          <div class="rc"><span class="chip-csp csp-you">YOU</span></div>
+          <div class="rc"><span class="chip-csp csp-you">YOU</span></div>
+          <div class="rc"><span class="chip-csp csp-aws">CSP</span></div>
+        </div>
+        <div class="resp-row">
+          <div class="rc rc-label">Identity & Access (IAM)</div>
+          <div class="rc"><span class="chip-csp csp-you">YOU</span></div>
+          <div class="rc"><span class="chip-csp csp-you">YOU</span></div>
+          <div class="rc"><span class="chip-csp csp-you">YOU</span></div>
+        </div>
+        <div class="resp-row">
+          <div class="rc rc-label">Data Classification & Encryption</div>
+          <div class="rc"><span class="chip-csp csp-you">YOU</span></div>
+          <div class="rc"><span class="chip-csp csp-you">YOU</span></div>
+          <div class="rc"><span class="chip-csp csp-you">YOU</span></div>
+        </div>
+        <div class="resp-row">
+          <div class="rc rc-label">Network Traffic (VPC/Firewall Config)</div>
+          <div class="rc"><span class="chip-csp csp-you">YOU</span></div>
+          <div class="rc"><span class="chip-csp csp-shared">SHARED</span></div>
+          <div class="rc"><span class="chip-csp csp-aws">CSP</span></div>
+        </div>
+        <div class="resp-row">
+          <div class="rc rc-label">Incident Response</div>
+          <div class="rc"><span class="chip-csp csp-shared">SHARED</span></div>
+          <div class="rc"><span class="chip-csp csp-shared">SHARED</span></div>
+          <div class="rc"><span class="chip-csp csp-shared">SHARED</span></div>
+        </div>
+      </div>
+
+      <div class="danger-box"><strong>🚨 Real-World Examples of Shared Responsibility Failures:</strong><br>
+      <strong>Capital One (2019):</strong> SSRF vulnerability + over-permissive IAM role → 106 million records exposed. AWS infrastructure was secure. The customer's configuration was not.<br>
+      <strong>Facebook + AWS S3 (2019):</strong> Third-party developer left S3 buckets publicly readable. S3 itself was fine. The bucket ACL was misconfigured by the customer.<br>
+      <strong>Microsoft Power Apps (2021):</strong> Default settings left 38 million records exposed. Microsoft provided the option to restrict access; the customer didn't enable it.</div>
+    </div>
+
+
+    <!-- ═══ S4: AWS AZURE GCP ═══ -->
+    <div class="lab-section" id="s4">
+      <div class="s-head"><span class="s-num">04</span><h2>AWS · Azure · GCP — Big Three Cloud Platforms</h2><span class="s-badge sb-cyan">Platform Guide</span></div>
+
+      <p>The three major cloud providers each have their own security services, naming conventions, and best practices. A cloud security professional needs to understand all three, as organizations often run multi-cloud environments.</p>
+
+      <div class="provider-grid">
+        <div class="provider-card pc-aws">
+          <div class="pc-logo">🟠</div>
+          <div class="pc-name">Amazon Web Services (AWS)</div>
+          <div class="pc-desc">Largest cloud market share (~33%). Most job postings require AWS knowledge.</div>
+          <ul class="pc-ul">
+            <li><strong>IAM</strong> — Identity and Access Management (roles, policies, users)</li>
+            <li><strong>CloudTrail</strong> — Audit log of every API call</li>
+            <li><strong>GuardDuty</strong> — Threat detection service (like a cloud IDS)</li>
+            <li><strong>Security Hub</strong> — Centralized security findings dashboard</li>
+            <li><strong>S3 Bucket Policies</strong> — Object storage access control</li>
+            <li><strong>VPC Security Groups</strong> — Cloud firewall rules</li>
+            <li><strong>AWS Config</strong> — Compliance and configuration monitoring</li>
+            <li><strong>KMS</strong> — Key Management Service for encryption</li>
+          </ul>
+        </div>
+        <div class="provider-card pc-azure">
+          <div class="pc-logo">🔵</div>
+          <div class="pc-name">Microsoft Azure</div>
+          <div class="pc-desc">2nd largest share (~23%). Dominant in enterprise Windows environments.</div>
+          <ul class="pc-ul">
+            <li><strong>Azure AD</strong> (Entra ID) — Identity provider, SSO, MFA</li>
+            <li><strong>Microsoft Sentinel</strong> — Cloud-native SIEM/SOAR</li>
+            <li><strong>Defender for Cloud</strong> — CSPM + workload protection</li>
+            <li><strong>Azure Monitor</strong> — Logs and metrics platform</li>
+            <li><strong>RBAC</strong> — Role-Based Access Control</li>
+            <li><strong>NSG</strong> — Network Security Groups (firewall)</li>
+            <li><strong>Azure Policy</strong> — Enforce compliance rules at scale</li>
+            <li><strong>Key Vault</strong> — Secrets and certificate management</li>
+          </ul>
+        </div>
+        <div class="provider-card pc-gcp">
+          <div class="pc-logo">🔴</div>
+          <div class="pc-name">Google Cloud Platform (GCP)</div>
+          <div class="pc-desc">3rd (~11%). Growing fast in AI/ML and data-heavy workloads.</div>
+          <ul class="pc-ul">
+            <li><strong>Cloud IAM</strong> — Resource hierarchy-based access control</li>
+            <li><strong>Security Command Center</strong> — Central security dashboard</li>
+            <li><strong>Cloud Armor</strong> — DDoS protection and WAF</li>
+            <li><strong>Cloud Audit Logs</strong> — API activity logging</li>
+            <li><strong>VPC Service Controls</strong> — Perimeter-based access control</li>
+            <li><strong>Binary Authorization</strong> — Container image signing</li>
+            <li><strong>Chronicle</strong> — Security analytics platform (SIEM)</li>
+            <li><strong>Cloud KMS</strong> — Encryption key management</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>Key Naming Differences Across Providers</h3>
+      <table>
+        <thead><tr><th>Concept</th><th>AWS</th><th>Azure</th><th>GCP</th></tr></thead>
+        <tbody>
+          <tr><td>Identity System</td><td>IAM</td><td>Azure AD / Entra ID</td><td>Cloud IAM</td></tr>
+          <tr><td>Virtual Machine</td><td>EC2</td><td>Virtual Machine</td><td>Compute Engine</td></tr>
+          <tr><td>Object Storage</td><td>S3 Bucket</td><td>Azure Blob Storage</td><td>Cloud Storage Bucket</td></tr>
+          <tr><td>API Audit Log</td><td>CloudTrail</td><td>Activity Log / Monitor</td><td>Cloud Audit Logs</td></tr>
+          <tr><td>Virtual Network</td><td>VPC</td><td>VNet</td><td>VPC</td></tr>
+          <tr><td>Firewall</td><td>Security Groups + NACL</td><td>NSG + Azure Firewall</td><td>Firewall Rules + Cloud Armor</td></tr>
+          <tr><td>Serverless</td><td>Lambda</td><td>Azure Functions</td><td>Cloud Functions / Cloud Run</td></tr>
+          <tr><td>Container Orchestration</td><td>EKS</td><td>AKS</td><td>GKE</td></tr>
+          <tr><td>Threat Detection</td><td>GuardDuty</td><td>Defender for Cloud</td><td>Security Command Center</td></tr>
+          <tr><td>Secrets Management</td><td>Secrets Manager</td><td>Key Vault</td><td>Secret Manager</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+
+    <!-- ═══ S5: IAM ═══ -->
+    <div class="lab-section" id="s5">
+      <div class="s-head"><span class="s-num">05</span><h2>IAM — Identity & Access Management</h2><span class="s-badge sb-warn">Most Critical Skill</span></div>
+
+      <p>IAM is the single most important cloud security topic. <strong>Over 80% of cloud breaches involve IAM misconfigurations</strong> — either overly permissive roles, exposed access keys, or lack of MFA. Identity is literally the perimeter in cloud security.</p>
+
+      <div class="info-box"><strong>💡 Core IAM Concepts:</strong><br>
+      <strong>Principal</strong> — Who is making the request (user, role, service account, or application)<br>
+      <strong>Policy</strong> — A document that defines what actions are allowed or denied<br>
+      <strong>Least Privilege</strong> — Grant only the minimum permissions required to do the job<br>
+      <strong>Role</strong> — A set of permissions that can be assumed by users, services, or other AWS accounts</div>
+
+      <h3>AWS IAM Policy — How It Works</h3>
+      <p>AWS IAM policies are JSON documents. Every API call in AWS is evaluated against these policies. Understanding the structure is essential:</p>
+
+      <pre><span class="c">{</span>
+  <span class="s">"Version"</span>: <span class="s">"2012-10-17"</span>,
+  <span class="s">"Statement"</span>: [
+    {
+      <span class="s">"Sid"</span>: <span class="s">"AllowS3ReadOnly"</span>,
+      <span class="s">"Effect"</span>: <span class="k">"Allow"</span>,           <span class="c">// Allow or Deny</span>
+      <span class="s">"Action"</span>: [
+        <span class="s">"s3:GetObject"</span>,          <span class="c">// Read objects</span>
+        <span class="s">"s3:ListBucket"</span>          <span class="c">// List bucket contents</span>
+      ],
+      <span class="s">"Resource"</span>: [
+        <span class="s">"arn:aws:s3:::my-app-bucket"</span>,
+        <span class="s">"arn:aws:s3:::my-app-bucket/*"</span>
+      ],
+      <span class="s">"Condition"</span>: {
+        <span class="s">"StringEquals"</span>: {
+          <span class="s">"aws:RequestedRegion"</span>: <span class="s">"us-east-1"</span>  <span class="c">// Only from this region</span>
+        }
+      }
+    }
+  ]
+}
+<span class="c">
+// ❌ DANGEROUS — Never do this (grants full admin to everything):
+"Action": "*", "Resource": "*"  ←  This is the #1 misconfiguration</span></pre>
+
+      <h3>IAM Best Practices</h3>
+      <div class="flow-steps">
+        <div class="flow-step"><div class="fs-num">1</div><div class="fs-body"><h4>Never use the Root Account</h4><p>The root account has unrestricted access to everything. Create an IAM admin user immediately, enable MFA on root, and lock the root credentials away. Never use root for daily tasks — not even for billing.</p></div></div>
+        <div class="flow-step"><div class="fs-num">2</div><div class="fs-body"><h4>Enable MFA Everywhere</h4><p>Multi-factor authentication is the single most impactful security control. Require MFA for all IAM users, enforce it via IAM policy conditions, and use hardware keys (YubiKey) for privileged accounts.</p></div></div>
+        <div class="flow-step"><div class="fs-num">3</div><div class="fs-body"><h4>Use Roles, Not Long-Term Keys</h4><p>IAM access keys are like passwords that never expire. Instead, use IAM Roles that issue temporary credentials (STS tokens). Applications on EC2 should assume a role — never embed access keys in code or config files.</p></div></div>
+        <div class="flow-step"><div class="fs-num">4</div><div class="fs-body"><h4>Apply Least Privilege</h4><p>Start with zero permissions. Grant only what's explicitly needed. Use AWS Access Analyzer to see what permissions an identity actually uses — then remove everything else. Review quarterly.</p></div></div>
+        <div class="flow-step"><div class="fs-num">5</div><div class="fs-body"><h4>Audit Regularly</h4><p>Generate IAM credential reports monthly. Delete unused users and rotate old access keys. Use AWS CloudTrail + GuardDuty to alert on unusual IAM activity like role assumption from foreign IPs.</p></div></div>
+      </div>
+
+      <h3>Common IAM Misconfigurations (Attack Vectors)</h3>
+      <table>
+        <thead><tr><th>Misconfiguration</th><th>Risk</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td><code>Action: "*", Resource: "*"</code></td><td>Full admin access — wildcard policy</td><td>Apply specific actions and ARNs only</td></tr>
+          <tr><td>Access keys in GitHub code</td><td>Immediate compromise — bots scan GitHub 24/7</td><td>Use IAM Roles. Add secrets scanning to CI/CD</td></tr>
+          <tr><td>No MFA on privileged users</td><td>Password compromise = account takeover</td><td>Enforce MFA via <code>aws:MultiFactorAuthPresent</code> condition</td></tr>
+          <tr><td>Unused admin accounts</td><td>Orphaned accounts become backdoors</td><td>Delete accounts unused 90+ days</td></tr>
+          <tr><td><code>sts:AssumeRole</code> open to <code>*</code></td><td>Any principal can assume the role</td><td>Restrict to specific account/role ARNs</td></tr>
+          <tr><td>Service role with excessive permissions</td><td>Lambda/EC2 compromise → full cloud access</td><td>Scope each service role to minimum required</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+
+    <!-- ═══ S6: IAM POLICY LAB ═══ -->
+    <div class="lab-section" id="s6">
+      <div class="s-head"><span class="s-num">06</span><h2>🧪 IAM Policy Simulator Lab</h2><span class="s-badge sb-warn">Hands-On Lab</span></div>
+
+      <p>Simulate how AWS IAM policy evaluation works. Select a user's attached policy, then try an action against a resource. The simulator shows exactly why access is allowed or denied — including condition checks.</p>
+
+      <div class="iam-sim">
+        <div class="iam-sim-hdr">
+          <div class="iam-dot"></div>
+          <span>AWS IAM POLICY EVALUATOR — SIMULATOR</span>
+          <span style="margin-left:auto;color:#1a4a5a;">us-east-1</span>
+        </div>
+        <div class="iam-body">
+          <div class="iam-row">
+            <select class="iam-select" id="iamUser">
+              <option value="dev">👤 dev-user (ReadOnlyAccess policy)</option>
+              <option value="admin">👤 admin-user (AdministratorAccess)</option>
+              <option value="lambda">⚙️ lambda-execution-role (S3FullAccess + DenyDelete)</option>
+              <option value="readonly">👤 readonly-user (S3 specific bucket only)</option>
+              <option value="hacked">💀 compromised-key (No MFA, open wildcard role)</option>
+            </select>
+          </div>
+          <div class="iam-row">
+            <select class="iam-select" id="iamAction">
+              <option value="s3:GetObject">s3:GetObject (Read file from S3)</option>
+              <option value="s3:DeleteBucket">s3:DeleteBucket (Delete S3 bucket)</option>
+              <option value="iam:CreateUser">iam:CreateUser (Create new IAM user)</option>
+              <option value="ec2:DescribeInstances">ec2:DescribeInstances (List EC2 instances)</option>
+              <option value="sts:AssumeRole">sts:AssumeRole (Assume admin role)</option>
+              <option value="cloudtrail:StopLogging">cloudtrail:StopLogging (Disable audit logs ⚠️)</option>
+            </select>
+            <button class="iam-run-btn" onclick="runIAMSim()">▶ Evaluate</button>
+          </div>
+          <div class="iam-output" id="iamOutput">
+            <span class="il-dim">Select a user and action, then click Evaluate...</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-box"><strong>📌 How AWS Evaluates IAM Policies:</strong> AWS uses a specific evaluation logic — <strong>Explicit Deny always wins</strong>, even over Allow. If no policy matches, the default is <strong>Implicit Deny</strong>. This is why wildcard allows (<code>*</code>) are dangerous — they match everything with no deny to stop them.</div>
+    </div>
+
+
+    <!-- ═══ S7: NETWORKING ═══ -->
+    <div class="lab-section" id="s7">
+      <div class="s-head"><span class="s-num">07</span><h2>Cloud Networking Security — VPC, Firewalls, Segmentation</h2><span class="s-badge sb-cyan">Core Concept</span></div>
+
+      <p>Cloud networking security involves isolating resources, controlling traffic flow, and preventing unauthorized access between services. Unlike physical networks, cloud networks are software-defined and can be misconfigured with a single click.</p>
+
+      <h3>VPC — Virtual Private Cloud</h3>
+      <p>A VPC is your own private section of the cloud — an isolated virtual network where you launch resources. Think of it as your own data center inside AWS/Azure/GCP. Everything inside is private by default; you explicitly open what you want exposed.</p>
+
+      <h4>Key Networking Components (AWS)</h4>
+      <table>
+        <thead><tr><th>Component</th><th>What It Does</th><th>Security Role</th></tr></thead>
+        <tbody>
+          <tr><td>Security Group</td><td>Instance-level stateful firewall</td><td>Controls what traffic reaches individual EC2 instances</td></tr>
+          <tr><td>NACL (Network ACL)</td><td>Subnet-level stateless firewall</td><td>Broad controls — allow/deny entire CIDRs at subnet boundary</td></tr>
+          <tr><td>Internet Gateway</td><td>Allows public internet access</td><td>If attached to subnet → resources can be internet-exposed</td></tr>
+          <tr><td>NAT Gateway</td><td>Outbound internet, no inbound</td><td>Private subnets reach internet without being reachable from it</td></tr>
+          <tr><td>VPC Endpoint</td><td>Private connection to AWS services</td><td>Access S3, DynamoDB without traffic leaving AWS network</td></tr>
+          <tr><td>VPC Peering / Transit GW</td><td>Connect multiple VPCs</td><td>Enable cross-VPC traffic; can create lateral movement paths if misconfigured</td></tr>
+          <tr><td>Flow Logs</td><td>Log all network traffic</td><td>Essential for forensics, anomaly detection, compliance</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Critical Networking Misconfigurations</h3>
+      <ul>
+        <li><strong>0.0.0.0/0 in Security Group</strong> — Allows ANY IP to connect to that port. Never allow SSH (22) or RDP (3389) from 0.0.0.0/0 publicly.</li>
+        <li><strong>Public subnet with no firewall</strong> — Resources in public subnets are internet-reachable. Always use Security Groups to restrict ports.</li>
+        <li><strong>Unrestricted egress</strong> — Outbound <code>0.0.0.0/0:all</code> allows any data to leave your environment — potential exfiltration path.</li>
+        <li><strong>Direct database in public subnet</strong> — Databases (RDS, MongoDB) should always be in private subnets with no internet gateway route.</li>
+      </ul>
+
+      <pre><span class="c"># AWS CLI — Audit security groups for dangerous 0.0.0.0/0 rules</span>
+<span class="k">aws</span> ec2 describe-security-groups \
+  --query <span class="s">'SecurityGroups[?IpPermissions[?IpRanges[?CidrIp==`0.0.0.0/0`]]].{Name:GroupName,ID:GroupId}'</span> \
+  --output table
+
+<span class="c"># Check for publicly accessible RDS instances</span>
+<span class="k">aws</span> rds describe-db-instances \
+  --query <span class="s">'DBInstances[?PubliclyAccessible==`true`].DBInstanceIdentifier'</span>
+
+<span class="c"># Enable VPC Flow Logs (should be on in every VPC)</span>
+<span class="k">aws</span> ec2 create-flow-logs \
+  --resource-type VPC \
+  --resource-ids vpc-12345678 \
+  --traffic-type ALL \
+  --log-destination-type cloud-watch-logs \
+  --log-group-name /aws/vpc/flowlogs</pre>
+    </div>
+
+
+    <!-- ═══ S8: DATA SECURITY ═══ -->
+    <div class="lab-section" id="s8">
+      <div class="s-head"><span class="s-num">08</span><h2>Data Security & Encryption in the Cloud</h2><span class="s-badge sb-purple">Data Protection</span></div>
+
+      <p>Data is the ultimate target of most cloud attacks. Cloud security requires protecting data at rest (stored), in transit (moving between services), and in use (being processed). Encryption is non-negotiable in regulated industries.</p>
+
+      <h3>Encryption at Rest</h3>
+      <p>All data stored in cloud services should be encrypted. Most CSPs offer server-side encryption (SSE) managed by the provider — but for sensitive data, you should use customer-managed keys (CMK) so only you control decryption.</p>
+
+      <table>
+        <thead><tr><th>Service</th><th>AWS</th><th>Azure</th><th>GCP</th></tr></thead>
+        <tbody>
+          <tr><td>Object Storage Encryption</td><td>S3 SSE-S3, SSE-KMS, SSE-C</td><td>Azure Storage Service Encryption</td><td>Cloud Storage + Cloud KMS</td></tr>
+          <tr><td>Database Encryption</td><td>RDS encrypted at rest (AES-256)</td><td>Azure SQL TDE (Transparent Data Encryption)</td><td>Cloud SQL + CMEK</td></tr>
+          <tr><td>Key Management</td><td>AWS KMS (FIPS 140-2)</td><td>Azure Key Vault</td><td>Cloud KMS + Secret Manager</td></tr>
+          <tr><td>Disk Encryption</td><td>EBS encrypted volumes</td><td>Azure Disk Encryption (BitLocker/DM-Crypt)</td><td>Persistent Disk encryption</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Encryption in Transit</h3>
+      <ul>
+        <li><strong>Always enforce TLS 1.2+</strong> — Disable older SSL/TLS versions on load balancers and API gateways</li>
+        <li><strong>Use HTTPS endpoints only</strong> — S3 bucket policies can enforce <code>aws:SecureTransport: true</code> to reject HTTP requests</li>
+        <li><strong>Encrypt inter-service communication</strong> — Even traffic inside your VPC should use TLS (service mesh or mTLS for microservices)</li>
+        <li><strong>Certificate management</strong> — Use AWS Certificate Manager (ACM) or Azure Key Vault for automated TLS certificate rotation</li>
+      </ul>
+
+      <h3>Data Classification</h3>
+      <p>Not all data needs the same protection. Classify your data first, then apply appropriate controls:</p>
+      <table>
+        <thead><tr><th>Classification</th><th>Examples</th><th>Required Controls</th></tr></thead>
+        <tbody>
+          <tr><td>Public</td><td>Marketing website, public APIs</td><td>Basic integrity, availability</td></tr>
+          <tr><td>Internal</td><td>Internal docs, employee emails</td><td>Access control, audit logs</td></tr>
+          <tr><td>Confidential</td><td>Source code, financial data</td><td>Encryption, MFA, DLP</td></tr>
+          <tr><td>Restricted (PII/PHI/PCI)</td><td>SSNs, health records, card data</td><td>Encryption + CMK, strict IAM, compliance audits, DLP</td></tr>
+        </tbody>
+      </table>
+
+      <div class="success-box"><strong>✅ S3 Bucket Security Checklist (the most common misconfiguration target):</strong>
+      <ul style="margin-top:8px;">
+        <li>Block all public access at account level (AWS Block Public Access)</li>
+        <li>Enable server-side encryption (SSE-KMS for sensitive data)</li>
+        <li>Enable versioning + MFA delete for critical buckets</li>
+        <li>Enable access logging and S3 server access logs</li>
+        <li>Use bucket policies to enforce HTTPS (<code>aws:SecureTransport</code>)</li>
+        <li>Enable AWS Macie to automatically detect sensitive data (PII) in S3</li>
+      </ul></div>
+    </div>
+
+
+    <!-- ═══ S9: MISCONFIGURATION LAB ═══ -->
+    <div class="lab-section" id="s9">
+      <div class="s-head"><span class="s-num">09</span><h2>🧪 Cloud Misconfiguration Detection Lab</h2><span class="s-badge sb-warn">Interactive Lab</span></div>
+
+      <p>Cloud misconfigurations are the #1 cause of breaches. In this lab, you'll read real cloud configuration snippets and identify the critical security flaw hidden inside. Spot it before an attacker does.</p>
+
+      <div class="misconfig-quiz">
+        <div class="mq-title">
+          🔍 CONFIGURATION AUDIT LAB
+          <span class="mq-score-wrap">Score: <span id="mqScore">0</span>/5</span>
+        </div>
+        <div id="mqContent"></div>
+      </div>
+    </div>
+
+
+    <!-- ═══ S10: THREAT LANDSCAPE ═══ -->
+    <div class="lab-section" id="s10">
+      <div class="s-head"><span class="s-num">10</span><h2>Cloud Threat Landscape — What Attackers Target</h2><span class="s-badge sb-red">Threat Intel</span></div>
+
+      <p>Cloud threats are distinct from traditional cybersecurity threats. Understanding the attacker's playbook is essential for building effective defenses. The Cloud Security Alliance (CSA) publishes the "Egregious Eleven" — the top cloud threats every year.</p>
+
+      <div class="threat-matrix">
+        <div class="tm-card">
+          <div class="tm-icon">🔑</div>
+          <div class="tm-title">IAM Misconfiguration</div>
+          <div class="tm-desc">Over-permissive roles, no MFA, exposed access keys in code. The #1 cloud attack entry point.</div>
+          <span class="tm-badge tm-crit">Critical</span>
+        </div>
+        <div class="tm-card">
+          <div class="tm-icon">🪣</div>
+          <div class="tm-title">Exposed Storage Buckets</div>
+          <div class="tm-desc">S3/Blob/GCS buckets misconfigured as publicly readable. Billions of records exposed annually.</div>
+          <span class="tm-badge tm-crit">Critical</span>
+        </div>
+        <div class="tm-card">
+          <div class="tm-icon">🔗</div>
+          <div class="tm-title">SSRF → Metadata Access</div>
+          <div class="tm-desc">Server-Side Request Forgery used to hit 169.254.169.254 and steal IAM credentials from the instance metadata service.</div>
+          <span class="tm-badge tm-crit">Critical</span>
+        </div>
+        <div class="tm-card">
+          <div class="tm-icon">🐳</div>
+          <div class="tm-title">Container Escape</div>
+          <div class="tm-desc">Attacking misconfigured Kubernetes clusters, Docker socket exposure, or privileged containers to escape to the host node.</div>
+          <span class="tm-badge tm-high">High</span>
+        </div>
+        <div class="tm-card">
+          <div class="tm-icon">💸</div>
+          <div class="tm-title">Cryptojacking</div>
+          <div class="tm-desc">Attackers spin up compute resources in your account to mine cryptocurrency. AWS bills you. First sign: unexpected $50,000+ bill.</div>
+          <span class="tm-badge tm-high">High</span>
+        </div>
+        <div class="tm-card">
+          <div class="tm-icon">📦</div>
+          <div class="tm-title">Supply Chain Attacks</div>
+          <div class="tm-desc">Compromising open-source packages, container images, or CI/CD pipelines that deploy to your cloud environment.</div>
+          <span class="tm-badge tm-high">High</span>
+        </div>
+        <div class="tm-card">
+          <div class="tm-icon">🔍</div>
+          <div class="tm-title">CloudTrail Disabling</div>
+          <div class="tm-desc">Attacker's first post-compromise action: <code>cloudtrail:StopLogging</code> to blind the SOC. Always alert on this API call.</div>
+          <span class="tm-badge tm-high">High</span>
+        </div>
+        <div class="tm-card">
+          <div class="tm-icon">🏠</div>
+          <div class="tm-title">Insider Threats</div>
+          <div class="tm-desc">Malicious or negligent employees with excessive cloud access exfiltrating data to personal storage or deleting resources.</div>
+          <span class="tm-badge tm-high">High</span>
+        </div>
+        <div class="tm-card">
+          <div class="tm-icon">⚙️</div>
+          <div class="tm-title">Insecure API Keys in Code</div>
+          <div class="tm-desc">Developers commit AWS/Azure/GCP keys to public GitHub. Bots find them in seconds and begin exfiltration.</div>
+          <span class="tm-badge tm-crit">Critical</span>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ═══ S11: ATTACK CHAIN ═══ -->
+    <div class="lab-section" id="s11">
+      <div class="s-head"><span class="s-num">11</span><h2>☠️ Real Attack Chain: SSRF → Cloud Breach</h2><span class="s-badge sb-red">Case Study</span></div>
+
+      <p>This is the most common and devastating cloud attack path in 2025. It was used in the <strong>Capital One breach (2019)</strong> — 106 million customer records stolen. Understanding this chain is essential for both attackers and defenders.</p>
+
+      <div class="warning-box"><strong>⚠️ The Golden Endpoint:</strong> Every cloud VM (EC2, Azure VM, GCP Compute) has a special internal IP address <code>169.254.169.254</code> — the <strong>Instance Metadata Service (IMDS)</strong>. It provides configuration data including temporary IAM credentials. If an attacker can make your server request this URL (via SSRF), they steal your cloud identity.</div>
+
+      <div class="attack-chain">
+        <div class="ac-step">
+          <div class="ac-dot c1"></div>
+          <div class="ac-body">
+            <div class="ac-phase">Phase 1 — Initial Access</div>
+            <div class="ac-title">Discover SSRF Vulnerability in Web App</div>
+            <div class="ac-desc">Attacker finds a web application that fetches URLs provided by users — like an image resizer, link previewer, or PDF generator. The server makes HTTP requests on behalf of the user without proper input validation.</div>
+            <code class="ac-cmd">GET /fetch?url=http://internal-server/secret-page HTTP/1.1
+→ Server fetches the URL and returns content (SSRF confirmed)</code>
+          </div>
+        </div>
+        <div class="ac-step">
+          <div class="ac-dot c2"></div>
+          <div class="ac-body">
+            <div class="ac-phase">Phase 2 — Cloud Metadata Theft</div>
+            <div class="ac-title">Query IMDS to Steal IAM Credentials</div>
+            <div class="ac-desc">The attacker points the SSRF at the IMDS endpoint. The EC2 instance dutifully fetches its own metadata — including the temporary IAM credentials assigned to the instance role.</div>
+            <code class="ac-cmd">GET /fetch?url=http://169.254.169.254/latest/meta-data/iam/security-credentials/
+→ Response: {"AccessKeyId":"ASIA...","SecretAccessKey":"...","Token":"...","Expiration":"..."}</code>
+          </div>
+        </div>
+        <div class="ac-step">
+          <div class="ac-dot c3"></div>
+          <div class="ac-body">
+            <div class="ac-phase">Phase 3 — IAM Enumeration</div>
+            <div class="ac-title">Use Stolen Credentials to Map the Environment</div>
+            <div class="ac-desc">The attacker uses the stolen temporary credentials from a remote server. They first enumerate what the role can access — listing S3 buckets, EC2 instances, and IAM permissions.</div>
+            <code class="ac-cmd">$ export AWS_ACCESS_KEY_ID="ASIA..."
+$ export AWS_SECRET_ACCESS_KEY="..."
+$ export AWS_SESSION_TOKEN="..."
+$ aws sts get-caller-identity     → Confirms who we are
+$ aws s3 ls                       → Lists ALL accessible buckets
+$ aws iam list-attached-role-policies --role-name WAF-Role  → Check permissions</code>
+          </div>
+        </div>
+        <div class="ac-step">
+          <div class="ac-dot c4"></div>
+          <div class="ac-body">
+            <div class="ac-phase">Phase 4 — Privilege Escalation</div>
+            <div class="ac-title">Assume Higher-Privilege Role (If Available)</div>
+            <div class="ac-desc">If the compromised role has <code>sts:AssumeRole</code> permission, the attacker can pivot to more powerful roles — potentially reaching admin level. In Capital One's case, the WAF role had read access to 700+ S3 buckets.</div>
+            <code class="ac-cmd">$ aws sts assume-role \
+    --role-arn arn:aws:iam::TARGET:role/AdminRole \
+    --role-session-name pwned-session
+→ New credentials with elevated permissions returned</code>
+          </div>
+        </div>
+        <div class="ac-step">
+          <div class="ac-dot c5"></div>
+          <div class="ac-body">
+            <div class="ac-phase">Phase 5 — Impact (Capital One Result)</div>
+            <div class="ac-title">Mass Data Exfiltration + Cover Tracks</div>
+            <div class="ac-desc">The attacker downloads data from all accessible S3 buckets. In Capital One: 30GB of credit application data, 106 million customer records including SSNs and credit scores. Then attempts to disable CloudTrail logging to blind defenders.</div>
+            <code class="ac-cmd">$ aws s3 cp --recursive s3://capital-one-sensitive-bucket/ ./exfil/
+$ aws cloudtrail stop-logging --name main-trail   ← Cover tracks
+<span class="r">→ NOT DETECTED for 4 months until someone found the data on GitHub</span></code>
+          </div>
+        </div>
+      </div>
+
+      <h3>How to Defend Against This Attack</h3>
+      <table>
+        <thead><tr><th>Attack Step</th><th>Defense</th></tr></thead>
+        <tbody>
+          <tr><td>SSRF in web app</td><td>Block server-side requests to 169.254.0.0/16, validate all URLs, use SSRF-safe HTTP libraries, WAF rules</td></tr>
+          <tr><td>IMDS credential theft</td><td>Enforce <strong>IMDSv2</strong> — requires token-based auth before serving metadata (blocks simple SSRF)</td></tr>
+          <tr><td>Over-privileged EC2 role</td><td>Least privilege — WAF role should only access WAF logs, not S3 data buckets</td></tr>
+          <tr><td>Role chaining/assumption</td><td>Remove <code>sts:AssumeRole *</code> — restrict to specific role ARNs</td></tr>
+          <tr><td>CloudTrail disabled</td><td>Alert on <code>cloudtrail:StopLogging</code>, enable CloudTrail Log File Validation, send to separate security account</td></tr>
+        </tbody>
+      </table>
+
+      <pre><span class="c"># DEFENSE: Enforce IMDSv2 (blocks SSRF credential theft)</span>
+<span class="k">aws</span> ec2 modify-instance-metadata-options \
+  --instance-id i-1234567890abcdef0 \
+  --http-tokens required \          <span class="c"># Require session token (IMDSv2)</span>
+  --http-put-response-hop-limit 1   <span class="c"># Block reverse proxies from reaching IMDS</span>
+
+<span class="c"># DETECTION: CloudWatch alert on CloudTrail stop-logging event</span>
+<span class="c"># Event pattern to catch attackers trying to go blind:</span>
+<span class="s">{
+  "source": ["aws.cloudtrail"],
+  "detail-type": ["AWS API Call via CloudTrail"],
+  "detail": {
+    "eventName": ["StopLogging", "DeleteTrail", "UpdateTrail"]
+  }
+}</span></pre>
+    </div>
+
+
+    <!-- ═══ S12: ZERO TRUST ═══ -->
+    <div class="lab-section" id="s12">
+      <div class="s-head"><span class="s-num">12</span><h2>Zero Trust Architecture in the Cloud</h2><span class="s-badge sb-purple">Modern Security</span></div>
+
+      <p><strong>Zero Trust</strong> is a security model based on the principle: <em>"Never trust, always verify."</em> Instead of assuming everything inside your network is safe, Zero Trust requires continuous verification of every user, device, and service — regardless of where they are.</p>
+
+      <div class="info-box"><strong>💡 Why Zero Trust for Cloud?</strong> The traditional "castle and moat" model doesn't work in the cloud because there IS no castle wall. Employees access cloud resources from anywhere — coffee shops, home offices, airports. Devices may be personal or compromised. The only constant is identity. Zero Trust makes identity the verification checkpoint for every access request.</div>
+
+      <div class="zt-pillars">
+        <div class="zt-pillar">
+          <div class="zt-icon">🔐</div>
+          <div class="zt-name">Verify Identity</div>
+          <div class="zt-desc">Authenticate every user and service every time. Use MFA, conditional access policies, and identity risk signals to validate every login.</div>
+        </div>
+        <div class="zt-pillar">
+          <div class="zt-icon">📏</div>
+          <div class="zt-name">Least Privilege</div>
+          <div class="zt-desc">Grant minimum access needed, just-in-time. Use time-limited roles (PIM/PAM) instead of permanent admin access. Review regularly.</div>
+        </div>
+        <div class="zt-pillar">
+          <div class="zt-icon">🔬</div>
+          <div class="zt-name">Assume Breach</div>
+          <div class="zt-desc">Design as if attackers are already inside. Segment networks, encrypt everything, monitor all activity, and minimize blast radius.</div>
+        </div>
+        <div class="zt-pillar">
+          <div class="zt-icon">🔬</div>
+          <div class="zt-name">Inspect Traffic</div>
+          <div class="zt-desc">Analyze all traffic — including encrypted east-west (internal) traffic. Use micro-segmentation and service mesh for intra-cluster communication.</div>
+        </div>
+        <div class="zt-pillar">
+          <div class="zt-icon">📊</div>
+          <div class="zt-name">Monitor Everything</div>
+          <div class="zt-desc">Collect and analyze all logs. Build behavioral baselines. Use ML-based anomaly detection to spot unusual access patterns in real time.</div>
+        </div>
+      </div>
+
+      <h3>Zero Trust Implementation in AWS (Example)</h3>
+      <pre><span class="c"># Step 1: Require MFA via IAM condition — no MFA = access denied</span>
+{
+  <span class="s">"Effect"</span>: <span class="s">"Deny"</span>,
+  <span class="s">"Action"</span>: <span class="s">"*"</span>,
+  <span class="s">"Resource"</span>: <span class="s">"*"</span>,
+  <span class="s">"Condition"</span>: {
+    <span class="s">"BoolIfExists"</span>: {
+      <span class="s">"aws:MultiFactorAuthPresent"</span>: <span class="s">"false"</span>  <span class="c">// Deny if no MFA</span>
+    }
+  }
+}
+
+<span class="c"># Step 2: Restrict access by IP (corporate VPN only)</span>
+<span class="s">"Condition"</span>: {
+  <span class="s">"NotIpAddress"</span>: {
+    <span class="s">"aws:SourceIp"</span>: [<span class="s">"203.0.113.0/24"</span>]  <span class="c">// Deny if NOT corp IP</span>
+  }
+}
+
+<span class="c"># Step 3: Enable AWS IAM Identity Center (SSO) with short session tokens</span>
+<span class="k">aws</span> sso-admin create-permission-set \
+  --session-duration PT1H \   <span class="c"># Sessions expire after 1 hour</span>
+  --relay-state https://console.aws.amazon.com/</pre>
+    </div>
+
+
+    <!-- ═══ S13: MONITORING ═══ -->
+    <div class="lab-section" id="s13">
+      <div class="s-head"><span class="s-num">13</span><h2>Cloud Monitoring, Logging & SIEM Integration</h2><span class="s-badge sb-cyan">Detection</span></div>
+
+      <p>In the cloud, you have more logging capability than in traditional environments — every API call, network flow, and configuration change is logged. The challenge is making sense of thousands of events per second and detecting the signal in the noise.</p>
+
+      <h3>Critical Log Sources (AWS)</h3>
+      <table>
+        <thead><tr><th>Log Source</th><th>What It Captures</th><th>Threat Detection Use</th></tr></thead>
+        <tbody>
+          <tr><td><strong>CloudTrail</strong></td><td>Every AWS API call — who did what, when, from where</td><td>IAM abuse, data exfiltration attempts, config changes</td></tr>
+          <tr><td><strong>VPC Flow Logs</strong></td><td>Network traffic — source/dest IP, port, protocol, accept/reject</td><td>Port scanning, lateral movement, data exfiltration</td></tr>
+          <tr><td><strong>GuardDuty</strong></td><td>ML-based threat detection across CloudTrail + DNS + Flow Logs</td><td>Cryptocurrency mining, credential compromise, unusual access</td></tr>
+          <tr><td><strong>S3 Access Logs</strong></td><td>All requests to S3 buckets — read, write, delete</td><td>Unauthorized data access, exfiltration, public exposure</td></tr>
+          <tr><td><strong>WAF Logs</strong></td><td>Web application firewall — blocked requests, rule matches</td><td>SQL injection, XSS, SSRF attempts</td></tr>
+          <tr><td><strong>EKS Audit Logs</strong></td><td>Kubernetes API server actions</td><td>Privilege escalation, namespace escapes, secret access</td></tr>
+        </tbody>
+      </table>
+
+      <h3>High-Priority CloudTrail Alerts (Must-Monitor Events)</h3>
+      <ul>
+        <li><code>cloudtrail:StopLogging</code> — Attacker trying to go dark</li>
+        <li><code>iam:CreateUser</code>, <code>iam:AttachUserPolicy *</code> — Backdoor account creation</li>
+        <li><code>sts:AssumeRole</code> from unusual IP/geography</li>
+        <li><code>s3:GetObject</code> on sensitive buckets by unrecognized principals</li>
+        <li><code>ec2:AuthorizeSecurityGroupIngress</code> with <code>0.0.0.0/0</code></li>
+        <li><code>guardduty:DeleteDetector</code> — Attacker disabling threat detection</li>
+        <li><code>kms:DisableKey</code> or <code>kms:ScheduleKeyDeletion</code> — Ransomware preparation</li>
+        <li>Console login from new country or unusual time</li>
+      </ul>
+
+      <div class="note-box"><strong>📌 SIEM Integration:</strong> For enterprise environments, forward cloud logs to Microsoft Sentinel, Splunk, or Elastic SIEM. AWS Security Lake aggregates logs across accounts in OCSF format. Azure Sentinel natively ingests Azure activity logs. With a SIEM, you can write detection rules that correlate across log sources — e.g., "root login + IAM user creation + CloudTrail stopped within 5 minutes = likely compromise."</div>
+    </div>
+
+
+    <!-- ═══ S14: CONTAINERS ═══ -->
+    <div class="lab-section" id="s14">
+      <div class="s-head"><span class="s-num">14</span><h2>Container & Kubernetes Security</h2><span class="s-badge sb-orange">Cloud Native</span></div>
+
+      <p>Containers (Docker) and Kubernetes (K8s) are now the dominant way to deploy cloud applications. They introduce an entirely new attack surface on top of the existing cloud security concerns.</p>
+
+      <h3>Docker Container Security Basics</h3>
+      <ul>
+        <li><strong>Never run containers as root</strong> — Use <code>USER</code> in Dockerfile to run as non-root</li>
+        <li><strong>Use minimal base images</strong> — Alpine Linux (5MB) vs Ubuntu (70MB). Fewer packages = smaller attack surface</li>
+        <li><strong>Scan images for vulnerabilities</strong> — Trivy, Snyk, AWS ECR image scanning, Clair</li>
+        <li><strong>Never expose Docker socket</strong> — Mounting <code>/var/run/docker.sock</code> inside a container gives container escape capability</li>
+        <li><strong>Read-only filesystem</strong> — Mount container filesystem as read-only where possible</li>
+        <li><strong>Drop Linux capabilities</strong> — Remove capabilities like <code>NET_ADMIN</code>, <code>SYS_ADMIN</code> not needed by the app</li>
+      </ul>
+
+      <h3>Kubernetes Security — The 4Cs Model</h3>
+      <div class="flow-steps">
+        <div class="flow-step"><div class="fs-num">C1</div><div class="fs-body"><h4>Cloud</h4><p>Secure the underlying cloud infrastructure. IAM for EKS/AKS/GKE cluster access, node group security groups, private API endpoints.</p></div></div>
+        <div class="flow-step"><div class="fs-num">C2</div><div class="fs-body"><h4>Cluster</h4><p>Kubernetes RBAC (Role-Based Access Control), NetworkPolicies to restrict pod-to-pod traffic, admission controllers (OPA Gatekeeper, Kyverno) to enforce security policies.</p></div></div>
+        <div class="flow-step"><div class="fs-num">C3</div><div class="fs-body"><h4>Container</h4><p>Secure container images — no root, minimal base, vulnerability-free. Pod Security Standards (PSS) enforce security contexts across namespaces.</p></div></div>
+        <div class="flow-step"><div class="fs-num">C4</div><div class="fs-body"><h4>Code</h4><p>Secure the application code itself — SAST, DAST, dependency scanning, secrets detection in CI/CD pipeline before deployment to K8s.</p></div></div>
+      </div>
+
+      <pre><span class="c"># Kubernetes NetworkPolicy — Deny all inter-pod traffic by default (Zero Trust)</span>
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: production
+spec:
+  podSelector: {}         <span class="c"># Applies to ALL pods in namespace</span>
+  policyTypes:
+  - Ingress
+  - Egress              <span class="c"># Block both directions by default</span>
+<span class="c">
+# Then explicitly allow only what's needed:
+# Allow frontend → backend on port 8080 only</span>
+---
+kind: NetworkPolicy
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: frontend
+    ports:
+    - port: 8080</pre>
+    </div>
+
+
+    <!-- ═══ S15: SERVERLESS ═══ -->
+    <div class="lab-section" id="s15">
+      <div class="s-head"><span class="s-num">15</span><h2>Serverless Security — Lambda, Functions & APIs</h2><span class="s-badge sb-orange">Cloud Native</span></div>
+
+      <p>Serverless (AWS Lambda, Azure Functions, GCP Cloud Functions) eliminates the need to manage servers. The CSP handles OS patching and runtime. But serverless introduces unique security challenges around IAM, secrets management, and cold start attacks.</p>
+
+      <h3>Serverless Attack Surface</h3>
+      <table>
+        <thead><tr><th>Attack Vector</th><th>How It Happens</th><th>Defense</th></tr></thead>
+        <tbody>
+          <tr><td>Overpermissive Lambda Role</td><td>Lambda function's IAM role has <code>*:*</code> — compromise of function = full cloud access</td><td>Least privilege per-function role. Never share roles between functions.</td></tr>
+          <tr><td>Secrets in Environment Variables</td><td>Developer puts DB password in Lambda env var — visible in AWS console, logs</td><td>Use AWS Secrets Manager or SSM Parameter Store (encrypted)</td></tr>
+          <tr><td>SSRF via Lambda</td><td>Lambda fetches user-controlled URLs — can reach IMDS at 169.254.169.254</td><td>IMDSv2 enforcement, input validation, block IMDS URL patterns in WAF</td></tr>
+          <tr><td>Event Injection</td><td>Malicious data in SQS/SNS/S3 event payload that Lambda processes — leads to injection attacks</td><td>Validate and sanitize all event data before processing</td></tr>
+          <tr><td>Dependency Vulnerabilities</td><td>npm/Python packages bundled with Lambda have known CVEs</td><td>Scan dependencies in CI/CD (Snyk, OWASP Dependency-Check)</td></tr>
+        </tbody>
+      </table>
+
+      <div class="success-box"><strong>✅ Serverless Security Quick Wins:</strong><br>
+      Use <strong>one IAM role per Lambda function</strong> (not a shared role)<br>
+      Store secrets in <strong>AWS Secrets Manager</strong>, not environment variables<br>
+      Enable <strong>AWS Lambda function URL auth</strong> or API Gateway auth — never expose functions unauthenticated<br>
+      Enable <strong>AWS X-Ray</strong> for distributed tracing and anomaly detection<br>
+      Set <strong>memory and timeout limits</strong> — excessive execution time is a DoS indicator</div>
+    </div>
+
+
+    <!-- ═══ S16: COMPLIANCE ═══ -->
+    <div class="lab-section" id="s16">
+      <div class="s-head"><span class="s-num">16</span><h2>Cloud Compliance Frameworks</h2><span class="s-badge sb-purple">Governance</span></div>
+
+      <p>Cloud environments must comply with industry and government regulations depending on what data you handle and where you operate. Non-compliance can result in multi-million dollar fines and mandatory breach notifications.</p>
+
+      <table>
+        <thead><tr><th>Framework</th><th>Who Needs It</th><th>Key Requirements</th><th>AWS Tools</th></tr></thead>
+        <tbody>
+          <tr><td><strong>SOC 2 Type II</strong></td><td>SaaS companies, service providers</td><td>Security, availability, confidentiality controls audit</td><td>AWS Audit Manager, CloudTrail</td></tr>
+          <tr><td><strong>ISO 27001</strong></td><td>Global enterprises</td><td>ISMS framework — 114 security controls</td><td>AWS Config, Security Hub</td></tr>
+          <tr><td><strong>PCI DSS</strong></td><td>Any org handling card payments</td><td>Cardholder data protection, network segmentation, encryption</td><td>AWS Artifact, WAF, VPC segmentation</td></tr>
+          <tr><td><strong>HIPAA</strong></td><td>US healthcare data</td><td>PHI protection, encryption, audit controls, BAA required</td><td>AWS Healthcare compliance, KMS</td></tr>
+          <tr><td><strong>GDPR</strong></td><td>Any org processing EU citizens' data</td><td>Data subject rights, breach notification (72hr), data minimization</td><td>Macie (PII detection), DynamoDB PITR</td></tr>
+          <tr><td><strong>FedRAMP</strong></td><td>US government cloud systems</td><td>NIST 800-53 controls, continuous monitoring</td><td>AWS GovCloud</td></tr>
+          <tr><td><strong>NIST CSF</strong></td><td>US federal agencies, recommended broadly</td><td>Identify, Protect, Detect, Respond, Recover</td><td>AWS Security Hub (maps to NIST)</td></tr>
+        </tbody>
+      </table>
+
+      <div class="info-box"><strong>💡 CSPM — Cloud Security Posture Management:</strong> Tools like <strong>AWS Security Hub, Wiz, Orca Security, Prisma Cloud</strong> continuously scan your cloud environment against compliance benchmarks (CIS AWS Foundations, NIST, PCI) and surface misconfigurations automatically. Think of CSPM as a continuous compliance auditor running 24/7 against your entire cloud footprint.</div>
+    </div>
+
+
+    <!-- ═══ S17: INCIDENT RESPONSE ═══ -->
+    <div class="lab-section" id="s17">
+      <div class="s-head"><span class="s-num">17</span><h2>Incident Response in Cloud Environments</h2><span class="s-badge sb-red">IR</span></div>
+
+      <p>Cloud IR is faster and has more tooling than traditional IR — but also has unique challenges like ephemeral resources (containers disappear), shared infrastructure, and cross-account activity. The PICERL framework applies, but cloud-specific steps are critical.</p>
+
+      <h3>Cloud IR Playbook — Compromised IAM Credentials</h3>
+      <div class="flow-steps">
+        <div class="flow-step"><div class="fs-num">1</div><div class="fs-body"><h4>Contain Immediately — Revoke the Key</h4><p>Do NOT wait to investigate first. Immediately: <code>aws iam delete-access-key --access-key-id AKIA...</code> or attach a Deny-All policy to the compromised user. Contain first, investigate second.</p></div></div>
+        <div class="flow-step"><div class="fs-num">2</div><div class="fs-body"><h4>Determine Blast Radius</h4><p>Query CloudTrail for all actions taken with the compromised key in the last 24-48 hours: <code>aws cloudtrail lookup-events --lookup-attributes AttributeKey=AccessKeyId,AttributeValue=AKIA...</code></p></div></div>
+        <div class="flow-step"><div class="fs-num">3</div><div class="fs-body"><h4>Identify Created Resources</h4><p>Check for new IAM users, EC2 instances, S3 buckets, or Lambda functions created during the compromise window. Attackers often create persistence mechanisms — backdoor IAM users, scheduled tasks.</p></div></div>
+        <div class="flow-step"><div class="fs-num">4</div><div class="fs-body"><h4>Preserve Evidence</h4><p>Export CloudTrail logs, VPC Flow Logs, and EBS snapshots before terminating compromised resources. Cloud forensics requires logs — without them you lose the investigation trail forever.</p></div></div>
+        <div class="flow-step"><div class="fs-num">5</div><div class="fs-body"><h4>Eradicate & Recover</h4><p>Delete attacker-created resources, rotate all credentials (not just the compromised one), apply SCPs to prevent recurrence, and restore from clean snapshots/backups.</p></div></div>
+        <div class="flow-step"><div class="fs-num">6</div><div class="fs-body"><h4>Post-Incident Improvements</h4><p>Enable GuardDuty if not running, implement credential scanning in CI/CD (prevent key commits), set up AWS Config rules for continuous compliance, and conduct security training.</p></div></div>
+      </div>
+
+      <pre><span class="c"># Cloud IR — Complete compromised key investigation script</span>
+
+<span class="c"># 1. Immediately attach Deny-All to compromised user</span>
+<span class="k">aws</span> iam put-user-policy --user-name compromised-user \
+  --policy-name EMERGENCY-DENY-ALL \
+  --policy-document <span class="s">'{"Version":"2012-10-17","Statement":[{"Effect":"Deny","Action":"*","Resource":"*"}]}'</span>
+
+<span class="c"># 2. Find all API calls made with compromised key (last 90 days)</span>
+<span class="k">aws</span> cloudtrail lookup-events \
+  --lookup-attributes AttributeKey=AccessKeyId,AttributeValue=AKIAIOSFODNN7EXAMPLE \
+  --start-time 2025-05-01 \
+  --query <span class="s">'Events[].{Time:EventTime,Name:EventName,Source:SourceIPAddress}'</span>
+
+<span class="c"># 3. List all active IAM sessions (find stolen session tokens)</span>
+<span class="k">aws</span> iam list-access-keys --user-name compromised-user
+
+<span class="c"># 4. Check for new IAM users/roles created by attacker</span>
+<span class="k">aws</span> iam list-users --query <span class="s">'Users[?CreateDate>="2025-05-18"].UserName'</span></pre>
+    </div>
+
+
+    <!-- ═══ S18: CLOUD PENTESTING ═══ -->
+    <div class="lab-section" id="s18">
+      <div class="s-head"><span class="s-num">18</span><h2>Cloud Penetration Testing Techniques</h2><span class="s-badge sb-red">Offensive</span></div>
+
+      <p>Cloud pentesting (offensive security in cloud environments) follows the same methodology as traditional pentesting but with cloud-specific tools and techniques. <strong>Always obtain written authorization and check CSP pentesting policies before testing.</strong></p>
+
+      <div class="warning-box"><strong>⚠️ Legal Requirement:</strong> AWS, Azure, and GCP all have penetration testing policies. AWS allows most testing without prior authorization, but prohibits DNS zone walking, DoS testing, and port flooding. Always check the current policy and ensure you have a signed Statement of Work. Unauthorized cloud testing is a criminal offense.</div>
+
+      <h3>Cloud Pentesting Phases</h3>
+      <table>
+        <thead><tr><th>Phase</th><th>Techniques</th><th>Tools</th></tr></thead>
+        <tbody>
+          <tr><td>Reconnaissance</td><td>DNS enumeration, certificate transparency, GitHub dorks for leaked keys, Shodan for exposed services</td><td>theHarvester, amass, trufflehog, gitleaks, Shodan</td></tr>
+          <tr><td>Enumeration</td><td>List S3 buckets, identify account IDs, check for public AMIs/snapshots, enumerate API endpoints</td><td>Prowler, ScoutSuite, CloudBrute, aws-cli</td></tr>
+          <tr><td>Exploitation</td><td>SSRF to metadata, IAM privesc, exposed credentials, vulnerable Lambda inputs, public DB access</td><td>Pacu (AWS exploitation framework), aws-cli, curl</td></tr>
+          <tr><td>Privilege Escalation</td><td>IAM role chaining, policy misconfiguration, passrole abuse, create IAM user then attach policy</td><td>Pacu, enumerate-iam, cloudfox</td></tr>
+          <tr><td>Lateral Movement</td><td>AssumeRole to other accounts, cross-account trust exploitation, EC2 metadata to pivot</td><td>Pacu, aws-cli, cloudfox</td></tr>
+          <tr><td>Reporting</td><td>Document findings with evidence, CVSS scores, remediation steps, and proof-of-concept</td><td>Plextrac, Dradis, custom templates</td></tr>
+        </tbody>
+      </table>
+
+      <pre><span class="c"># Pacu — AWS Exploitation Framework (like Metasploit for AWS)</span>
+<span class="k">pip</span> install pacu
+
+<span class="c"># Start Pacu, import stolen credentials</span>
+Pacu > set_keys --key-alias compromised --access-key AKIA... --secret-key ...
+
+<span class="c"># Enumerate IAM permissions automatically</span>
+Pacu > run iam__enum_permissions
+
+<span class="c"># Check for privilege escalation paths</span>
+Pacu > run iam__privesc_scan
+
+<span class="c"># Enumerate all S3 buckets and their access control</span>
+Pacu > run s3__enum_bucket_sctags
+
+<span class="c"># Scout Suite — multi-cloud security audit tool (free)</span>
+<span class="k">python3</span> scout.py aws --report-dir ./audit-report
+
+<span class="c"># Prowler — AWS security best practices assessment</span>
+<span class="k">./prowler</span> -g cis_level1 -M json   <span class="c"># CIS Level 1 compliance check</span></pre>
+    </div>
+
+
+    <!-- ═══ S19: TOOLS ═══ -->
+    <div class="lab-section" id="s19">
+      <div class="s-head"><span class="s-num">19</span><h2>Cloud Security Tools Arsenal</h2><span class="s-badge sb-lime">Reference</span></div>
+
+      <h4>CSPM — Cloud Security Posture Management</h4>
+      <div class="tools-grid">
+        <div class="tool-card"><div class="tc-name">☁️ Wiz</div><div class="tc-desc">Agentless cloud security platform. Maps complete attack paths across your entire cloud environment. Industry-leading CSPM.</div><span class="tc-tag">Enterprise · AWS/Azure/GCP</span></div>
+        <div class="tool-card"><div class="tc-name">🔍 Prowler</div><div class="tc-desc">Open-source AWS/Azure/GCP security assessment. 300+ checks against CIS Benchmarks, NIST, PCI, HIPAA. Free and powerful.</div><span class="tc-tag">Free · Open Source</span></div>
+        <div class="tool-card"><div class="tc-name">🦅 ScoutSuite</div><div class="tc-desc">Multi-cloud security auditing tool. Runs assessment across all three major clouds and generates HTML report with findings.</div><span class="tc-tag">Free · Open Source</span></div>
+        <div class="tool-card"><div class="tc-name">🛡️ AWS Security Hub</div><div class="tc-desc">Native AWS CSPM that aggregates findings from GuardDuty, Inspector, Macie and maps to security standards automatically.</div><span class="tc-tag">Native · AWS</span></div>
+      </div>
+
+      <h4>IAM & Identity Security</h4>
+      <div class="tools-grid">
+        <div class="tool-card"><div class="tc-name">🩸 BloodHound CE</div><div class="tc-desc">Now supports Azure AD attack path analysis. Visualizes privilege escalation paths to Global Administrator in Entra ID environments.</div><span class="tc-tag">Free · Azure AD</span></div>
+        <div class="tool-card"><div class="tc-name">🔑 Pacu</div><div class="tc-desc">AWS exploitation framework. Automates IAM enumeration, privilege escalation scanning, and cloud resource enumeration during pentests.</div><span class="tc-tag">Free · AWS Pentest</span></div>
+        <div class="tool-card"><div class="tc-name">🔓 CloudFox</div><div class="tc-desc">Find exploitable attack paths in cloud infrastructure. Discovers privilege escalation, secrets, and lateral movement opportunities.</div><span class="tc-tag">Free · Multi-cloud</span></div>
+        <div class="tool-card"><div class="tc-name">📋 enumerate-iam</div><div class="tc-desc">Enumerate IAM permissions attached to AWS credentials by brute-forcing API calls. Essential for post-compromise enumeration.</div><span class="tc-tag">Free · AWS</span></div>
+      </div>
+
+      <h4>Secrets & Credential Scanning</h4>
+      <div class="tools-grid">
+        <div class="tool-card"><div class="tc-name">🐷 TruffleHog</div><div class="tc-desc">Scans git history, S3, filesystems, and CI/CD for secrets. Verifies found credentials are still active (live credential detection).</div><span class="tc-tag">Free · All clouds</span></div>
+        <div class="tool-card"><div class="tc-name">🔐 Gitleaks</div><div class="tc-desc">Fast SAST tool for detecting secrets, API keys, and credentials in git repositories. Integrates into CI/CD pipelines.</div><span class="tc-tag">Free · CI/CD</span></div>
+        <div class="tool-card"><div class="tc-name">🐈 Trivy</div><div class="tc-desc">All-in-one vulnerability scanner for containers, IaC, packages, and cloud configs. Scans Docker images, Terraform, Kubernetes manifests.</div><span class="tc-tag">Free · Containers/IaC</span></div>
+        <div class="tool-card"><div class="tc-name">📡 AWS Macie</div><div class="tc-desc">ML-based sensitive data discovery for S3. Automatically identifies PII, financial data, credentials in S3 buckets.</div><span class="tc-tag">Native · AWS · $</span></div>
+      </div>
+    </div>
+
+
+    <!-- ═══ S20: CAREER ═══ -->
+    <div class="lab-section" id="s20">
+      <div class="s-head"><span class="s-num">20</span><h2>Cloud Security Career Path</h2><span class="s-badge sb-green">Career</span></div>
+
+      <p>Cloud security is the fastest-growing cybersecurity specialization. The global cloud security market is projected to reach $68 billion by 2025. Organizations are desperately hiring professionals who understand cloud-native security — and the talent shortage drives salaries up.</p>
+
+      <h3>Role Progression</h3>
+      <div class="flow-steps">
+        <div class="flow-step"><div class="fs-num">1</div><div class="fs-body"><h4>Cloud Security Analyst — Entry Level (0–2 yrs) · $70k–$100k</h4><p>Monitor cloud SIEM alerts, investigate GuardDuty findings, enforce compliance using Security Hub, assist with IAM reviews, manage security tooling. Entry point for SOC analysts transitioning to cloud.</p></div></div>
+        <div class="flow-step"><div class="fs-num">2</div><div class="fs-body"><h4>Cloud Security Engineer — Mid Level (2–5 yrs) · $110k–$150k</h4><p>Design secure cloud architectures, build automated security controls (Terraform, AWS Config Rules), lead cloud pentests, implement Zero Trust, build CSPM programs, respond to cloud incidents.</p></div></div>
+        <div class="flow-step"><div class="fs-num">3</div><div class="fs-body"><h4>Cloud Security Architect — Senior (5+ yrs) · $150k–$220k+</h4><p>Define cloud security strategy across business units, design landing zone security (AWS Control Tower, Azure Landing Zones), advise leadership, evaluate new services, lead compliance programs.</p></div></div>
+      </div>
+
+      <h3>Certification Roadmap</h3>
+      <div class="cert-timeline">
+        <div class="cert-step">
+          <div class="cs-badge cs-b1">Beginner</div>
+          <div class="cs-name">AWS Certified Cloud Practitioner</div>
+          <div class="cs-cost">~$100 · Cloud basics</div>
+        </div>
+        <div class="cert-step">
+          <div class="cs-badge cs-b2">Intermediate</div>
+          <div class="cs-name">AWS Solutions Architect Associate</div>
+          <div class="cs-cost">~$150 · Architecture</div>
+        </div>
+        <div class="cert-step">
+          <div class="cs-badge cs-b2">Intermediate</div>
+          <div class="cs-name">AWS Security Specialty</div>
+          <div class="cs-cost">~$300 · Gold standard</div>
+        </div>
+        <div class="cert-step">
+          <div class="cs-badge cs-b3">Advanced</div>
+          <div class="cs-name">CCSP (ISC²)</div>
+          <div class="cs-cost">~$500 · Multi-cloud</div>
+        </div>
+        <div class="cert-step">
+          <div class="cs-badge cs-b3">Advanced</div>
+          <div class="cs-name">CCSK (CSA)</div>
+          <div class="cs-cost">~$400 · Cloud concepts</div>
+        </div>
+        <div class="cert-step">
+          <div class="cs-badge cs-b4">Expert</div>
+          <div class="cs-name">GWEB / GCSA (GIAC)</div>
+          <div class="cs-cost">~$2000 · Pentest focus</div>
+        </div>
+      </div>
+
+      <div class="success-box"><strong>🏠 Free Practice Resources:</strong><br>
+      <strong>AWS Free Tier</strong> — Create a free AWS account and build a secure architecture hands-on<br>
+      <strong>flaws.cloud</strong> — Intentionally vulnerable AWS environment (free, amazing learning)<br>
+      <strong>CloudGoat (Rhino Security Labs)</strong> — Vulnerable-by-design AWS environments for cloud pentesting<br>
+      <strong>Wiz CTF</strong> — Cloud security CTF challenges covering real-world misconfigurations<br>
+      <strong>TryHackMe — AWS Security Path</strong> — Guided cloud security learning rooms</div>
+    </div>
+
+
+    <!-- REFERENCES -->
+    <div class="lab-section" id="refs">
+      <div class="s-head"><span class="s-num">📚</span><h2>Further Reading & Resources</h2><span class="s-badge sb-green">References</span></div>
+      <a class="ref-card" href="https://flaws.cloud" target="_blank">
+        <div class="ref-icon">☁️</div><div class="ref-body"><div class="ref-name">flaws.cloud — AWS Security Challenges</div><div class="ref-sub">Free intentionally vulnerable AWS environment. Best hands-on cloud security learning tool available. Start here.</div></div><div class="ref-arrow">→</div>
+      </a>
+      <a class="ref-card" href="https://github.com/RhinoSecurityLabs/cloudgoat" target="_blank">
+        <div class="ref-icon">🐐</div><div class="ref-body"><div class="ref-name">CloudGoat — Vulnerable AWS Deployment</div><div class="ref-sub">Terraform-based intentionally vulnerable AWS environments for practicing cloud pentesting in a safe, legal setting.</div></div><div class="ref-arrow">→</div>
+      </a>
+      <a class="ref-card" href="https://cloudsecurityalliance.org/research/guidance" target="_blank">
+        <div class="ref-icon">📋</div><div class="ref-body"><div class="ref-name">CSA Security Guidance v4</div><div class="ref-sub">Cloud Security Alliance's definitive cloud security guidance. Free download. Essential reading for CCSK certification.</div></div><div class="ref-arrow">→</div>
+      </a>
+      <a class="ref-card" href="https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/" target="_blank">
+        <div class="ref-icon">🏗️</div><div class="ref-body"><div class="ref-name">AWS Well-Architected Security Pillar</div><div class="ref-sub">AWS's official security best practices framework. Comprehensive guidance covering all 6 security pillars. Free.</div></div><div class="ref-arrow">→</div>
+      </a>
+    </div>
+
+
+    <!-- ═══ S21: FINAL VIVA ═══ -->
+    <div class="viva-section" id="s21">
+      <div style="text-align:center;margin-bottom:20px;">
+        <div style="font-family:'Orbitron',sans-serif;font-size:1.2rem;font-weight:700;color:var(--accent);margin-bottom:6px;">🎓 Final Viva Assessment</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--muted);">Scroll through all 20 sections to unlock · 10 questions · 5 minutes · 75% to pass · +250 XP</div>
+      </div>
+      <div id="vivaLocked" class="viva-locked-overlay">
+        <div class="lock-icon">🔒</div>
+        <div class="lock-msg">Read all 20 sections to unlock this assessment.<br>Scroll through the entire module to unlock.</div>
+      </div>
+      <div class="viva-timer" id="vivaTimer" style="display:none;">05:00</div>
+      <form id="quizForm" style="display:none;">
+        <div class="quiz-q"><p>1. The Capital One breach (2019) was caused by which attack chain?</p>
+          <label><input type="radio" name="q1" value="0"> SQL Injection → Database dump</label>
+          <label><input type="radio" name="q1" value="1"> SSRF → IMDS metadata → IAM credential theft → S3 exfiltration</label>
+          <label><input type="radio" name="q1" value="0"> Phishing email → Ransomware → Data encryption</label>
+          <label><input type="radio" name="q1" value="0"> Default password on RDS → Direct database access</label>
+        </div>
+        <div class="quiz-q"><p>2. In the Shared Responsibility Model, who is responsible for patching the Guest OS on an EC2 instance (IaaS)?</p>
+          <label><input type="radio" name="q2" value="0"> AWS (CSP)</label>
+          <label><input type="radio" name="q2" value="1"> The Customer</label>
+          <label><input type="radio" name="q2" value="0"> Both AWS and the customer share this equally</label>
+          <label><input type="radio" name="q2" value="0"> No one — EC2 auto-patches itself</label>
+        </div>
+        <div class="quiz-q"><p>3. An IAM policy contains <code>"Action": "*", "Resource": "*", "Effect": "Allow"</code>. What does this do?</p>
+          <label><input type="radio" name="q3" value="0"> Allows read-only access to all AWS services</label>
+          <label><input type="radio" name="q3" value="0"> Has no effect — wildcards are blocked by default</label>
+          <label><input type="radio" name="q3" value="1"> Grants full administrative access to all AWS resources — equivalent to root</label>
+          <label><input type="radio" name="q3" value="0"> Allows access only within the current VPC</label>
+        </div>
+        <div class="quiz-q"><p>4. An attacker exploits SSRF to reach <code>http://169.254.169.254/latest/meta-data/</code>. What is the immediate risk?</p>
+          <label><input type="radio" name="q4" value="0"> They can DDoS the EC2 instance</label>
+          <label><input type="radio" name="q4" value="1"> They can steal the instance's temporary IAM credentials and impersonate it to access AWS services</label>
+          <label><input type="radio" name="q4" value="0"> They can read the instance's application source code</label>
+          <label><input type="radio" name="q4" value="0"> They can view VPC network topology only</label>
+        </div>
+        <div class="quiz-q"><p>5. What is the primary purpose of enabling <strong>IMDSv2</strong> on EC2 instances?</p>
+          <label><input type="radio" name="q5" value="0"> It makes the instance load faster</label>
+          <label><input type="radio" name="q5" value="0"> It disables all access to instance metadata</label>
+          <label><input type="radio" name="q5" value="1"> It requires a session token to access the IMDS, blocking simple SSRF attacks that can't create tokens</label>
+          <label><input type="radio" name="q5" value="0"> It automatically encrypts all instance storage</label>
+        </div>
+        <div class="quiz-q"><p>6. Which Zero Trust principle states: "Design security assuming attackers are already inside your environment"?</p>
+          <label><input type="radio" name="q6" value="0"> Least Privilege</label>
+          <label><input type="radio" name="q6" value="0"> Verify Explicitly</label>
+          <label><input type="radio" name="q6" value="1"> Assume Breach</label>
+          <label><input type="radio" name="q6" value="0"> Identity as Perimeter</label>
+        </div>
+        <div class="quiz-q"><p>7. An attacker's first action after gaining access via compromised IAM credentials is often <code>cloudtrail:StopLogging</code>. Why?</p>
+          <label><input type="radio" name="q7" value="0"> To speed up their API calls by reducing overhead</label>
+          <label><input type="radio" name="q7" value="0"> To free up storage space in the account</label>
+          <label><input type="radio" name="q7" value="1"> To disable the audit trail so defenders can't see what API calls the attacker is making</label>
+          <label><input type="radio" name="q7" value="0"> CloudTrail has no security value — stopping it is harmless</label>
+        </div>
+        <div class="quiz-q"><p>8. In Kubernetes security, what does a <strong>NetworkPolicy</strong> with an empty <code>podSelector</code> and no ingress/egress rules achieve?</p>
+          <label><input type="radio" name="q8" value="0"> Allows all traffic to all pods in the namespace</label>
+          <label><input type="radio" name="q8" value="1"> Denies all ingress and egress traffic to all pods (default deny — Zero Trust)</label>
+          <label><input type="radio" name="q8" value="0"> Has no effect — NetworkPolicies require explicit deny rules</label>
+          <label><input type="radio" name="q8" value="0"> Only affects pods in the kube-system namespace</label>
+        </div>
+        <div class="quiz-q"><p>9. According to Gartner, what percentage of cloud security failures are the customer's fault (not the CSP)?</p>
+          <label><input type="radio" name="q9" value="0"> 25% — CSPs have significant responsibility</label>
+          <label><input type="radio" name="q9" value="0"> 50% — Equal responsibility</label>
+          <label><input type="radio" name="q9" value="0"> 75% — Mostly customer fault</label>
+          <label><input type="radio" name="q9" value="1"> 99% — Almost all cloud failures are customer misconfiguration</label>
+        </div>
+        <div class="quiz-q"><p>10. A developer stores an AWS access key in a public GitHub repository. Bots scan GitHub continuously. What should the developer do FIRST?</p>
+          <label><input type="radio" name="q10" value="0"> Delete the GitHub repository to hide the leak</label>
+          <label><input type="radio" name="q10" value="0"> Change their GitHub password</label>
+          <label><input type="radio" name="q10" value="0"> Check if anyone used the key, then decide</label>
+          <label><input type="radio" name="q10" value="1"> Immediately delete/deactivate the key in AWS IAM — assume it is already compromised</label>
+        </div>
+        <button type="button" class="submit-quiz" onclick="submitViva()">☁️ Submit Assessment</button>
+      </form>
+      <div class="quiz-result" id="quizResult">
+        <div class="qr-score" id="qrScore"></div>
+        <div class="qr-msg" id="qrMsg"></div>
+      </div>
+    </div>
+
+
+    <!-- COMPLETE -->
+    <div class="complete-wrap">
+      <button class="complete-btn" id="completeBtn" onclick="completeCourse()">☁️ Mark Module Complete — Earn 250 XP</button>
+    </div>
+
+  </div><!-- /content -->
+  <footer>
+    HackForge · Cloud Security Module · <a href="index.html">Home</a> · <a href="blue-team.html">Blue Team</a> · <a href="red-team.html">Red Team</a>
+  </footer>
+</main>
+
+
+<script>
+/* ═══ SCROLL PROGRESS & TOC ══════════════════════════ */
+const sections = document.querySelectorAll('[id^="s"]');
+const tocLinks  = document.querySelectorAll('.toc-link');
+let vivaUnlocked = false;
+
+window.addEventListener('scroll', () => {
+  const total = document.body.scrollHeight - window.innerHeight;
+  const pct   = Math.min(window.scrollY / total, 1);
+  document.getElementById('readIndicator').style.transform = `scaleX(${pct})`;
+  const rp = Math.round(pct * 100);
+  document.getElementById('pillFill').style.width  = rp + '%';
+  document.getElementById('pillPct').textContent   = rp + '%';
+  document.getElementById('lpbFill').style.width   = rp + '%';
+  document.getElementById('lpbPct').textContent    = rp + '%';
+  if (pct > 0.9 && !vivaUnlocked) { vivaUnlocked = true; unlockViva(); }
+  let cur = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 120) cur = s.id; });
+  tocLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + cur));
+});
+
+/* ═══ IAM SIMULATOR ══════════════════════════════════ */
+const iamPolicies = {
+  dev: {
+    s3_GetObject:           { allow: true,  reason: '✅ ALLOW — ReadOnlyAccess grants s3:GetObject on all resources. Access permitted.' },
+    s3_DeleteBucket:        { allow: false, reason: '❌ DENY — ReadOnlyAccess does not include s3:DeleteBucket. No matching Allow statement. Implicit Deny.' },
+    iam_CreateUser:         { allow: false, reason: '❌ DENY — ReadOnlyAccess is read-only. No IAM write permissions. Implicit Deny.' },
+    ec2_DescribeInstances:  { allow: true,  reason: '✅ ALLOW — ReadOnlyAccess includes ec2:Describe* across all regions.' },
+    sts_AssumeRole:         { allow: false, reason: '❌ DENY — ReadOnlyAccess does not allow STS role assumption. Implicit Deny.' },
+    cloudtrail_StopLogging: { allow: false, reason: '❌ DENY — ReadOnlyAccess does not include CloudTrail write APIs. Implicit Deny.' },
+  },
+  admin: {
+    s3_GetObject:           { allow: true,  reason: '✅ ALLOW — AdministratorAccess = Action:* Resource:*. All actions permitted including s3:GetObject.' },
+    s3_DeleteBucket:        { allow: true,  reason: '⚠️ ALLOW (DANGEROUS) — AdministratorAccess grants s3:DeleteBucket. This wildcard policy is why least privilege matters.' },
+    iam_CreateUser:         { allow: true,  reason: '⚠️ ALLOW (HIGH RISK) — AdministratorAccess includes iam:*. Can create users, policies, roles — full IAM control.' },
+    ec2_DescribeInstances:  { allow: true,  reason: '✅ ALLOW — AdministratorAccess includes all ec2 actions.' },
+    sts_AssumeRole:         { allow: true,  reason: '⚠️ ALLOW — AdministratorAccess grants sts:AssumeRole on any role. Can pivot to any role in any account.' },
+    cloudtrail_StopLogging: { allow: true,  reason: '🔴 ALLOW (CRITICAL) — AdministratorAccess can stop CloudTrail. Always alert on this event in a real environment.' },
+  },
+  lambda: {
+    s3_GetObject:           { allow: true,  reason: '✅ ALLOW — Lambda execution role has S3FullAccess. GetObject permitted on all buckets.' },
+    s3_DeleteBucket:        { allow: false, reason: '❌ EXPLICIT DENY — An explicit DenyDelete policy attached to this role blocks s3:DeleteBucket. Explicit Deny overrides all Allows.' },
+    iam_CreateUser:         { allow: false, reason: '❌ DENY — Lambda role has no IAM permissions. Implicit Deny.' },
+    ec2_DescribeInstances:  { allow: false, reason: '❌ DENY — Lambda role scoped to S3 only. No EC2 permissions. Implicit Deny.' },
+    sts_AssumeRole:         { allow: false, reason: '❌ DENY — Lambda role has no sts:AssumeRole permission. Implicit Deny.' },
+    cloudtrail_StopLogging: { allow: false, reason: '❌ DENY — Lambda role has no CloudTrail permissions. Implicit Deny.' },
+  },
+  readonly: {
+    s3_GetObject:           { allow: true,  reason: '✅ ALLOW — Policy grants s3:GetObject on arn:aws:s3:::specific-bucket/* only. This resource matches.' },
+    s3_DeleteBucket:        { allow: false, reason: '❌ DENY — Policy only grants GetObject and ListBucket. No delete permissions. Implicit Deny.' },
+    iam_CreateUser:         { allow: false, reason: '❌ DENY — Scoped read-only policy. No IAM permissions at all. Implicit Deny.' },
+    ec2_DescribeInstances:  { allow: false, reason: '❌ DENY — Policy is S3-specific. No EC2 permissions. Implicit Deny.' },
+    sts_AssumeRole:         { allow: false, reason: '❌ DENY — Read-only S3 policy. No STS permissions. Implicit Deny.' },
+    cloudtrail_StopLogging: { allow: false, reason: '❌ DENY — No CloudTrail permissions. Implicit Deny.' },
+  },
+  hacked: {
+    s3_GetObject:           { allow: true,  reason: '🔴 ALLOW — Compromised key has wildcard role policy (Action:* Resource:*). Attacker can read all S3 data.' },
+    s3_DeleteBucket:        { allow: true,  reason: '🔴 ALLOW — Wildcard policy. Attacker can delete buckets, destroy data, or prepare for ransomware.' },
+    iam_CreateUser:         { allow: true,  reason: '🔴 ALLOW — Wildcard. Attacker creates a backdoor IAM user with admin access for persistent access.' },
+    ec2_DescribeInstances:  { allow: true,  reason: '🔴 ALLOW — Wildcard. Attacker maps entire infrastructure for lateral movement targeting.' },
+    sts_AssumeRole:         { allow: true,  reason: '🔴 ALLOW — Can assume any role. Attacker pivots across accounts. This is why AssumeRole:* is catastrophic.' },
+    cloudtrail_StopLogging: { allow: true,  reason: '🔴 CRITICAL — Attacker disables CloudTrail immediately. SOC is now blind. Real attackers always do this first.' },
+  }
+};
+
+function runIAMSim() {
+  const user   = document.getElementById('iamUser').value;
+  const action = document.getElementById('iamAction').value;
+  const key    = action.replace(':', '_');
+  const policy = iamPolicies[user]?.[key];
+  const out    = document.getElementById('iamOutput');
+  if (!policy) { out.innerHTML = '<span class="il-warn">No simulation data for this combination.</span>'; return; }
+  const lines = [
+    `<span class="il-dim">══════════════════════════════════════════</span>`,
+    `<span class="il-info">▶ Evaluating: ${action}</span>`,
+    `<span class="il-dim">  Principal:  ${document.getElementById('iamUser').options[document.getElementById('iamUser').selectedIndex].text.split('(')[0].trim()}</span>`,
+    `<span class="il-dim">  Resource:   arn:aws:s3:::example-bucket/* (default)</span>`,
+    `<span class="il-dim">══════════════════════════════════════════</span>`,
+    `<span class="il-dim">  Step 1: Check for explicit DENY policies...</span>`,
+    policy.allow
+      ? `<span class="il-dim">  → No explicit DENY found</span>`
+      : action.includes('Delete') && user === 'lambda'
+        ? `<span class="il-danger il-deny">  → ⚠️  EXPLICIT DENY found! (DenyDelete policy attached)</span>`
+        : `<span class="il-dim">  → No explicit DENY found (will check Allow)</span>`,
+    `<span class="il-dim">  Step 2: Check for matching ALLOW statements...</span>`,
+    policy.allow
+      ? `<span class="il-ok">  → Matching ALLOW statement found</span>`
+      : `<span class="il-dim">  → No matching ALLOW statement</span>`,
+    `<span class="il-dim">══════════════════════════════════════════</span>`,
+    policy.allow
+      ? `<span class="il-ok">  RESULT: ${policy.reason}</span>`
+      : `<span class="il-deny">  RESULT: ${policy.reason}</span>`,
+  ];
+  out.innerHTML = '';
+  lines.forEach((line, i) => {
+    const span = document.createElement('div');
+    span.innerHTML = line;
+    span.style.animationDelay = (i * 0.06) + 's';
+    span.className = 'iam-line';
+    out.appendChild(span);
+  });
+}
+
+/* ═══ MISCONFIGURATION QUIZ ════════════════════════ */
+const mqQuestions = [
+  {
+    title: 'AWS S3 Bucket Policy',
+    code: `{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": <span class="vuln">"Allow"</span>,
+    "Principal": <span class="vuln">"*"</span>,
+    "Action": "s3:GetObject",
+    "Resource": "arn:aws:s3:::corp-financial-data/*"
+  }]
+}`,
+    q: 'What critical security vulnerability exists in this S3 bucket policy?',
+    opts: [
+      'The bucket name is too descriptive',
+      'Principal "*" means ANY user on the internet can read all files — this bucket is completely public',
+      'GetObject should be replaced with ListBucket',
+      'The Resource ARN is incorrect syntax',
+    ],
+    correct: 1,
+    exp: '✅ Correct! Principal "*" makes this bucket publicly readable to the ENTIRE internet. This is the most common S3 misconfiguration — it has exposed billions of records. Fix: Remove the public policy and enable S3 Block Public Access.'
+  },
+  {
+    title: 'EC2 Security Group Rule',
+    code: `SecurityGroupIngress:
+  - IpProtocol: tcp
+    FromPort: <span class="vuln">22</span>
+    ToPort: <span class="vuln">22</span>
+    CidrIp: <span class="vuln">"0.0.0.0/0"</span>   # SSH from anywhere
+  - IpProtocol: tcp
+    FromPort: <span class="vuln">3389</span>
+    ToPort: <span class="vuln">3389</span>
+    CidrIp: <span class="vuln">"0.0.0.0/0"</span>   # RDP from anywhere`,
+    q: 'What is the security risk with this EC2 security group configuration?',
+    opts: [
+      'Only one port can be open at a time in a Security Group',
+      'TCP protocol should be changed to UDP for SSH',
+      'Allowing SSH (22) and RDP (3389) from 0.0.0.0/0 exposes these management ports to the entire internet — inviting brute force attacks',
+      'The YAML syntax is incorrect',
+    ],
+    correct: 2,
+    exp: '✅ Correct! Exposing SSH and RDP to 0.0.0.0/0 is extremely dangerous. Automated bots scan the internet for port 22/3389 within minutes of exposure. Fix: Restrict to your corporate VPN CIDR (e.g., 10.0.0.0/8) or use AWS Systems Manager Session Manager instead of direct SSH.'
+  },
+  {
+    title: 'Lambda Function Environment',
+    code: `Functions:
+  ProcessOrders:
+    Handler: index.handler
+    Runtime: nodejs20.x
+    Environment:
+      Variables:
+        DB_HOST: "prod-db.cluster.us-east-1.rds.amazonaws.com"
+        DB_USER: "admin"
+        DB_PASSWORD: <span class="vuln">"SuperSecret123!"</span>
+        AWS_REGION: "us-east-1"
+        PAYMENT_API_KEY: <span class="vuln">"pk_live_9d8f3k2j..."</span>`,
+    q: 'What is the critical security problem with this Lambda configuration?',
+    opts: [
+      'Lambda functions cannot connect to RDS databases',
+      'The runtime nodejs20.x is outdated',
+      'Database passwords and API keys are stored in plaintext environment variables — visible in the AWS console, logs, and to anyone with Lambda read access',
+      'The handler name format is incorrect',
+    ],
+    correct: 2,
+    exp: '✅ Correct! Never store secrets in Lambda environment variables. They appear in plaintext in the AWS console, CloudFormation templates, and any logs that print env vars. Fix: Store secrets in AWS Secrets Manager or SSM Parameter Store (SecureString), then retrieve them at runtime using the SDK.'
+  },
+  {
+    title: 'IAM Role Trust Policy',
+    code: `{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {
+      "AWS": <span class="vuln">"*"</span>
+    },
+    "Action": "sts:AssumeRole",
+    "Condition": {}
+  }]
+}`,
+    q: 'This is a trust policy for an admin IAM role. What is the catastrophic flaw?',
+    opts: [
+      'The sts:AssumeRole action is deprecated',
+      'The Condition block must contain at least one condition',
+      'Principal "*" allows ANY AWS account or user in the world to assume this admin role — complete account takeover by anyone',
+      'IAM roles cannot be assumed by external principals',
+    ],
+    correct: 2,
+    exp: '✅ Correct! Principal "*" in a trust policy means any AWS user, anywhere, can assume this role and gain its permissions. If the role has admin access, this is total account compromise waiting to happen. Fix: Restrict Principal to your own account ARN or specific trusted role ARNs.'
+  },
+  {
+    title: 'CloudTrail Configuration',
+    code: `resource "aws_cloudtrail" "main" {
+  name                          = "prod-trail"
+  s3_bucket_name               = "audit-logs-bucket"
+  include_global_service_events = <span class="vuln">false</span>
+  is_multi_region_trail         = <span class="vuln">false</span>
+  enable_log_file_validation    = <span class="vuln">false</span>
+  
+  event_selector {
+    read_write_type   = <span class="vuln">"WriteOnly"</span>
+    include_management_events = true
+  }
+}`,
+    q: 'This CloudTrail Terraform config has THREE security gaps. What are they?',
+    opts: [
+      'CloudTrail should use DynamoDB, not S3',
+      'is_multi_region_trail:false misses other regions, enable_log_file_validation:false allows log tampering, WriteOnly misses read events (data exfiltration invisible)',
+      'The resource name "main" is too generic',
+      'CloudTrail cannot be configured with Terraform',
+    ],
+    correct: 1,
+    exp: '✅ Correct! Three problems: (1) Single-region trail misses API calls in other regions — attackers often operate in us-west-2 if you monitor us-east-1 only. (2) No log file validation — attacker can modify log files without detection. (3) WriteOnly misses read events — s3:GetObject exfiltration is invisible. Fix: multi-region trail + log validation + ReadWrite type.'
+  }
+];
+
+let mqIdx = 0, mqScore = 0, mqAnswered = false;
+
+function renderMQ() {
+  const q = mqQuestions[mqIdx];
+  document.getElementById('mqContent').innerHTML = `
+    <div style="font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted);margin-bottom:8px;letter-spacing:1px;text-transform:uppercase;">Config #${mqIdx+1}/${mqQuestions.length} — ${q.title}</div>
+    <div class="config-snippet">${q.code}</div>
+    <div class="mq-question">${q.q}</div>
+    <div class="mq-opts">
+      ${q.opts.map((opt,i)=>`<div class="mq-opt" id="mqo${i}" onclick="answerMQ(${i})"><span style="font-family:'JetBrains Mono',monospace;font-size:.7rem;color:rgba(0,220,255,.4);flex-shrink:0">${String.fromCharCode(65+i)}.</span>${opt}</div>`).join('')}
+    </div>
+    <div class="mq-feedback" id="mqFeedback"></div>
+    <button class="mq-next" id="mqNext" onclick="nextMQ()">Next Configuration →</button>`;
+  mqAnswered = false;
+}
+
+function answerMQ(chosen) {
+  if (mqAnswered) return;
+  mqAnswered = true;
+  const q = mqQuestions[mqIdx];
+  const opts = document.querySelectorAll('.mq-opt');
+  opts.forEach((el,i) => {
+    if (i === q.correct) el.classList.add('correct');
+    else if (i === chosen && chosen !== q.correct) el.classList.add('wrong');
+    el.style.pointerEvents = 'none';
+  });
+  if (chosen === q.correct) { mqScore++; document.getElementById('mqScore').textContent = mqScore; }
+  const fb = document.getElementById('mqFeedback');
+  fb.textContent = q.exp; fb.className = `mq-feedback ${chosen === q.correct ? 'ok' : 'bad'}`;
+  fb.style.display = 'block';
+  const nb = document.getElementById('mqNext');
+  if (mqIdx < mqQuestions.length - 1) nb.style.display = 'inline-block';
+  else { nb.style.display = 'none'; fb.textContent += ` | Final score: ${mqScore}/${mqQuestions.length}`; }
+}
+
+function nextMQ() { mqIdx++; renderMQ(); }
+renderMQ();
+
+/* ═══ VIVA ══════════════════════════════════════════ */
+function unlockViva() {
+  document.getElementById('vivaLocked').style.display = 'none';
+  document.getElementById('vivaTimer').style.display  = 'block';
+  document.getElementById('quizForm').style.display   = 'block';
+  startTimer();
+}
+let timerInterval;
+function startTimer() {
+  let s = 300;
+  timerInterval = setInterval(() => {
+    s--;
+    const m = String(Math.floor(s/60)).padStart(2,'0');
+    const sec = String(s%60).padStart(2,'0');
+    document.getElementById('vivaTimer').textContent = `${m}:${sec}`;
+    if (s <= 0) { clearInterval(timerInterval); submitViva(); }
+    if (s <= 60) document.getElementById('vivaTimer').style.color = 'var(--danger)';
+  }, 1000);
+}
+
+function submitViva() {
+  clearInterval(timerInterval);
+  const form = document.getElementById('quizForm');
+  const qs   = ['q1','q2','q3','q4','q5','q6','q7','q8','q9','q10'];
+  let score  = 0;
+  qs.forEach(q => { const c = form.querySelector(`input[name="${q}"]:checked`); if (c && c.value==='1') score++; });
+  const pct    = Math.round((score/qs.length)*100);
+  const passed = pct >= 75;
+  const result = document.getElementById('quizResult');
+  result.className = `quiz-result ${passed ? 'qr-pass' : 'qr-fail'}`;
+  document.getElementById('qrScore').textContent = `${pct}%`;
+  document.getElementById('qrScore').style.color = passed ? '#22c55e' : 'var(--danger)';
+  document.getElementById('qrMsg').textContent = passed
+    ? `☁️ Excellent! Scored ${score}/${qs.length}. Cloud Security module complete! +250 XP awarded.`
+    : `You scored ${score}/${qs.length}. Need 75% to pass. Review the sections and try again.`;
+  result.style.display = 'block';
+  form.style.display   = 'none';
+  if (passed) {
+    localStorage.setItem('cloudsec_complete', '1');
+    document.getElementById('markBtn').classList.add('done');
+    document.getElementById('markBtn').textContent = '✅ Completed!';
+  }
+}
+
+/* ═══ MARK COMPLETE ══════════════════════════════════ */
+function completeCourse() {
+  localStorage.setItem('cloudsec_complete','1');
+  document.getElementById('markBtn').classList.add('done');
+  document.getElementById('markBtn').textContent = '✅ Completed!';
+  const cb = document.getElementById('completeBtn');
+  if (cb) { cb.classList.add('done'); cb.textContent = '✅ Module Complete!'; }
+}
+if (localStorage.getItem('cloudsec_complete')) {
+  document.getElementById('markBtn').classList.add('done');
+  document.getElementById('markBtn').textContent = '✅ Completed!';
+}
+</script>
+</body>
+</html>
