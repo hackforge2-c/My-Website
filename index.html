@@ -1523,7 +1523,7 @@ body{
 
   <div class="nav-links" id="navLinks">
     <a href="learn.html">Learn</a>
-    <a href="Awareness.html">Awareness</a>
+    <a href="awareness.html">Awareness</a>
     <a href="practice-lab.html">Practice Arena</a>
     <a href="cyber-news.html">Security Feed</a>
   </div>
@@ -1563,7 +1563,7 @@ body{
         <div class="slide-content">
             <h1>Practice With CTF Challenges</h1>
             <p>Real world labs and hacking challenges</p>
-            <button onclick="location.href='main.html'" class="hero-btn">Enter CTF</button>
+            <button onclick="location.href='CTF/main.html'" class="hero-btn">Enter CTF</button>
         </div>
     </div>
 
@@ -1607,7 +1607,7 @@ body{
 
 <!-- Networking -->
 <div class="module-card reveal" onclick="openPage('networking.html')">
-  <span class="module-icon">🌐</span>
+  <span class="module-icon">🌐 </span>
   <div class="module-title">Networking</div>
   <div class="module-desc">OSI model, TCP/IP, DNS, HTTP, Firewalls.</div>
   <div class="tag-beginner">Beginner</div>
@@ -1640,7 +1640,7 @@ body{
 
 <!-- Web Security -->
 <div class="module-card reveal" onclick="openPage('WebFundamentals.html')">
-  <span class="module-icon">🔒</span>
+  <span class="module-icon">🔐</span>
   <div class="module-title">Web Security</div>
   <div class="module-desc">HTTP, cookies, XSS, SQL Injection.</div>
   <div class="tag-intermediate">Intermediate</div>
@@ -1650,18 +1650,20 @@ body{
 </div>
 
 <!-- Blue Team -->
-<div class="module-card locked-card reveal">
-  <span class="lock-icon">🔒</span>
-  <span class="module-icon">🔵</span>
+<div class="module-card locked-card reveal" onclick="openPage('Blueteam.html')">
+  <span class="module-icon">📡</span>
   <div class="module-title">Blue Team</div>
   <div class="module-desc">SOC, SIEM, Incident Response.</div>
-  <div class="tag-coming">Coming Soon</div>
+  <div class="tag-intermediate">Intermediate</div>
+  <div class="progress-bar">
+    <div class="progress-fill" style="width:10%"></div>
+  </div>
 </div>
 
 <!-- Red Team -->
 <div class="module-card locked-card reveal">
   <span class="lock-icon">🔒</span>
-  <span class="module-icon">🔴</span>
+  <span class="module-icon">⚔️</span>
   <div class="module-title">Red Team</div>
   <div class="module-desc">Pentesting, exploitation, attacks.</div>
   <div class="tag-coming">Coming Soon</div>
