@@ -237,25 +237,36 @@ Date: <span id="date"></span>
 </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
+<script src="firebase-config.js"></script>
 <script>
-// PARAMS
-const params = new URLSearchParams(window.location.search);
-const name = params.get("name") || "HackForge Learner";
-const course = params.get("course") || "Cybersecurity Training";
+// The certificate is issued by the server from your real profile and score,
+// so the name/course can't be forged through the URL. Verify it at verify.html.
+const course = new URLSearchParams(window.location.search).get("course") || "Cybersecurity Training";
+const issueCertificate = firebase.app().functions("us-central1").httpsCallable("issueCertificate");
 
-document.getElementById("studentName").innerText = name;
-document.getElementById("courseName").innerText = course;
+document.getElementById("courseName").textContent = course;
+document.getElementById("studentName").textContent = "Checking...";
 
-// CERT ID
-const certID = "HP-" + name.replace(/\s/g,'').toUpperCase().slice(0,6) + "-" + Date.now().toString().slice(-5);
-document.getElementById("certID").innerText = certID;
-
-// DATE
-const today = new Date();
-document.getElementById("date").innerText = today.toLocaleDateString('en-US', {
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric'
+auth.onAuthStateChanged(async (user) => {
+  if (!user) { window.location.href = "login.html"; return; }
+  try {
+    const { data } = await issueCertificate({ course });
+    document.getElementById("studentName").textContent = data.username;
+    document.getElementById("courseName").textContent = data.course;
+    document.getElementById("certID").textContent = data.certId;
+    document.getElementById("date").textContent = new Date(data.date + "T00:00:00").toLocaleDateString('en-US', {
+      year: 'numeric', month: 'long', day: 'numeric'
+    });
+  } catch (e) {
+    document.getElementById("studentName").textContent = "Not available yet";
+    document.getElementById("certID").textContent = "-";
+    document.getElementById("date").textContent = "-";
+    alert(e.message || "Could not issue the certificate right now.");
+  }
 });
 
 // SHARE

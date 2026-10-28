@@ -1173,7 +1173,7 @@ Subnet Mask = 255.255.255.0</pre>
           <div class="ref-name">Networking Fundmantals</div>
           <div class="ref-sub">Comprehensive guide to cybersecurity fundamentals</div>
         </div>
-        <a class="ref-dl" href="Networking fundmantals.pdf" target="_blank">Download PDF</a>
+        <a class="ref-dl" href="networking-fundamentals.pdf" target="_blank">Download PDF</a>
       </div>
     </div>
 
@@ -1194,19 +1194,8 @@ Subnet Mask = 255.255.255.0</pre>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyCOEbqMZifKAVoKlZDHmcslXduBUxxb1xU",
-  authDomain: "hackproof-feb59.firebaseapp.com",
-  projectId: "hackproof-feb59",
-  storageBucket: "hackproof-feb59.firebasestorage.app",
-  messagingSenderId: "309682905913",
-  appId: "1:309682905913:web:7e32f772ed2e82672b3ee8",
-  measurementId: "G-PKSRE0Z6CC"
-};
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db   = firebase.firestore();
 
 function completeModule(moduleName) {
   const btn = document.getElementById('completeBtn');

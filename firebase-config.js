@@ -1,4 +1,5 @@
-
+// Shared Firebase setup. Load AFTER the firebase-app/auth/firestore compat SDKs (9.23.0).
+// The web API key is public by design - access is enforced by firestore.rules, not by hiding this file.
 const firebaseConfig = {
   apiKey: "AIzaSyCOEbqMZifKAVoKlZDHmcslXduBUxxb1xU",
   authDomain: "hackproof-feb59.firebaseapp.com",
@@ -9,7 +10,7 @@ const firebaseConfig = {
   measurementId: "G-PKSRE0Z6CC"
 };
 
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 
 const auth = firebase.auth();
 const db = firebase.firestore();

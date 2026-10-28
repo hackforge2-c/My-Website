@@ -229,7 +229,7 @@ Use DevTools → Application → Cookies.
 
 <div class="input-group">
 <input id="f1" class="input-field">
-<button onclick="check(1,'HP{cookie_easy}',10,'card2')" class="btn btn-primary">Submit</button>
+<button onclick="check(1,'card2')" class="btn btn-primary">Submit</button>
 </div>
 
 <button onclick="toggle('h1')" class="btn btn-hint">Hint</button>
@@ -254,7 +254,7 @@ Look for Base64 encoded values.
 
 <div class="input-group">
 <input id="f2" class="input-field">
-<button onclick="check(2,'HP{cookie_medium}',20,'card3')" class="btn btn-primary">Submit</button>
+<button onclick="check(2,'card3')" class="btn btn-primary">Submit</button>
 </div>
 
 <button onclick="toggle('h2')" class="btn btn-hint">Hint</button>
@@ -279,7 +279,7 @@ Edit cookies manually in DevTools.
 
 <div class="input-group">
 <input id="f3" class="input-field">
-<button onclick="check(3,'HP{cookie_admin}',30,null)" class="btn btn-primary">Submit</button>
+<button onclick="check(3,null)" class="btn btn-primary">Submit</button>
 </div>
 
 <button onclick="toggle('h3')" class="btn btn-hint">Hint</button>
@@ -290,7 +290,14 @@ Edit cookies manually in DevTools.
 
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="ctf.js"></script>
 <script>
+const CHALLENGE = 4;
 document.addEventListener('DOMContentLoaded',()=>{
     const p=parseInt(localStorage.getItem("cookieProgress"))||1;
     if(p>=2) unlock('card2','lock2');
@@ -298,23 +305,12 @@ document.addEventListener('DOMContentLoaded',()=>{
     updateScore();
 });
 
-function check(l,c,pts,next){
-    const i=document.getElementById('f'+l).value.trim();
-    const r=document.getElementById('r'+l);
-
-    if(i===c){
-        r.innerHTML="<span style='color:var(--primary)'>Correct +"+pts+"</span>";
-        localStorage.setItem("cookieProgress",l+1);
-
-        let s=parseInt(localStorage.getItem("score")||0)+pts;
-        localStorage.setItem("score",s);
-
-        updateScore();
-
-        if(next) unlock(next,'lock'+(l+1));
-    } else {
-        r.innerHTML="<span style='color:var(--danger)'>Wrong</span>";
-    }
+async function check(l,next){
+    const r=document.getElementById("r"+l);
+    const res=await submitFlag(CHALLENGE,l,document.getElementById("f"+l).value.trim(),r);
+    if(!res||!res.correct) return;
+    localStorage.setItem("cookieProgress",l+1); // UI progress only; points live on the server
+    if(next) unlock(next,"lock"+(l+1));
 }
 
 function unlock(c,l){
@@ -327,10 +323,7 @@ function toggle(id){
     el.style.display=el.style.display==="block"?"none":"block";
 }
 
-function updateScore(){
-    document.getElementById("scoreDisplay").innerText=
-    "SCORE: "+(localStorage.getItem("score")||0);
-}
+function updateScore(){ refreshScore("scoreDisplay"); }
 </script>
 
 </body>

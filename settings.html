@@ -691,6 +691,7 @@ async function updateProfile() {
     twitter:  twitterInput.value,
     linkedin: linkedinInput.value,
   });
+  await db.collection("leaderboard").doc(user.uid).set({ username: usernameInput.value }, { merge: true });
   document.getElementById('sidebarName').innerText  = usernameInput.value || 'Learner';
   document.getElementById('avatarName').innerText   = usernameInput.value || 'Learner';
   showToast('Profile saved!');
@@ -811,17 +812,23 @@ async function loadLogs(uid) {
     container.innerHTML = '<div style="font-family:JetBrains Mono,monospace;font-size:.78rem;color:var(--muted);text-align:center;padding:20px;">No activity logs yet.</div>';
     return;
   }
-  container.innerHTML = '';
+  container.replaceChildren();
   snap.forEach(doc => {
     const d = doc.data();
     const t = new Date(d.time);
     const timeStr = t.toLocaleDateString('en-US', {month:'short',day:'numeric'}) + ' · ' + t.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
-    container.innerHTML += `
-      <div class="log-item">
-        <div class="log-dot ${d.action.includes('Login')?'green':'amber'}"></div>
-        <div class="log-action">${d.action}</div>
-        <div class="log-time">${timeStr}</div>
-      </div>`;
+    const item = document.createElement('div');
+    item.className = 'log-item';
+    const dot = document.createElement('div');
+    dot.className = 'log-dot ' + (String(d.action).includes('Login') ? 'green' : 'amber');
+    const act = document.createElement('div');
+    act.className = 'log-action';
+    act.textContent = d.action;
+    const time = document.createElement('div');
+    time.className = 'log-time';
+    time.textContent = timeStr;
+    item.append(dot, act, time);
+    container.appendChild(item);
   });
 }
 
@@ -859,6 +866,7 @@ async function deleteAccount() {
   const code = prompt('Type DELETE to confirm:');
   if (code !== 'DELETE') { showToast('Cancelled', 'error'); return; }
   const user = auth.currentUser;
+  await db.collection("leaderboard").doc(user.uid).delete();
   await db.collection("users").doc(user.uid).delete();
   await user.delete();
   showToast('Account deleted. Goodbye!');

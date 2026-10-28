@@ -77,7 +77,7 @@ body { margin:0; font-family:'Poppins',sans-serif; background:radial-gradient(ci
 
 <div class="input-group">
 <input id="f1" class="input-field" placeholder="Enter flag">
-<button onclick="check(1,'HP{xss_reflected}',10,'card2')" class="btn btn-primary">Submit</button>
+<button onclick="check(1,'card2')" class="btn btn-primary">Submit</button>
 </div>
 <button onclick="aiHint(1)" class="btn btn-hint">AI Hint</button>
 <div id="hint1" class="ai-box"></div>
@@ -99,7 +99,7 @@ body { margin:0; font-family:'Poppins',sans-serif; background:radial-gradient(ci
 
 <div class="input-group">
 <input id="f2" class="input-field" placeholder="Enter flag">
-<button onclick="check(2,'HP{xss_stored}',20,'card3')" class="btn btn-primary">Submit</button>
+<button onclick="check(2,'card3')" class="btn btn-primary">Submit</button>
 </div>
 <button onclick="aiHint(2)" class="btn btn-hint">AI Hint</button>
 <div id="hint2" class="ai-box"></div>
@@ -121,7 +121,7 @@ body { margin:0; font-family:'Poppins',sans-serif; background:radial-gradient(ci
 
 <div class="input-group">
 <input id="f3" class="input-field" placeholder="Enter flag">
-<button onclick="check(3,'HP{xss_dom}',30,null)" class="btn btn-primary">Submit</button>
+<button onclick="check(3,null)" class="btn btn-primary">Submit</button>
 </div>
 <button onclick="aiHint(3)" class="btn btn-hint">AI Hint</button>
 <div id="hint3" class="ai-box"></div>
@@ -130,7 +130,14 @@ body { margin:0; font-family:'Poppins',sans-serif; background:radial-gradient(ci
 
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="ctf.js"></script>
 <script>
+const CHALLENGE = 8;
 let stage={};
 
 function aiHint(level){
@@ -146,22 +153,15 @@ function aiHint(level){
     stage[level]++;
 }
 
-function check(l,c,pts,next){
-    const i=document.getElementById('f'+l).value.trim();
-    const r=document.getElementById('r'+l);
-    if(i===c){
-        r.innerHTML="<span style='color:var(--primary)'>✓ Correct! +"+pts+" pts</span>";
-        localStorage.setItem('p8',l+1);
-        let s=parseInt(localStorage.getItem('score')||0)+pts;
-        localStorage.setItem('score',s);
-        updateScore();
-        if(next) unlock(next,'lock'+(l+1));
-    } else {
-        r.innerHTML="<span style='color:var(--danger)'>✗ Wrong flag</span>";
-    }
+async function check(l,next){
+    const r=document.getElementById("r"+l);
+    const res=await submitFlag(CHALLENGE,l,document.getElementById("f"+l).value.trim(),r);
+    if(!res||!res.correct) return;
+    localStorage.setItem("p8",l+1); // UI progress only; points live on the server
+    if(next) unlock(next,"lock"+(l+1));
 }
 function unlock(c,l){ document.getElementById(c).classList.remove('locked'); document.getElementById(l).style.display='none'; }
-function updateScore(){ document.getElementById('scoreDisplay').innerText='SCORE: '+(localStorage.getItem('score')||0); }
+function updateScore(){ refreshScore("scoreDisplay"); }
 document.addEventListener('DOMContentLoaded',()=>{
     let p=parseInt(localStorage.getItem('p8'))||1;
     if(p>=2) unlock('card2','lock2');

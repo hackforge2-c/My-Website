@@ -469,11 +469,9 @@ function getLevel(xp) { return Math.floor(xp / 100) + 1; }
 
 /* ── RANK ── */
 async function calculateRank(userId) {
-  const snap = await db.collection("users").get();
-  let users = [];
-  snap.forEach(doc => users.push({ id: doc.id, xp: doc.data().points || 0 }));
-  users.sort((a, b) => b.xp - a.xp);
-  return users.findIndex(u => u.id === userId) + 1;
+  const snap = await db.collection("leaderboard").orderBy("points", "desc").limit(100).get();
+  const idx = snap.docs.findIndex(d => d.id === userId);
+  return idx === -1 ? "100+" : idx + 1;
 }
 
 /* ── TYPING EFFECT ── */
@@ -594,17 +592,25 @@ function renderBadges(labs) {
 
 /* ── TOP USERS ── */
 async function loadTopUsers() {
-  const snap = await db.collection("users").get();
-  let users = [];
-  snap.forEach(doc => users.push({ name: doc.data().username || 'Anonymous', xp: doc.data().points || 0 }));
-  users.sort((a, b) => b.xp - a.xp);
+  const snap = await db.collection("leaderboard").orderBy("points", "desc").limit(5).get();
   const medals = ['🥇','🥈','🥉'];
-  document.getElementById("topUsers").innerHTML = users.slice(0, 5).map((u, i) => `
-    <div class="hacker-row">
-      <span class="hacker-medal">${medals[i] || `#${i+1}`}</span>
-      <span class="hacker-name">${u.name}</span>
-      <span class="hacker-xp">${u.xp} XP</span>
-    </div>`).join('');
+  const box = document.getElementById("topUsers");
+  box.replaceChildren(...snap.docs.map((d, i) => {
+    const u = d.data();
+    const row = document.createElement("div");
+    row.className = "hacker-row";
+    for (const [cls, text] of [
+      ["hacker-medal", medals[i] || `#${i+1}`],
+      ["hacker-name", u.username || "Anonymous"],
+      ["hacker-xp", `${u.points || 0} XP`],
+    ]) {
+      const span = document.createElement("span");
+      span.className = cls;
+      span.textContent = text;
+      row.appendChild(span);
+    }
+    return row;
+  }));
 }
 
 /* ── AUTH ── */

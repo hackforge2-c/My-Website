@@ -1,0 +1,74 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+
+    // Fields only the server (Admin SDK / Cloud Functions) may change.
+    function serverOnly() {
+      return ['points', 'streak', 'certificates', 'labsCompleted', 'email', 'createdAt'];
+    }
+
+    // Private profile: only the owner can read it. Nobody else, ever.
+    match /users/{uid} {
+      allow read: if isOwner(uid);
+      allow create: if isOwner(uid)
+        && request.resource.data.get('points', 0) == 0
+        && request.resource.data.get('streak', 0) == 0
+        && request.resource.data.get('certificates', 0) == 0
+        && request.resource.data.get('labsCompleted', 0) == 0
+        && request.resource.data.get('coursesCompleted', 0) == 0
+        && request.resource.data.get('email', request.auth.token.email) == request.auth.token.email
+        && request.resource.data.get('username', '') is string
+        && request.resource.data.get('username', '').size() <= 30;
+      allow update: if isOwner(uid)
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(serverOnly())
+        && (!('coursesCompleted' in request.resource.data.diff(resource.data).affectedKeys())
+            || request.resource.data.coursesCompleted == 0)
+        && request.resource.data.get('username', '') is string
+        && request.resource.data.get('username', '').size() <= 30;
+      allow delete: if isOwner(uid);
+    }
+
+    // CTF solves: written only by the submitFlag Cloud Function.
+    match /users/{uid}/solves/{id} {
+      allow read: if isOwner(uid);
+      allow write: if false;
+    }
+
+    // Public leaderboard: only a display name + points. Contains nothing private.
+    match /leaderboard/{uid} {
+      allow read: if signedIn();
+      allow create: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['username', 'points'])
+        && request.resource.data.points == 0
+        && request.resource.data.username is string
+        && request.resource.data.username.size() <= 30;
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['username'])
+        && request.resource.data.username is string
+        && request.resource.data.username.size() <= 30;
+      allow delete: if isOwner(uid);
+    }
+
+    // Per-user security log: owner can read/append, never edit or delete.
+    match /securityLogs/{uid}/logs/{logId} {
+      allow read, create: if isOwner(uid);
+      allow update, delete: if false;
+    }
+
+    // Certificates: anyone can verify ONE certificate by its ID, nobody can list
+    // them or write them from the browser (issue them from the Admin SDK).
+    match /certificates/{certId} {
+      allow get: if true;
+      allow list, write: if false;
+    }
+
+    // Learning content: world-readable, never writable from the browser.
+    match /vulnerabilities/{id} { allow read: if true; allow write: if false; }
+    match /tools/{id}           { allow read: if true; allow write: if false; }
+
+    match /{document=**} { allow read, write: if false; }
+  }
+}

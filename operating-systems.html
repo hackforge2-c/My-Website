@@ -2159,7 +2159,7 @@ footer a:hover { text-decoration: underline; }
           <div class="ref-name">Operating Systems.pdf</div>
           <div class="ref-sub">Comprehensive guide — covers all topics in this module and beyond</div>
         </div>
-        <a class="ref-dl" href="Operating Systems.pdf" target="_blank">Download PDF</a>
+        <a class="ref-dl" href="operating-systems.pdf" target="_blank">Download PDF</a>
       </div>
     </div>
 
@@ -2180,20 +2180,9 @@ footer a:hover { text-decoration: underline; }
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
 
 <script>
-/* ── Firebase ── */
-const firebaseConfig = {
-  apiKey: "AIzaSyCOEbqMZifKAVoKlZDHmcslXduBUxxb1xU",
-  authDomain: "hackproof-feb59.firebaseapp.com",
-  projectId: "hackproof-feb59",
-  storageBucket: "hackproof-feb59.firebasestorage.app",
-  messagingSenderId: "309682905913",
-  appId: "1:309682905913:web:7e32f772ed2e82672b3ee8"
-};
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db   = firebase.firestore();
 
 /* ── Complete course ── */
 async function completeCourse() {

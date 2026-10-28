@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://unpkg.com/lucide@0.469.0"></script>
 
 <style>
 :root{
@@ -1639,7 +1639,7 @@ body{
 </div>
 
 <!-- Web Security -->
-<div class="module-card reveal" onclick="openPage('WebFundamentals.html')">
+<div class="module-card reveal" onclick="openPage('web-fundamentals.html')">
   <span class="module-icon">🔐</span>
   <div class="module-title">Web Security</div>
   <div class="module-desc">HTTP, cookies, XSS, SQL Injection.</div>
@@ -1650,7 +1650,7 @@ body{
 </div>
 
 <!-- Blue Team -->
-<div class="module-card locked-card reveal" onclick="openPage('Blueteam.html')">
+<div class="module-card locked-card reveal" onclick="openPage('blue-team.html')">
   <span class="module-icon">📡</span>
   <div class="module-title">Blue Team</div>
   <div class="module-desc">SOC, SIEM, Incident Response.</div>
@@ -1661,7 +1661,7 @@ body{
 </div>
 
 <!-- Red Team -->
-<div class="module-card locked-card reveal" onclick="openPage('Redteam.html')">
+<div class="module-card locked-card reveal" onclick="openPage('red-team.html')">
   <span class="module-icon">⚔️</span>
   <div class="module-title">Red Team</div>
   <div class="module-desc">Pentesting, exploitation, attacks.</div>
@@ -1804,41 +1804,7 @@ document.getElementById('navLinks').querySelectorAll('a').forEach(a => {
   });
 });
 </script>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCOEbqMZifKAVoKlZDHmcslXduBUxxb1xU",
-  authDomain: "hackproof-feb59.firebaseapp.com",
-  projectId: "hackproof-feb59",
-  storageBucket: "hackproof-feb59.firebasestorage.app",
-  messagingSenderId: "309682905913",
-  appId: "1:309682905913:web:7e32f772ed2e82672b3ee8",
-  measurementId: "G-PKSRE0Z6CC"
-};
-
-firebase.initializeApp(firebaseConfig);
-
-const auth = firebase.auth();
-const db = firebase.firestore();
-
-
-onAuthStateChanged(auth, (user) => {
-  if(user){
-    console.log("User logged in:", user.uid);
-    
-    // Change login button to Dashboard or Logout
-    document.querySelector(".login-btn").innerText = "Dashboard";
-    document.querySelector(".login-btn").onclick = () => {
-      window.location.href = "dashboard.html";
-    };
-
-  } else {
-    console.log("No user logged in");
-  }
-});
-</script>
 
 
 
@@ -1922,16 +1888,7 @@ function filterModules() {
   });
 }
 </script>
-<script type="module">
-import { auth } from "./firebase-config.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-onAuthStateChanged(auth, (user)=>{
-  if(!user){
-    window.location.href = "login.html";
-  }
-});
-</script>
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -1942,15 +1899,20 @@ onAuthStateChanged(auth, (user)=>{
 auth.onAuthStateChanged(async (user)=>{
   if(user){
     const doc = await db.collection("users").doc(user.uid).get();
-    const data = doc.data();
+    const data = doc.data() || {};
 
-    document.getElementById("navUser").innerHTML = `
-      <div class="user-nav">
-        <span>👤 ${data.username}</span>
-        <button onclick="location.href='dashboard.html'">Dashboard</button>
-        <button onclick="logout()">Logout</button>
-      </div>
-    `;
+    const wrap = document.createElement("div");
+    wrap.className = "user-nav";
+    const name = document.createElement("span");
+    name.textContent = "👤 " + (data.username || user.displayName || "Hacker");
+    const dash = document.createElement("button");
+    dash.textContent = "Dashboard";
+    dash.onclick = () => { location.href = "dashboard.html"; };
+    const out = document.createElement("button");
+    out.textContent = "Logout";
+    out.onclick = logout;
+    wrap.append(name, dash, out);
+    document.getElementById("navUser").replaceChildren(wrap);
   }
 });
 
@@ -2032,8 +1994,14 @@ function chipAsk(text) {
 }
 
 /* Render simple markdown-like formatting */
+function escapeHtml(t) {
+  return String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                  .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+/* The API reply is escaped first, so model output can never inject markup */
 function formatReply(text) {
-  return text
+  return escapeHtml(text)
     .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
     .replace(/`([^`]+)`/g, '<code>$1</code>')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
@@ -2061,40 +2029,34 @@ function getPageContext() {
   return "The user is on the HackProof homepage browsing the learning modules.";
 }
 
+/* URL of the deployed `chat` Cloud Function (see functions/index.js and README) */
+const CHAT_ENDPOINT = "https://us-central1-hackproof-feb59.cloudfunctions.net/chat";
+
 /* Send message */
 async function sendMessage() {
   const msg = inputEl.value.trim();
   if (!msg) return;
   inputEl.value = "";
 
-  addMsg("user", msg);
+  addMsg("user", escapeHtml(msg));
   history.push({ role: "user", content: msg });
 
   typingEl.classList.add("show");
   chatMessages.scrollTop = chatMessages.scrollHeight;
 
   try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    const user = auth.currentUser;
+    if (!user) {
+      typingEl.classList.remove("show");
+      addMsg("bot", "🔒 Please <a href='login.html'>log in</a> to chat with HackForge AI.");
+      history.pop();
+      return;
+    }
+    const token = await user.getIdToken();
+    const res = await fetch(CHAT_ENDPOINT, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 1000,
-        system: `You are HackForge AI, an expert cybersecurity learning assistant embedded in the HackProof platform.
-
-${getPageContext()}
-
-Your role:
-- Explain cybersecurity concepts clearly (XSS, SQLi, buffer overflow, etc.)
-- Give CTF hints — guide step by step, don't just give full answers
-- Explain tools: nmap, Burp Suite, Metasploit, Wireshark, hashcat, etc.
-- Help with Linux commands, networking, web security
-- Suggest learning paths and career advice
-- Use code blocks for commands and payloads
-- Be concise, practical, hacker-friendly, and encouraging
-- Never assist with illegal or unethical real-world attacks`,
-        messages: history
-      })
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+      body: JSON.stringify({ messages: history, context: getPageContext() })
     });
 
     typingEl.classList.remove("show");
@@ -2102,7 +2064,7 @@ Your role:
     const data = await res.json();
 
     if (data.error) {
-      addMsg("bot", `⚠️ <strong>API Error:</strong> ${data.error.message}<br><small>Make sure your Anthropic API key is configured.</small>`);
+      addMsg("bot", `⚠️ <strong>Error:</strong> ${escapeHtml(data.error.message || data.error)}`);
       history.pop();
       return;
     }

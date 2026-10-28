@@ -1,107 +1,42 @@
-<div align="center">
+# HackForge
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0d1117,50:1f2937,100:7c3aed&height=220&section=header&text=HackForge&fontSize=72&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=Breaking%20things%20to%20understand%20them&descAlignY=60&descSize=20" alt="HackForge banner" />
+A cybersecurity learning platform: study modules, a 9-challenge CTF arena, practice labs, a daily vulnerability, a dashboard with a leaderboard, and verifiable certificates.
 
-<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&duration=3000&pause=1000&color=A78BFA&center=true&vCenter=true&width=700&lines=%3E+whoami;%3E+web+security+%7C+secure+development;%3E+learning+by+breaking+things;%3E+always+authorized.+always+ethical." alt="Typing animation" />
+> For learning and authorized testing only. Never test systems you don't have permission to test.
 
-[![Profile Views](https://komarev.com/ghpvc/?username=hackforge2-c&style=for-the-badge&color=7c3aed&label=PROFILE+VIEWS)](https://github.com/hackforge2-c)
+## What's inside
 
-</div>
+| Area | Files |
+|------|-------|
+| Home / info | `index.html`, `about.html`, `contact.html`, `privacy.html`, `terms.html`, `roadmap.html` |
+| Study modules | `cybersecurity-101`, `networking`, `operating-systems`, `linux-cheatsheet`, `web-fundamentals`, `red-team`, `blue-team`, `siem`, `cloud-security`, `sql-injection`, `password-cracking`, `awareness`, `technical-awareness`, `cybersecurity-activities` (`.html`, some with `.pdf`) |
+| CTF Arena | `main.html` (hub), `challenge1`-`challenge9.html`, targets: `target.html`, `user.html`, `secret.html`, `config.txt`, `robots.txt`, `backup.zip` |
+| Accounts | `login`, `register`, `dashboard`, `settings` |
+| Learning feed | `learn.html` (daily vulnerability + tools, from Firestore), `cyber-news.html` |
+| Certificates | `certificate.html` (issued server-side), `verify.html` |
+| Backend | `firestore.rules`, `functions/` (Cloud Functions), `firebase.json` |
 
----
+## How it's secured
 
-## 🧭 About
+- **Firestore rules** (`firestore.rules`): a user can only read their own `users/{uid}` document. The leaderboard is a separate public `leaderboard` collection holding only a display name and points. `points`, `streak`, `certificates` etc. can never be written from the browser.
+- **Scoring is server-side**: the `submitFlag` function checks flags (stored only as SHA-256 hashes in `functions/flags.js`) and awards each flag once.
+- **Certificates** are issued by `issueCertificate` from the account's real name and score (needs 100 points).
+- **AI chat** goes through the `chat` function so the Anthropic API key stays in Secret Manager.
+- The Firebase web config in `firebase-config.js` is public by design; the rules are what protect the data.
 
-```text
-$ cat about.txt
-HackForge is my cybersecurity learning lab. I study how web applications
-fail, reproduce the flaws in safe environments, then write up the fix.
+## Deploying the backend
 
-$ ls ./focus
-[ web-security ] [ recon ] [ secure-coding ] [ code-review ] [ writeups ]
+```bash
+npm i -g firebase-tools && firebase login
+cd functions && npm install && cd ..
+firebase functions:secrets:set ANTHROPIC_API_KEY
+firebase deploy --only firestore:rules,functions
 ```
 
-## ⚔️ Skill Matrix
+Functions need the Blaze plan. After deploying, if the `chat` URL differs from `CHAT_ENDPOINT` in `index.html`, update it.
 
-| Domain | Level | Progress |
-|--------|-------|----------|
-| Web Security (OWASP Top 10) | Learning | `█████░░░░░` 50% |
-| Recon & Enumeration | Learning | `████░░░░░░` 40% |
-| Secure Coding | Intermediate | `██████░░░░` 60% |
-| Linux & CLI | Intermediate | `██████░░░░` 60% |
-| Code Review | Beginner | `███░░░░░░░` 30% |
+Existing users will not appear on the leaderboard until their `users/{uid}` document is next written (the `syncLeaderboard` function mirrors it). To backfill, edit each user doc once, or run a one-off Admin SDK script.
 
-> Update these percentages as you progress. Honest numbers are better than inflated ones.
+## Local preview
 
-## 🛠️ Stack
-
-![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)
-![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
-![Linux](https://img.shields.io/badge/Linux-FCC624?style=flat-square&logo=linux&logoColor=black)
-![Git](https://img.shields.io/badge/Git-F05032?style=flat-square&logo=git&logoColor=white)
-![Burp Suite](https://img.shields.io/badge/Burp_Suite-FF6633?style=flat-square&logo=burpsuite&logoColor=white)
-
-## 🗺️ Learning Roadmap
-
-```mermaid
-flowchart LR
-    A[Web Fundamentals] --> B[Injection Flaws]
-    B --> C[Auth & Access Control]
-    C --> D[Misconfig & SSRF]
-    D --> E[Secure Code Review]
-    E --> F[Write Reports]
-    style A fill:#7c3aed,color:#fff
-    style B fill:#6d28d9,color:#fff
-    style C fill:#5b21b6,color:#fff
-    style D fill:#4c1d95,color:#fff
-    style E fill:#3b0764,color:#fff
-    style F fill:#1e1b4b,color:#fff
-```
-
-## 📂 Projects
-
-<table>
-<tr>
-<td width="50%">
-
-### 🌐 [My-Website](https://github.com/hackforge2-c/My-Website)
-Cybersecurity learning platform. Hands-on home for HackForge's labs and notes.
-
-![HTML](https://img.shields.io/badge/-HTML-E34F26?style=flat-square&logo=html5&logoColor=white)
-
-</td>
-<td width="50%">
-
-### 💰 [BudgetBuddy](https://github.com/hackforge2-c/BudgetBuddy)
-Budget tracker built in JavaScript. A practice project for clean front-end logic.
-
-![JS](https://img.shields.io/badge/-JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
-
-</td>
-</tr>
-</table>
-
-## 📊 GitHub Stats
-
-<div align="center">
-
-<img height="165" src="https://github-readme-stats.vercel.app/api?username=hackforge2-c&show_icons=true&theme=tokyonight&hide_border=true&bg_color=0d1117" alt="GitHub stats" />
-<img height="165" src="https://github-readme-stats.vercel.app/api/top-langs/?username=hackforge2-c&layout=compact&theme=tokyonight&hide_border=true&bg_color=0d1117" alt="Top languages" />
-
-<img src="https://github-profile-trophy.vercel.app/?username=hackforge2-c&theme=tokyonight&no-frame=true&row=1&column=6" alt="Trophies" />
-
-</div>
-
-## 📫 Connect
-
-<div align="center">
-
-[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/hackforge2-c)
-
-</div>
-
----
-
-<div align="center">
-<sub>⚠️ Everything here is for learning and authorized testing only. Never test systems you don't have permission to test.</sub>
-</div>
+It's static HTML, so any static server works, e.g. `python3 -m http.server`.

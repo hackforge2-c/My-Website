@@ -518,22 +518,9 @@ body::before {
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
 
 <script>
-/* ── FIREBASE INIT (inline — no dependency on external file) ── */
-const firebaseConfig = {
-  apiKey:            "AIzaSyCOEbqMZifKAVoKlZDHmcslXduBUxxb1xU",
-  authDomain:        "hackproof-feb59.firebaseapp.com",
-  projectId:         "hackproof-feb59",
-  storageBucket:     "hackproof-feb59.firebasestorage.app",
-  messagingSenderId: "309682905913",
-  appId:             "1:309682905913:web:7e32f772ed2e82672b3ee8",
-};
-
-// only init if not already initialised
-if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db   = firebase.firestore();
 
 /* ── HELPERS ── */
 function showMsg(text, type = 'error') {
@@ -617,6 +604,7 @@ async function signInWithGoogle() {
         labsCompleted:    0,
         progress: { cybersecurity:0, networking:0, os:0, web:0 },
       });
+      await db.collection('leaderboard').doc(user.uid).set({ username: user.displayName || 'Hacker', points: 0 });
     }
     window.location.href = 'dashboard.html';
   } catch (err) {

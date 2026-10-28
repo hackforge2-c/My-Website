@@ -212,7 +212,7 @@ footer a{color:var(--cyan);text-decoration:none;}
       <h1>Capture The Flag</h1>
       <p>Practice real-world cybersecurity challenges. Capture flags, earn points, climb the ranks.</p>
       <div class="hero-meta">
-        <div class="hm-stat"><div class="hm-dot" style="background:var(--accent);box-shadow:0 0 6px var(--accent);"></div>7 Challenges</div>
+        <div class="hm-stat"><div class="hm-dot" style="background:var(--accent);box-shadow:0 0 6px var(--accent);"></div>9 Challenges</div>
         <div class="hm-stat"><div class="hm-dot" style="background:var(--cyan);box-shadow:0 0 6px var(--cyan);"></div>3 Difficulty Levels</div>
         <div class="hm-stat"><div class="hm-dot" style="background:var(--danger);box-shadow:0 0 6px var(--danger);"></div>Live Timer</div>
         <div class="hm-stat"><div class="hm-dot" style="background:var(--purple);box-shadow:0 0 6px var(--purple);"></div>Score Tracking</div>
@@ -249,7 +249,7 @@ footer a{color:var(--cyan);text-decoration:none;}
         <div class="progress-fill" id="progressBar"></div>
       </div>
       <div class="pw-sub">
-        <span id="flagsText">0 / 7 flags captured</span>
+        <span id="flagsText">0 / 9 flags captured</span>
         <span id="rankHint">Capture 3 flags to reach Intermediate</span>
       </div>
     </div>
@@ -374,6 +374,34 @@ footer a{color:var(--cyan);text-decoration:none;}
         <a class="start-btn" href="challenge7.html">🚩 Start</a>
       </div>
 
+      <div class="challenge-row" data-diff="hard" id="ch8">
+        <div class="ch-num">08</div>
+        <div class="ch-info">
+          <div class="ch-name">Challenge 8</div>
+          <div class="ch-topic">⚡ Cross-Site Scripting (XSS)</div>
+        </div>
+        <div>
+          <div class="ch-points">+30 PTS</div>
+          <div class="ch-pts-lbl">Hard Tier</div>
+        </div>
+        <div class="diff-badge hard">Hard</div>
+        <a class="start-btn" href="challenge8.html">🚩 Start</a>
+      </div>
+
+      <div class="challenge-row" data-diff="hard" id="ch9">
+        <div class="ch-num">09</div>
+        <div class="ch-info">
+          <div class="ch-name">Challenge 9</div>
+          <div class="ch-topic">🔑 JWT Attacks</div>
+        </div>
+        <div>
+          <div class="ch-points">+30 PTS</div>
+          <div class="ch-pts-lbl">Hard Tier</div>
+        </div>
+        <div class="diff-badge hard">Hard</div>
+        <a class="start-btn" href="challenge9.html">🚩 Start</a>
+      </div>
+
     </div><!-- /challenge-list -->
 
   </div><!-- /content -->
@@ -387,10 +415,14 @@ footer a{color:var(--cyan);text-decoration:none;}
   </footer>
 </main>
 
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
 <script>
-/* ── LOAD FROM LOCALSTORAGE ── */
-let score = parseInt(localStorage.getItem("score")) || 0;
-let flags = parseInt(localStorage.getItem("flags")) || 0;
+/* ── SCORE + FLAGS COME FROM THE SERVER (users/{uid}.points and users/{uid}/solves) ── */
+let score = 0;
+let flags = 0;
 
 /* ── RENDER SCORE / RANK ── */
 function getRank(s) {
@@ -407,9 +439,9 @@ function renderStats() {
   document.getElementById("sidebarScore").innerText = score;
   document.getElementById("sidebarRank").innerText  = rank.label;
 
-  const pct = Math.round((flags / 7) * 100);
+  const pct = Math.round((flags / 9) * 100);
   document.getElementById("progressPct").innerText = pct + '%';
-  document.getElementById("flagsText").innerText   = flags + ' / 7 flags captured';
+  document.getElementById("flagsText").innerText   = flags + ' / 9 flags captured';
   document.getElementById("rankHint").innerText    = score < 80
     ? 'Reach 80 pts for Intermediate'
     : score < 150 ? 'Reach 150 pts for Pro Hacker' : '🏆 Max rank achieved!';
@@ -419,6 +451,17 @@ function renderStats() {
   }, 300);
 }
 renderStats();
+
+auth.onAuthStateChanged(async (user) => {
+  if (!user) return;
+  const [me, solves] = await Promise.all([
+    db.collection("users").doc(user.uid).get(),
+    db.collection("users").doc(user.uid).collection("solves").get()
+  ]);
+  score = (me.data() || {}).points || 0;
+  flags = solves.size;
+  renderStats();
+});
 
 /* ── TIMER ── */
 let seconds = parseInt(localStorage.getItem("ctfTime")) || 0;
