@@ -398,6 +398,7 @@ footer a:hover { text-decoration: underline; }
   .topic-section { padding: 20px; }
 }
 </style>
+<link rel="stylesheet" href="vz.css">
 </head>
 <body>
 
@@ -493,9 +494,11 @@ footer a:hover { text-decoration: underline; }
         <li>Reaches destination and reassembles</li>
       </ul>
       <div class="img-block">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/UDP_encapsulation.svg/800px-UDP_encapsulation.svg.png" alt="Network packet structure" loading="lazy">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/UDP_encapsulation.svg/960px-UDP_encapsulation.svg.png" alt="Network packet structure" loading="lazy">
         <div class="img-caption">📦 How data is broken into packets and encapsulated for transmission</div>
       </div>
+<!-- visual: net-journey -->
+<div class="vz" data-vz="net-journey"></div>
     </div>
 
     <!-- ── 02 Types of Networks ── -->
@@ -510,7 +513,7 @@ footer a:hover { text-decoration: underline; }
       <h3 class="topic-title">4. PAN (Personal Area Network)</h3>
       <ul><li>Very small range</li><li>Example: Bluetooth, Mobile hotspot</li></ul>
       <div class="img-block">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Data_Networks_classification_by_spatial_scope.svg/800px-Data_Networks_classification_by_spatial_scope.svg.png" alt="LAN WAN MAN PAN comparison" loading="lazy">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Data_Networks_classification_by_spatial_scope.svg/960px-Data_Networks_classification_by_spatial_scope.svg.png" alt="LAN WAN MAN PAN comparison" loading="lazy">
         <div class="img-caption">🌐 PAN → LAN → MAN → WAN — network types by geographic scope</div>
       </div>
     </div>
@@ -540,7 +543,7 @@ footer a:hover { text-decoration: underline; }
       <h3 class="topic-title">4. Ring Topology</h3>
       <ul><li>Devices connected in circle</li><li>Pros: Data flows in one direction</li><li>Cons: One failure affects all</li></ul>
       <div class="img-block">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/NetworkTopologies.svg/800px-NetworkTopologies.svg.png" alt="Network topologies diagram" loading="lazy">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/NetworkTopologies.svg?width=800" alt="Network topologies diagram" loading="lazy">
         <div class="img-caption">🔗 Star, Mesh, Bus and Ring topologies side by side</div>
       </div>
     </div>
@@ -565,9 +568,11 @@ footer a:hover { text-decoration: underline; }
       <p>The OSI Model is a 7-layer conceptual framework that explains how data moves from one device to another over a network.</p>
       <p>It was standardized by the International Organization for Standardization (ISO) to help vendors and engineers design, build, and troubleshoot network systems in a consistent way.</p>
       <div class="img-block">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/OSI_Model_v1.svg/600px-OSI_Model_v1.svg.png" alt="OSI Model 7 layers diagram" loading="lazy">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/OSI_Model_v1.svg/500px-OSI_Model_v1.svg.png" alt="OSI Model 7 layers diagram" loading="lazy">
         <div class="img-caption">🧱 OSI Model — all 7 layers from Physical to Application</div>
       </div>
+<!-- visual: osi -->
+<div class="vz" data-vz="osi"></div>
       <h4>OSI Layers (Layer 7 → Layer 1):</h4>
       <h4>Layer 1 – Physical Layer:</h4>
       <p>Transfers raw bits (0s and 1s) over physical media.</p>
@@ -620,7 +625,7 @@ footer a:hover { text-decoration: underline; }
       <div class="s-head"><span class="s-num">07</span><h2>TCP/IP Model</h2><span class="s-badge s-badge-cyan">4 Layers</span></div>
       <p>The TCP/IP (Transmission Control Protocol / Internet Protocol) model is a practical and implementable communication model that defines how data is actually transmitted across networks, and it is the foundation of the Internet.</p>
       <div class="img-block">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/UDP_encapsulation.svg/800px-UDP_encapsulation.svg.png" alt="TCP/IP model layers" loading="lazy">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/UDP_encapsulation.svg/960px-UDP_encapsulation.svg.png" alt="TCP/IP model layers" loading="lazy">
         <div class="img-caption">🔄 TCP/IP — the real-world 4-layer model powering the Internet</div>
       </div>
       <p><strong>TCP/IP HAS 4 LAYERS:</strong></p>
@@ -648,13 +653,15 @@ footer a:hover { text-decoration: underline; }
       <p><strong>Technologies / Media:</strong></p>
       <ul><li>Ethernet</li><li>ARP</li><li>Wi-Fi</li><li>Cables (UTP, Fiber)</li><li>MAC Address</li></ul>
       <p>Network Access layer handles physical transmission and MAC addressing.</p>
+<!-- visual: tcp-udp -->
+<div class="vz" data-vz="tcp-udp"></div>
     </div>
 
     <!-- ── 08 Network Devices ── -->
     <div class="topic-section" id="devices">
       <div class="s-head"><span class="s-num">08</span><h2>Network Devices</h2></div>
       <div class="img-block">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Adsl_connections.jpg/800px-Adsl_connections.jpg" alt="Network devices" loading="lazy">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Adsl_connections.jpg/960px-Adsl_connections.jpg" alt="Network devices" loading="lazy">
         <div class="img-caption">🖧 Real-world network setup — router, switch, modem connected together</div>
       </div>
       <h3 class="topic-title">1. Router</h3>
@@ -713,7 +720,7 @@ footer a:hover { text-decoration: underline; }
       <p>A VPN is a secure communication technology that creates an encrypted tunnel over a public network (like the Internet) to securely transmit data between users and networks.</p>
       <p>A VPN is a secure tunnel on the Internet that keeps your data private and hidden.</p>
       <div class="img-block">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/VPN_overview-en.svg/800px-VPN_overview-en.svg.png" alt="VPN tunnel diagram" loading="lazy">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/VPN_overview-en.svg?width=800" alt="VPN tunnel diagram" loading="lazy">
         <div class="img-caption">🔒 VPN creates an encrypted tunnel between your device and the internet</div>
       </div>
       <h4>What VPN Does</h4>
@@ -721,6 +728,8 @@ footer a:hover { text-decoration: underline; }
       <h4>VPN Protocol Examples</h4>
       <ul><li>IPsec</li><li>SSL / TLS</li><li>L2TP</li><li>OpenVPN</li><li>WireGuard</li></ul>
       <p>A VPN securely encrypts data and provides private communication over public networks.</p>
+<!-- visual: vpn -->
+<div class="vz" data-vz="vpn"></div>
     </div>
 
     <!-- ── 10 Firewall ── -->
@@ -729,7 +738,7 @@ footer a:hover { text-decoration: underline; }
       <p>A Firewall is a network security device or software that monitors, filters, and controls incoming and outgoing network traffic based on predefined security rules.</p>
       <p>Firewall can also show configuration details and system logs.</p>
       <div class="img-block">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Firewall.png/800px-Firewall.png" alt="Firewall between trusted and untrusted network" loading="lazy">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Firewall.png/960px-Firewall.png" alt="Firewall between trusted and untrusted network" loading="lazy">
         <div class="img-caption">🛡️ Firewall sits between your internal network and the internet — blocking malicious traffic</div>
       </div>
       <h4>What Firewall Does:</h4>
@@ -758,6 +767,8 @@ footer a:hover { text-decoration: underline; }
           <tr><td>Next-Gen Firewall (NGFW)</td><td>Deep inspection, IDS/IPS</td></tr>
         </tbody>
       </table>
+<!-- visual: firewall -->
+<div class="vz" data-vz="firewall"></div>
     </div>
 
     <!-- ── 11 IDS/IPS ── -->
@@ -782,6 +793,8 @@ footer a:hover { text-decoration: underline; }
       <ul><li>They are already known activities OR known patterns within the internet.</li><li>Compares traffic against a internet or database of known attack patterns (signatures).</li><li>Good at detecting known threats, but cannot detect new/unknown attacks.</li><li>Example: Detecting a virus because its signature is already in the database.</li></ul>
       <p><strong>Anomaly-Based Detection:</strong></p>
       <ul><li>They are not known or this patterns are not in the internet.</li><li>Builds a baseline of normal behavior (traffic, user actions, etc.) and raises alerts when something unusual happens.</li><li>Can detect new, unknown, or zero-day attacks.</li><li>But may sometimes raise false alarms (false positives).</li></ul>
+<!-- visual: ids-ips -->
+<div class="vz" data-vz="ids-ips"></div>
     </div>
 
     <!-- ── 12 IP Addressing ── -->
@@ -817,7 +830,7 @@ footer a:hover { text-decoration: underline; }
       <h4>IPv4 (Internet Protocol Version 4)</h4>
       <p>IPv4 is the most commonly used IP addressing system.</p>
       <div class="img-block">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Ipv4_address.svg/800px-Ipv4_address.svg.png" alt="IPv4 address structure" loading="lazy">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Ipv4_address.svg/960px-Ipv4_address.svg.png" alt="IPv4 address structure" loading="lazy">
         <div class="img-caption">🔢 IPv4 address — 32-bit, four octets separated by dots (e.g. 192.168.1.1)</div>
       </div>
       <h4>Structure</h4>
@@ -911,7 +924,7 @@ Host = 10</pre>
       <h4>What is Subnetting?</h4>
       <p>Subnetting means dividing one large network into smaller networks.</p>
       <div class="img-block">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Subnetting_Concept.svg/800px-Subnetting_Concept.svg.png" alt="Subnetting diagram" loading="lazy">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Subnetting_Concept.svg?width=800" alt="Subnetting diagram" loading="lazy">
         <div class="img-caption">🔀 Subnetting — splitting one large network into smaller manageable sub-networks</div>
       </div>
       <h4>Why Subnetting?</h4>
@@ -937,6 +950,8 @@ Subnet Mask = 255.255.255.0</pre>
       </table>
       <p><strong>Most common network:</strong></p>
       <pre>192.168.1.0/24</pre>
+<!-- visual: subnet -->
+<div class="vz" data-vz="subnet"></div>
     </div>
 
     <!-- ── 17 Default Gateway ── -->
@@ -944,10 +959,6 @@ Subnet Mask = 255.255.255.0</pre>
       <div class="s-head"><span class="s-num">17</span><h2>Default Gateway</h2></div>
       <h4>What is Default Gateway?</h4>
       <p>Default gateway is the router IP address that devices use to communicate with other networks or the internet.</p>
-      <div class="img-block">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Gateway_in_a_LAN.png/800px-Gateway_in_a_LAN.png" alt="Default gateway in a LAN" loading="lazy">
-        <div class="img-caption">🚪 Default gateway — the router acts as the exit door from your local network to the internet</div>
-      </div>
       <h4>Example</h4>
       <table>
         <thead><tr><th>Device</th><th>IP</th></tr></thead>
@@ -1052,7 +1063,7 @@ Subnet Mask = 255.255.255.0</pre>
       <h4>What is MITM?</h4>
       <p>Man-In-The-Middle attack happens when a hacker secretly stands between two communicating systems and intercepts the communication without their knowledge.</p>
       <div class="img-block">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Man_in_the_middle_attack.svg/800px-Man_in_the_middle_attack.svg.png" alt="MITM attack diagram" loading="lazy">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Man_in_the_middle_attack.svg/960px-Man_in_the_middle_attack.svg.png" alt="MITM attack diagram" loading="lazy">
         <div class="img-caption">⚠️ MITM — attacker secretly intercepts traffic between victim and server</div>
       </div>
       <p>You → talking to Bank Website<br>Hacker → standing in the middle<br>You think you are talking to bank<br>Bank thinks it is talking to you<br>But hacker is reading/modifying everything</p>
@@ -1063,6 +1074,8 @@ Subnet Mask = 255.255.255.0</pre>
       <ol><li>Attacker connects to same network</li><li>Attacker intercepts traffic</li><li>Attacker captures or modifies data</li><li>User and server don't know attacker exists</li></ol>
       <h4>Prevention</h4>
       <ul><li>Use HTTPS websites</li><li>Use VPN</li><li>Avoid public Wi-Fi</li><li>Use certificate-based authentication</li></ul>
+<!-- visual: mitm -->
+<div class="vz" data-vz="mitm"></div>
       <hr>
 
       <h3 class="topic-title">2. Denial of Service (DoS) Attack</h3>
@@ -1080,7 +1093,7 @@ Subnet Mask = 255.255.255.0</pre>
       <p>DDoS is same as DoS but attack comes from many computers instead of one.</p>
       <p>These computers are called botnet (infected systems controlled by attacker).</p>
       <div class="img-block">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Ddos-attack-ex.png/800px-Ddos-attack-ex.png" alt="DDoS botnet attack diagram" loading="lazy">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Ddos-attack-ex.png?width=800" alt="DDoS botnet attack diagram" loading="lazy">
         <div class="img-caption">💥 DDoS — thousands of infected machines (botnet) flood a single target server</div>
       </div>
       <h3>Difference between DoS and DDoS</h3>
@@ -1094,13 +1107,15 @@ Subnet Mask = 255.255.255.0</pre>
       </table>
       <h3>Prevention</h3>
       <ul><li>Traffic filtering</li><li>CDN</li><li>Anti-DDoS protection</li><li>Load balancing</li></ul>
+<!-- visual: ddos -->
+<div class="vz" data-vz="ddos"></div>
       <hr>
 
       <h3 class="topic-title">4. Packet Sniffing</h3>
       <h4>What is Packet Sniffing?</h4>
       <p>Packet sniffing means capturing network packets traveling through a network.</p>
       <div class="img-block">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Wireshark_screenshot.png/800px-Wireshark_screenshot.png" alt="Wireshark packet sniffing tool" loading="lazy">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Wireshark_screenshot.png?width=800" alt="Wireshark packet sniffing tool" loading="lazy">
         <div class="img-caption">🦈 Wireshark — the most popular packet sniffing tool used by attackers and defenders</div>
       </div>
       <p>Packets contain:</p>
@@ -1126,7 +1141,7 @@ Subnet Mask = 255.255.255.0</pre>
       <h4>What is Port Scanning?</h4>
       <p>Port scanning is used to find open ports on a system.</p>
       <div class="img-block">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Nmap-ls.png/800px-Nmap-ls.png" alt="Nmap port scanner output" loading="lazy">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Zenmap.png?width=800" alt="Nmap port scanner output" loading="lazy">
         <div class="img-caption">🔍 Nmap — the industry-standard port scanner used to discover open services</div>
       </div>
       <p>Every service runs on a port:</p>
@@ -1137,6 +1152,8 @@ Subnet Mask = 255.255.255.0</pre>
       <ul><li>Nmap</li></ul>
       <h3>Prevention</h3>
       <ul><li>Close unused ports</li><li>Firewall</li><li>IDS alerts</li><li>Port filtering</li></ul>
+<!-- visual: portscan -->
+<div class="vz" data-vz="portscan"></div>
       <hr>
 
       <h3 class="topic-title">7. Session Hijacking</h3>
@@ -1245,5 +1262,6 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
   });
 });
 </script>
+<script src="vz.js"></script>
 </body>
 </html>

@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HackForge | Cryptography</title>
+<link rel="icon" href="logo.png" type="image/png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ─── VARIABLES ──────────────────────────────────────────── */
+:root {
+  --bg:          #000000;
+  --bg-panel:    #080d16;
+  --panel:       #0d1422;
+  --panel-light: #131c2e;
+  --border:      rgba(196,255,0,0.15);
+  --border-dim:  rgba(196,255,0,0.07);
+  --text:        #dde6f0;
+  --muted:       #7a8fa8;
+  --accent:      #c4ff00;
+  --accent-glow: rgba(196,255,0,0.18);
+  --accent-dim:  rgba(196,255,0,0.08);
+  --danger:      #ff4d4d;
+  --warning:     #f59e0b;
+  --cyan:        #00e5ff;
+  --cyan-dim:    rgba(0,229,255,0.12);
+  --purple:      #8b5cf6;
+  --sidebar-w:   270px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  line-height: 1.75;
+  scroll-behavior: smooth;
+}
+
+/* ─── BACKGROUND ─────────────────────────────────────────── */
+.bg-grid {
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(196,255,0,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(196,255,0,0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none; z-index: 0;
+  animation: gridDrift 24s linear infinite;
+}
+@keyframes gridDrift { from{transform:translate(0,0)} to{transform:translate(48px,48px)} }
+
+.bg-vignette {
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 30% 20%, rgba(196,255,0,0.04) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 80%, rgba(0,229,255,0.03) 0%, transparent 60%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ─── SIDEBAR ────────────────────────────────────────────── */
+.sidebar {
+  position: fixed; left:0; top:0;
+  width: var(--sidebar-w); height: 100vh;
+  background: linear-gradient(180deg, #02050e 0%, #000000 100%);
+  border-right: 1px solid var(--border);
+  z-index: 200;
+  display: flex; flex-direction: column;
+  box-shadow: 4px 0 32px rgba(196,255,0,0.06);
+  overflow: hidden;
+}
+
+.logo-wrap {
+  padding: 18px 16px 16px;
+  border-bottom: 1px solid var(--border-dim);
+  background: linear-gradient(180deg, rgba(196,255,0,0.05) 0%, transparent 100%);
+  text-align: center;
+}
+.logo-img {
+  width: 170px; height: auto;
+  filter: drop-shadow(0 0 18px rgba(196,255,0,0.45));
+  transition: filter 0.3s, transform 0.3s;
+  display: block; margin: 0 auto;
+}
+.logo-img:hover { filter: drop-shadow(0 0 30px rgba(196,255,0,0.7)); transform: scale(1.04); }
+.logo-sub {
+  font-size: 0.65rem; color: var(--muted);
+  letter-spacing: 2px; text-transform: uppercase;
+  margin-top: 8px; font-family: 'JetBrains Mono', monospace;
+}
+
+.toc-label {
+  padding: 18px 22px 8px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.6rem; letter-spacing: 2.5px;
+  text-transform: uppercase; color: var(--accent); opacity: 0.6;
+}
+
+.toc-scroll {
+  flex: 1; overflow-y: auto; padding: 0 12px 20px;
+  scrollbar-width: thin; scrollbar-color: rgba(196,255,0,0.3) transparent;
+}
+.toc-scroll::-webkit-scrollbar { width: 4px; }
+.toc-scroll::-webkit-scrollbar-thumb { background: rgba(196,255,0,0.25); border-radius: 2px; }
+
+.toc-link {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; margin: 2px 0; border-radius: 7px;
+  color: var(--muted); text-decoration: none;
+  font-size: 0.82rem; font-weight: 500;
+  transition: all 0.22s; border-left: 2px solid transparent; line-height: 1.3;
+}
+.toc-link .toc-num {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;
+  color: rgba(196,255,0,0.35); flex-shrink: 0; width: 18px;
+}
+.toc-link:hover { background: var(--accent-dim); color: var(--accent); border-left-color: var(--accent); transform: translateX(3px); }
+.toc-link.active { background: rgba(196,255,0,0.12); color: var(--accent); border-left-color: var(--accent); }
+
+.sidebar-nav {
+  padding: 14px 12px; border-top: 1px solid var(--border-dim);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.sidebar-nav a {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; border-radius: 7px; color: var(--muted);
+  text-decoration: none; font-size: 0.82rem; font-weight: 500; transition: all 0.2s;
+}
+.sidebar-nav a:hover { background: var(--accent-dim); color: var(--accent); }
+.sidebar-nav a.active { color: var(--accent); background: var(--accent-dim); }
+
+/* ─── MAIN ───────────────────────────────────────────────── */
+.main { margin-left: var(--sidebar-w); min-height: 100vh; position: relative; z-index: 1; }
+
+/* ─── TOPBAR ─────────────────────────────────────────────── */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(0,0,0,0.85); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 48px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.topbar-left { display: flex; align-items: center; gap: 14px; }
+.breadcrumb {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+  color: var(--muted); display: flex; align-items: center; gap: 6px;
+}
+.breadcrumb span { color: var(--accent); opacity: 0.6; }
+.breadcrumb strong { color: var(--text); }
+.topbar-badge {
+  background: var(--accent-dim); border: 1px solid var(--border);
+  color: var(--accent); padding: 4px 10px; border-radius: 5px;
+  font-size: 0.72rem; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px;
+}
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.progress-pill {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--panel); border: 1px solid var(--border-dim);
+  border-radius: 30px; padding: 6px 14px; font-size: 0.78rem; color: var(--muted);
+}
+.progress-pill-bar { width: 80px; height: 5px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+.progress-pill-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #7fd600); border-radius: 3px; width: 25%; box-shadow: 0 0 8px rgba(196,255,0,0.5); }
+.mark-btn {
+  background: linear-gradient(135deg, var(--accent), #7fd600); color: #000;
+  border: none; padding: 9px 18px; border-radius: 7px;
+  font-weight: 700; font-size: 0.8rem; cursor: pointer;
+  font-family: 'Orbitron', sans-serif; transition: all 0.25s;
+  box-shadow: 0 0 16px rgba(196,255,0,0.25); letter-spacing: 0.3px;
+}
+.mark-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 24px rgba(196,255,0,0.45); }
+
+/* ─── READ INDICATOR ─────────────────────────────────────── */
+.read-indicator {
+  position: fixed; top: 0; left: var(--sidebar-w); right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--cyan));
+  transform-origin: left; transform: scaleX(0); z-index: 300; transition: transform 0.1s;
+}
+
+/* ─── CONTENT ────────────────────────────────────────────── */
+.content { padding: 48px 52px 80px; max-width: 920px; }
+
+/* ─── HERO ───────────────────────────────────────────────── */
+.page-hero {
+  margin-bottom: 48px; padding: 40px 44px;
+  background: linear-gradient(135deg, rgba(196,255,0,0.06) 0%, rgba(0,229,255,0.04) 100%);
+  border: 1px solid var(--border); border-radius: 14px;
+  position: relative; overflow: hidden;
+}
+.page-hero::before {
+  content: 'NET'; position: absolute; right: 24px; top: 50%; transform: translateY(-50%);
+  font-family: 'Orbitron', sans-serif; font-size: 5.5rem; font-weight: 900;
+  color: rgba(196,255,0,0.04); line-height: 1; pointer-events: none; user-select: none;
+}
+.hero-tag {
+  display: inline-block; background: var(--accent-dim); border: 1px solid var(--border);
+  color: var(--accent); padding: 4px 12px; border-radius: 5px;
+  font-size: 0.72rem; font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 1px; text-transform: uppercase; margin-bottom: 16px;
+}
+.page-hero h1 {
+  font-family: 'Orbitron', sans-serif; font-size: 2.2rem; font-weight: 700;
+  background: linear-gradient(135deg, #ffffff 30%, var(--accent));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; margin-bottom: 12px; line-height: 1.2;
+}
+.page-hero p { color: var(--muted); font-size: 0.97rem; max-width: 620px; line-height: 1.7; }
+.hero-meta { display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap; }
+.hero-stat { display: flex; align-items: center; gap: 7px; font-size: 0.8rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+.hero-stat .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+
+/* ─── TOPIC SECTION ──────────────────────────────────────── */
+.topic-section {
+  margin-bottom: 44px; padding: 36px 40px;
+  background: var(--bg-panel); border: 1px solid var(--border-dim);
+  border-radius: 14px; position: relative; transition: border-color 0.3s;
+  animation: fadeUp 0.4s ease both;
+}
+.topic-section:hover { border-color: rgba(196,255,0,0.2); }
+.topic-section::before {
+  content: ''; position: absolute; top: 0; left: 0;
+  width: 3px; height: 100%;
+  background: linear-gradient(180deg, var(--accent), transparent);
+  border-radius: 14px 0 0 14px; opacity: 0; transition: opacity 0.3s;
+}
+.topic-section:hover::before { opacity: 1; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+.topic-section:nth-child(1){animation-delay:0.05s}
+.topic-section:nth-child(2){animation-delay:0.10s}
+.topic-section:nth-child(3){animation-delay:0.15s}
+.topic-section:nth-child(4){animation-delay:0.20s}
+.topic-section:nth-child(5){animation-delay:0.25s}
+
+/* Section heading */
+.s-head {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 22px; padding-bottom: 16px; border-bottom: 1px solid var(--border-dim);
+}
+.s-num { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--accent); opacity: 0.55; flex-shrink: 0; }
+.topic-section h2 { font-family: 'Orbitron', sans-serif; font-size: 1.05rem; font-weight: 600; color: #fff; letter-spacing: 0.5px; }
+
+.s-badge { margin-left: auto; padding: 3px 9px; border-radius: 5px; font-size: 0.68rem; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+.s-badge-green  { background: var(--accent-dim); border: 1px solid var(--border); color: var(--accent); }
+.s-badge-red    { background: rgba(255,77,77,0.1); border: 1px solid rgba(255,77,77,0.25); color: var(--danger); }
+.s-badge-purple { background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.25); color: var(--purple); }
+.s-badge-warn   { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); color: var(--warning); }
+.s-badge-cyan   { background: var(--cyan-dim); border: 1px solid rgba(0,229,255,0.2); color: var(--cyan); }
+
+/* Content text */
+.topic-section p { color: var(--muted); font-size: 0.93rem; margin-bottom: 10px; line-height: 1.78; }
+.topic-section h3 {
+  font-size: 0.98rem; font-weight: 600; color: var(--text);
+  margin: 20px 0 8px; display: flex; align-items: center; gap: 8px;
+}
+.topic-section h3::before { content: ''; width: 14px; height: 2px; background: var(--accent); border-radius: 1px; flex-shrink: 0; }
+.topic-section h4 { font-size: 0.88rem; font-weight: 600; color: var(--accent); margin: 14px 0 6px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.3px; }
+.topic-section h5 { font-size: 0.82rem; font-weight: 600; color: var(--muted); margin: 10px 0 6px; }
+.topic-section strong { color: var(--text); }
+
+.topic-title {
+  font-size: 1rem; font-weight: 600; margin: 22px 0 10px;
+  color: var(--accent); display: flex; align-items: center; gap: 10px;
+}
+.topic-title::before { content: ''; width: 4px; height: 18px; background: var(--accent); border-radius: 2px; flex-shrink: 0; }
+
+.topic-section ul, .topic-section ol {
+  margin: 8px 0 12px 20px; color: var(--muted); font-size: 0.9rem;
+}
+.topic-section li { margin: 6px 0; padding-left: 4px; line-height: 1.65; }
+.topic-section li strong { color: var(--text); }
+
+/* ─── INFO / WARNING BOXES ───────────────────────────────── */
+.info-box {
+  background: rgba(196,255,0,0.05); border-left: 3px solid var(--accent);
+  padding: 14px 18px; margin: 14px 0; border-radius: 8px;
+  color: var(--muted); font-size: 0.88rem; line-height: 1.65;
+}
+.info-box strong { color: var(--text); }
+.warning-box {
+  background: rgba(245,158,11,0.06); border-left: 3px solid var(--warning);
+  padding: 14px 18px; margin: 14px 0; border-radius: 8px;
+  color: var(--muted); font-size: 0.88rem; line-height: 1.65;
+}
+.warning-box strong { color: var(--text); }
+
+/* ─── CODE / PRE ─────────────────────────────────────────── */
+pre, code {
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(196,255,0,0.06); border: 1px solid var(--border-dim);
+  color: var(--accent); border-radius: 6px;
+}
+code { padding: 2px 7px; font-size: 0.82em; }
+pre {
+  padding: 12px 16px; margin: 10px 0; font-size: 0.82rem;
+  overflow-x: auto; line-height: 1.7; white-space: pre-wrap; word-break: break-all;
+}
+
+/* ─── TABLE ──────────────────────────────────────────────── */
+.topic-section table {
+  width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.88rem;
+}
+.topic-section thead tr, .topic-section tr:first-child {
+  background: rgba(196,255,0,0.07); border-bottom: 1px solid var(--border);
+}
+.topic-section th {
+  padding: 11px 14px; text-align: left;
+  font-family: 'Orbitron', sans-serif; font-size: 0.65rem;
+  font-weight: 600; color: var(--accent); letter-spacing: 0.8px; text-transform: uppercase;
+}
+.topic-section td {
+  padding: 10px 14px; border-bottom: 1px solid var(--border-dim);
+  color: var(--muted); vertical-align: top;
+}
+.topic-section td:first-child { color: var(--text); font-weight: 500; }
+.topic-section tr:hover td { background: rgba(196,255,0,0.03); }
+
+/* divider */
+hr { border: none; border-top: 1px solid var(--border-dim); margin: 20px 0; }
+
+/* ─── REFERENCE ──────────────────────────────────────────── */
+.ref-card {
+  display: flex; align-items: center; gap: 16px;
+  padding: 18px 22px; background: var(--bg-panel);
+  border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px; transition: all 0.25s;
+}
+.ref-card:hover { transform: translateX(5px); box-shadow: 0 4px 20px rgba(0,0,0,0.4); border-color: rgba(196,255,0,0.25); }
+.ref-icon { font-size: 2rem; }
+.ref-body { flex: 1; }
+.ref-name { font-weight: 600; color: var(--text); font-size: 0.95rem; margin-bottom: 3px; }
+.ref-sub { font-size: 0.8rem; color: var(--muted); }
+.ref-dl {
+  background: var(--accent); color: #000; border: none;
+  padding: 8px 16px; border-radius: 7px; font-weight: 700;
+  font-size: 0.8rem; cursor: pointer; text-decoration: none;
+  font-family: 'Orbitron', sans-serif; transition: all 0.2s;
+  display: inline-block; white-space: nowrap;
+  box-shadow: 0 0 12px rgba(196,255,0,0.25);
+}
+.ref-dl:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(196,255,0,0.4); }
+
+/* ─── COMPLETE BUTTON ─────────────────────────────────────── */
+.complete-wrap { text-align: center; padding: 40px 0 20px; }
+.complete-btn {
+  background: linear-gradient(135deg, var(--accent), #7fd600); color: #000;
+  border: none; padding: 14px 36px; border-radius: 10px;
+  font-weight: 700; font-size: 0.92rem; cursor: pointer;
+  font-family: 'Orbitron', sans-serif; letter-spacing: 0.5px; transition: all 0.3s;
+  box-shadow: 0 0 24px rgba(196,255,0,0.3);
+}
+.complete-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 32px rgba(196,255,0,0.5); }
+.complete-btn.done { background: linear-gradient(135deg, #22c55e, #16a34a); }
+
+/* ─── FOOTER ─────────────────────────────────────────────── */
+footer {
+  text-align: center; padding: 24px 52px;
+  border-top: 1px solid var(--border-dim);
+  font-size: 0.8rem; color: var(--muted);
+  font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px;
+}
+footer a { color: var(--cyan); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+/* ─── IMAGES ─────────────────────────────────────────────── */
+.img-block {
+  margin: 20px 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border-dim);
+  background: #02040a;
+}
+.img-block img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 10px;
+  opacity: 0.92;
+  transition: opacity 0.3s;
+}
+.img-block img:hover { opacity: 1; }
+.img-caption {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-align: center;
+  padding: 8px 12px;
+  letter-spacing: 0.5px;
+  border-top: 1px solid var(--border-dim);
+  background: rgba(196,255,0,0.03);
+}
+
+/* ─── MOBILE ─────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  :root { --sidebar-w: 0px; }
+  .sidebar { display: none; }
+  .content { padding: 24px 20px 60px; }
+  .topbar { padding: 12px 20px; }
+  .page-hero h1 { font-size: 1.5rem; }
+  .topic-section { padding: 20px; }
+}
+
+/* ─── CRYPTOGRAPHY PAGE EXTRAS ───────────────────────────── */
+.mem-box {
+  background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.28);
+  border-left: 3px solid var(--purple); border-radius: 8px;
+  padding: 12px 16px; margin: 16px 0; font-size: 0.88rem; color: var(--muted); line-height: 1.7;
+}
+.mem-box strong { color: var(--text); }
+.mem-box .mem-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.66rem; color: var(--purple); letter-spacing: 1px; display: block; margin-bottom: 4px; }
+
+.demo {
+  background: var(--panel-light); border: 1px solid var(--border); border-radius: 12px;
+  padding: 18px; margin: 18px 0; position: relative;
+}
+.demo-title { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--cyan); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.demo-title::before { content: '▶'; font-size: 0.6rem; }
+.demo label { display: block; font-size: 0.75rem; color: var(--muted); margin: 10px 0 4px; font-family: 'JetBrains Mono', monospace; }
+.demo input[type=text] {
+  width: 100%; background: #05080e; border: 1px solid var(--border); color: var(--text);
+  padding: 9px 12px; border-radius: 7px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; outline: none;
+}
+.demo input[type=text]:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
+.btn-sm {
+  background: var(--accent-dim); color: var(--accent); border: 1px solid var(--border);
+  padding: 7px 14px; border-radius: 7px; font-size: 0.78rem; font-weight: 600; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; transition: all .2s; margin: 6px 6px 0 0;
+}
+.btn-sm:hover { background: var(--accent); color: #000; }
+.btn-sm.on { background: var(--accent); color: #000; }
+.btn-sm.red { color: var(--danger); border-color: rgba(255,77,77,0.3); background: rgba(255,77,77,0.08); }
+.btn-sm.red:hover { background: var(--danger); color: #000; }
+.out {
+  background: #05080e; border: 1px dashed rgba(0,229,255,0.25); border-radius: 7px;
+  padding: 9px 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+  color: var(--cyan); word-break: break-all; min-height: 38px; line-height: 1.6;
+}
+.out.good { color: var(--accent); border-color: var(--border); }
+.out.bad  { color: var(--danger); border-color: rgba(255,77,77,0.35); }
+.out .diff { background: rgba(255,77,77,0.35); color: #fff; border-radius: 2px; }
+.note-sm { font-size: 0.76rem; color: var(--muted); margin-top: 8px; font-style: italic; }
+
+/* generic stepper */
+.stepper { background: var(--panel-light); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin: 18px 0; }
+.stage { position: relative; min-height: 150px; }
+.frame { display: none; animation: frameIn .45s ease; }
+.frame.show { display: block; }
+@keyframes frameIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.step-cap { margin-top: 12px; padding: 10px 14px; background: rgba(0,229,255,0.07); border-left: 3px solid var(--cyan); border-radius: 6px; font-size: 0.86rem; color: var(--text); line-height: 1.6; min-height: 44px; }
+.step-ctl { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.dots { margin-left: auto; display: flex; gap: 5px; }
+.dots i { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.12); transition: all .25s; }
+.dots i.on { background: var(--accent); box-shadow: 0 0 6px var(--accent); transform: scale(1.25); }
+
+/* two-party flow */
+.flow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; }
+.node { flex: 0 0 auto; width: 104px; text-align: center; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 6px; font-size: 0.78rem; color: var(--text); transition: all .3s; }
+.node .em { font-size: 1.7rem; display: block; margin-bottom: 4px; }
+.node.hl { border-color: var(--accent); box-shadow: 0 0 18px var(--accent-glow); }
+.node.hl-c { border-color: var(--cyan); box-shadow: 0 0 18px rgba(0,229,255,0.25); }
+.node.bad { border-color: var(--danger); box-shadow: 0 0 18px rgba(255,77,77,0.25); }
+.lane { flex: 1; position: relative; height: 62px; display: flex; align-items: center; justify-content: center; }
+.lane::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 2px; background: repeating-linear-gradient(90deg, rgba(196,255,0,0.35) 0 8px, transparent 8px 14px); }
+.pkt { position: absolute; top: 50%; transform: translateY(-50%); background: var(--accent); color: #000; font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 700; padding: 5px 9px; border-radius: 6px; white-space: nowrap; max-width: 90%; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 0 14px var(--accent-glow); }
+.pkt.r { animation: goRight 2.2s ease-in-out infinite; }
+.pkt.l { animation: goLeft 2.2s ease-in-out infinite; }
+.pkt.both { animation: none; left: 50%; transform: translate(-50%,-50%); background: var(--purple); color: #fff; }
+.pkt.enc { background: var(--cyan); }
+.pkt.red { background: var(--danger); color: #fff; }
+@keyframes goRight { 0% { left: 0; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { left: calc(100% - 90px); opacity: 0; } }
+@keyframes goLeft  { 0% { left: calc(100% - 90px); opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { left: 0; opacity: 0; } }
+
+/* attacker view */
+.net3 { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 10px; align-items: center; }
+.net3 .mid { text-align: center; }
+.spy { background: rgba(255,77,77,0.07); border: 1px solid rgba(255,77,77,0.3); border-radius: 10px; padding: 10px; font-size: 0.78rem; text-align: center; margin-top: 10px; }
+.spy .out { margin-top: 6px; text-align: left; }
+.track { position: relative; height: 40px; }
+.track .pkt { animation: goRight 2.6s linear infinite; }
+
+/* ladders / meters */
+.ladder { display: grid; gap: 10px; margin: 14px 0; }
+.rung { display: grid; grid-template-columns: 120px 1fr 80px; align-items: center; gap: 12px; background: var(--panel-light); border: 1px solid var(--border-dim); border-radius: 9px; padding: 10px 14px; font-size: 0.84rem; }
+.rung .lv { font-family: 'JetBrains Mono', monospace; color: var(--muted); font-size: 0.74rem; }
+.meter { height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; }
+.meter i { display: block; height: 100%; width: 0; border-radius: 4px; transition: width 1.2s cubic-bezier(.2,.8,.2,1); }
+.rung .verdict { text-align: right; font-size: 0.8rem; }
+
+/* pill tags and chain */
+.chain { display: flex; flex-direction: column; align-items: center; gap: 0; }
+.cert { width: min(340px, 100%); text-align: center; padding: 10px 12px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; font-size: 0.82rem; transition: all .35s; }
+.cert small { display: block; color: var(--muted); font-size: 0.7rem; margin-top: 2px; }
+.cert.hl { border-color: var(--accent); box-shadow: 0 0 20px var(--accent-glow); background: rgba(196,255,0,0.06); }
+.cert.ok { border-color: #22c55e; background: rgba(34,197,94,0.08); }
+.link { height: 28px; width: 2px; background: var(--border); position: relative; }
+.link span { position: absolute; left: 10px; top: 5px; font-size: 0.68rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+.link.hl { background: var(--accent); }
+
+/* tree */
+.tree { display: flex; flex-direction: column; align-items: center; gap: 0; font-size: 0.82rem; }
+.tree .root { padding: 8px 18px; background: var(--accent); color: #000; font-weight: 700; border-radius: 8px; font-family: 'Orbitron', sans-serif; font-size: 0.8rem; }
+.tree .vline { width: 2px; height: 18px; background: var(--border); }
+.tree .branches { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 100%; border-top: 2px solid var(--border); padding-top: 0; position: relative; }
+.tree .br { display: flex; flex-direction: column; align-items: center; }
+.tree .tn { padding: 7px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel); text-align: center; }
+.tree .tn.c { border-color: rgba(0,229,255,0.35); color: var(--cyan); }
+.tree .tn.p { border-color: rgba(139,92,246,0.4); color: #b79bff; }
+.tree .tn.g { border-color: var(--border); color: var(--accent); }
+.tree .tn.w { border-color: rgba(245,158,11,0.4); color: var(--warning); }
+.tree .sub2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 0; }
+
+/* pfs sessions */
+.sessions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 14px 0; }
+.sess { text-align: center; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 6px; font-size: 0.78rem; transition: all .5s; }
+.sess .lock { font-size: 1.7rem; display: block; transition: transform .4s; }
+.sess.open { border-color: var(--danger); background: rgba(255,77,77,0.08); }
+.sess.open .lock { animation: shake .5s; }
+.sess.safe { border-color: #22c55e; background: rgba(34,197,94,0.07); }
+.sess .keytag { display: block; margin-top: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: var(--muted); }
+@keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px) rotate(-8deg); } 75% { transform: translateX(5px) rotate(8deg); } }
+
+/* weak list */
+.weak { display: grid; gap: 8px; margin: 12px 0; }
+.weak div { display: flex; gap: 10px; align-items: flex-start; background: rgba(255,77,77,0.05); border: 1px solid rgba(255,77,77,0.18); border-radius: 8px; padding: 9px 12px; font-size: 0.86rem; color: var(--muted); }
+.weak b { color: var(--danger); font-family: 'JetBrains Mono', monospace; min-width: 70px; }
+canvas.px { width: 100%; max-width: 230px; image-rendering: pixelated; border: 1px solid var(--border); border-radius: 8px; background: #05080e; }
+.px-row { display: flex; gap: 16px; flex-wrap: wrap; justify-content: space-around; }
+.px-row figure { text-align: center; font-size: 0.78rem; color: var(--muted); flex: 1 1 150px; }
+
+/* quiz */
+.q { margin: 14px 0; padding: 14px; background: var(--panel-light); border: 1px solid var(--border-dim); border-radius: 10px; }
+.q p { color: var(--text) !important; font-weight: 600; margin-bottom: 8px !important; }
+.q button { display: block; width: 100%; text-align: left; margin: 5px 0; background: var(--panel); border: 1px solid var(--border-dim); color: var(--muted); padding: 8px 12px; border-radius: 7px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; transition: all .2s; }
+.q button:hover { border-color: var(--accent); color: var(--text); }
+.q button.right { background: rgba(34,197,94,0.15); border-color: #22c55e; color: #fff; }
+.q button.wrong { background: rgba(255,77,77,0.12); border-color: var(--danger); color: #fff; }
+.q .why { display: none; font-size: 0.8rem; color: var(--muted); margin-top: 6px; }
+.q.done .why { display: block; }
+.score { font-family: 'Orbitron', sans-serif; color: var(--accent); font-size: 0.95rem; margin-top: 10px; }
+.cheat { width: 100%; }
+@media (max-width: 700px) {
+  .net3, .tree .branches { grid-template-columns: 1fr; }
+  .rung { grid-template-columns: 1fr; }
+  .node { width: 80px; }
+  .sessions { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { .pkt, .frame { animation: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-vignette"></div>
+<div class="read-indicator" id="readIndicator"></div>
+
+<!-- ═══════════════════ SIDEBAR ══════════════════════════════ -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="logo.png" alt="HackForge Logo" class="logo-img">
+    <div class="logo-sub">Cybersecurity Learning</div>
+  </div>
+
+  <div class="toc-label">On this page</div>
+
+  <div class="toc-scroll">
+    <a class="toc-link" href="#map">        <span class="toc-num">00</span>Big Picture</a>
+    <a class="toc-link" href="#encryption"> <span class="toc-num">01</span>Encryption &amp; TLS</a>
+    <a class="toc-link" href="#hashing">    <span class="toc-num">02</span>Hashing</a>
+    <a class="toc-link" href="#salts">      <span class="toc-num">03</span>Salts</a>
+    <a class="toc-link" href="#keys">       <span class="toc-num">04</span>Key Management</a>
+    <a class="toc-link" href="#algorithms"> <span class="toc-num">05</span>Algorithms &amp; Signatures</a>
+    <a class="toc-link" href="#weak">       <span class="toc-num">06</span>Weak Crypto</a>
+    <a class="toc-link" href="#certs">      <span class="toc-num">07</span>Certificates</a>
+    <a class="toc-link" href="#pfs">        <span class="toc-num">08</span>Perfect Forward Secrecy</a>
+    <a class="toc-link" href="#recap">      <span class="toc-num">09</span>Recap &amp; Quiz</a>
+  </div>
+
+  <div class="sidebar-nav">
+    <a href="index.html">📓 Notes</a>
+    <a href="roadmap.html">🗺️ Roadmap</a>
+    <a href="practice-lab.html">⚗️ Labs</a>
+  </div>
+</aside>
+
+<!-- ═══════════════════ MAIN ═════════════════════════════════ -->
+<main class="main">
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="breadcrumb">
+        <span>HackForge</span> / <span>Notes</span> / <strong>Cryptography</strong>
+      </div>
+      <div class="topbar-badge">MODULE 05</div>
+    </div>
+    <div class="topbar-right">
+      <button class="mark-btn" id="markBtn" onclick="completeModule('cryptography')">✓ Mark Complete</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- HERO -->
+    <div class="page-hero">
+      <div class="hero-tag">Core Module</div>
+      <h1>🔐 Cryptography &amp; Secure Communication</h1>
+      <p>How data is protected while stored and while travelling: encryption, hashing, salts, keys, signatures, certificates and forward secrecy. Every idea comes with a diagram, a live demo or a memory trick.</p>
+      <div class="hero-meta">
+        <div class="hero-stat"><div class="dot"></div>8 Topics</div>
+        <div class="hero-stat"><div class="dot" style="background:var(--cyan);box-shadow:0 0 6px var(--cyan);"></div>Interactive demos</div>
+        <div class="hero-stat"><div class="dot" style="background:#f59e0b;box-shadow:0 0 6px #f59e0b;"></div>Intermediate</div>
+      </div>
+    </div>
+
+    <!-- ── 00 Big picture ── -->
+    <div class="topic-section" id="map">
+      <div class="s-head"><span class="s-num">00</span><h2>The Big Picture</h2><span class="s-badge s-badge-green">Start here</span></div>
+      <div class="img-block">
+        <img src="images/crypto/cryptography-map.png" alt="Cryptography map: encryption, hashing, digital signatures" loading="lazy">
+        <div class="img-caption">🗺️ Cryptography splits into three jobs: protect data, check integrity, prove who sent it</div>
+      </div>
+
+      <div class="tree">
+        <div class="root">CRYPTOGRAPHY</div>
+        <div class="vline"></div>
+        <div class="branches">
+          <div class="br"><div class="vline"></div>
+            <div class="tn c">🔒 Encryption<br><small>Protect data</small></div>
+            <div class="vline"></div>
+            <div class="sub2">
+              <div class="tn c">At Rest<br><small>Database</small></div>
+              <div class="tn c">In Transit<br><small>HTTPS / TLS</small></div>
+            </div>
+          </div>
+          <div class="br"><div class="vline"></div>
+            <div class="tn w">#️⃣ Hashing<br><small>Integrity</small></div>
+          </div>
+          <div class="br"><div class="vline"></div>
+            <div class="tn p">✍️ Digital Signatures<br><small>Authentication</small></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mem-box"><span class="mem-tag">🧠 MEMORY TRICK</span>
+        <strong>Lock · Fingerprint · Signature.</strong> Encryption is a <strong>lock</strong> (hides the data), hashing is a <strong>fingerprint</strong> (detects change), a digital signature is your <strong>signature</strong> (proves who). Three questions: <em>Can others read it? Was it changed? Who sent it?</em>
+      </div>
+    </div>
+
+    <!-- ── 01 Encryption ── -->
+    <div class="topic-section" id="encryption">
+      <div class="s-head"><span class="s-num">01</span><h2>Cryptography &amp; Secure Communication</h2><span class="s-badge s-badge-cyan">Encryption</span></div>
+
+      <h3>Encryption at Rest</h3>
+      <p>Data at rest means data that is currently stored somewhere.</p>
+      <p><strong>Examples:</strong></p>
+      <ul>
+        <li>Database</li><li>Hard disk</li><li>SSD</li><li>Cloud storage</li><li>Backup</li><li>USB drive</li><li>Log files</li><li>Configuration files</li><li>Database dumps</li>
+      </ul>
+
+      <p><strong>For example:</strong></p>
+      <pre>Database
+User:
+Name: Vishu
+Email: vishu@example.com
+Phone: 9876543210</pre>
+      <p>If an attacker gets access to the database file, they may be able to read this information. Encryption at rest protects it.</p>
+      <pre>Plaintext
+↓
+Encryption
+↓
+Ciphertext</pre>
+      <p>Example:</p>
+      <pre>"Vishu"
+↓ AES-256
+"8fA9x...encrypted data..."</pre>
+      <p>Without the encryption key, the ciphertext should be computationally impractical to recover.</p>
+      <p><strong>AES = Advanced Encryption Standard</strong><br>AES is a symmetric encryption algorithm.<br>Symmetric means: <strong>The same secret key is used for both encryption and decryption.</strong></p>
+      <pre>Same secret key
+│
+▼
+Plaintext ────&gt; AES ────&gt; Ciphertext
+│
+│ same key
+▼
+Plaintext</pre>
+
+      <div class="demo" id="aesDemo">
+        <div class="demo-title">Live demo · real AES-256-GCM in your browser</div>
+        <label for="aesIn">Plaintext</label>
+        <input type="text" id="aesIn" value="Vishu" maxlength="60" autocomplete="off">
+        <button class="btn-sm" id="aesEnc">🔒 Encrypt</button>
+        <button class="btn-sm" id="aesDec" disabled>🔓 Decrypt with the same key</button>
+        <button class="btn-sm red" id="aesBad" disabled>🗝️ Try a wrong key</button>
+        <label>Secret key (random, 256-bit)</label>
+        <div class="out" id="aesKey">—</div>
+        <label>Ciphertext</label>
+        <div class="out" id="aesCt">Press “Encrypt”</div>
+        <label>Result</label>
+        <div class="out" id="aesRes">—</div>
+        <div class="note-sm">A new random key is made every time you press Encrypt. Without the right key the ciphertext cannot be opened.</div>
+      </div>
+
+      <h3>Encryption in Transit</h3>
+      <p>Now consider data moving between systems. Data encrypted while traveling over internet.</p>
+      <p>Example:</p>
+      <pre>Mobile App
+│
+│ user password
+│
+▼
+Internet
+│
+▼
+Backend Server</pre>
+      <p>If communication isn't properly protected, an attacker positioned on the network could potentially intercept traffic.</p>
+      <p>This is why we use:</p>
+      <p><strong>TLS — Transport Layer Security</strong></p>
+      <p>HTTPS essentially means:</p>
+      <pre>HTTP + TLS == HTTPS</pre>
+
+      <h3>HTTP vs HTTPS</h3>
+      <p><strong>HTTP</strong></p>
+      <pre>Client ───────────────&gt; Server</pre>
+      <p>HTTP doesn't provide encryption by itself.</p>
+      <p>Sensitive information such as:</p>
+      <p>username, password, session token AND personal information<br>should not be transmitted over plain HTTP.</p>
+      <p><strong>HTTPS</strong></p>
+      <pre>Client
+│
+│ encrypted TLS connection
+│
+▼
+Server</pre>
+      <p>The network sees encrypted traffic rather than the application's plaintext content.</p>
+
+      <div class="demo" id="httpDemo">
+        <div class="demo-title">Live demo · what does the person on the network see?</div>
+        <button class="btn-sm on" data-mode="http">HTTP (no encryption)</button>
+        <button class="btn-sm" data-mode="https">HTTPS (TLS)</button>
+        <div class="flow" style="margin-top:12px">
+          <div class="node"><span class="em">📱</span>Your phone</div>
+          <div class="lane"><span class="pkt r" id="httpPkt">password=Vishu@123</span></div>
+          <div class="node"><span class="em">🏦</span>Server</div>
+        </div>
+        <div class="spy">🕵️ Attacker on the same Wi-Fi sees:
+          <div class="out bad" id="httpSpy">POST /login  username=vishu&amp;password=Vishu@123</div>
+        </div>
+      </div>
+
+      <h3>What exactly does TLS provide?</h3>
+      <p>TLS provides several important security properties.</p>
+      <p><strong>Confidentiality :</strong><br>Attackers shouldn't be able to read the contents of the connection.</p>
+      <p><strong>Integrity :</strong><br>Attackers shouldn't be able to silently modify messages.</p>
+      <p><strong>Authentication :</strong><br>The client can verify that it is communicating with the intended server, based on the server's certificate and the trust chain.</p>
+      <p>So remember:</p>
+      <pre>TLS
+│
+├── Confidentiality
+├── Integrity
+└── Authentication</pre>
+
+      <div class="mem-box"><span class="mem-tag">🧠 MEMORY TRICK</span>
+        <strong>C-I-A inside TLS:</strong> <strong>C</strong>an't read it (Confidentiality) · <strong>I</strong>t wasn't changed (Integrity) · <strong>A</strong>re you really the bank? (Authentication).
+      </div>
+    </div>
+
+    <!-- ── 02 Hashing ── -->
+    <div class="topic-section" id="hashing">
+      <div class="s-head"><span class="s-num">02</span><h2>HASHING</h2><span class="s-badge s-badge-green">Integrity</span></div>
+      <p>Hashing in cybersecurity is a process that transforms data of any size into a fixed-length string called a hash value or digest.</p>
+      <p>It’s primarily used to verify data integrity rather than to encrypt or hide information.</p>
+      <p>Hashing is generally a one-way transformation.</p>
+      <pre>Input → Hash function → Hash</pre>
+      <p>Example:</p>
+      <pre>"hello"
+↓ SHA-256
+2cf24dba...</pre>
+      <p>You don't decrypt SHA-256.</p>
+
+      <h3>Encryption vs Hashing</h3>
+      <p>Suppose: Message = "Hello"</p>
+      <p><strong>Encryption:</strong></p>
+      <pre>"Hello"
+↓
+Encryption
+↓
+Ciphertext
+↓
+Decryption
+↓
+"Hello"</pre>
+      <p><strong>Hashing:</strong></p>
+      <pre>"Hello"
+↓
+Hash
+↓
+Hash value</pre>
+
+      <div class="stepper" id="encVsHash">
+        <div class="demo-title">Animation · a two-way door vs a one-way door</div>
+        <div class="stage">
+          <div class="frame" data-cap="Encryption is a TWO-way trip: with the key you can get “Hello” back.">
+            <div class="flow"><div class="node"><span class="em">📝</span>Hello</div><div class="lane"><span class="pkt r">encrypt →</span></div><div class="node hl-c"><span class="em">🔒</span>x9#Kq2…</div></div>
+          </div>
+          <div class="frame" data-cap="…and decryption brings the original back. That is the point of encryption.">
+            <div class="flow"><div class="node hl-c"><span class="em">🔒</span>x9#Kq2…</div><div class="lane"><span class="pkt l">← decrypt</span></div><div class="node hl"><span class="em">📝</span>Hello</div></div>
+          </div>
+          <div class="frame" data-cap="Hashing is ONE-way: “Hello” becomes a fixed-length fingerprint.">
+            <div class="flow"><div class="node"><span class="em">📝</span>Hello</div><div class="lane"><span class="pkt r">hash →</span></div><div class="node hl"><span class="em">#️⃣</span>185f8d…</div></div>
+          </div>
+          <div class="frame" data-cap="There is no way back. You don’t decrypt SHA-256.">
+            <div class="flow"><div class="node bad"><span class="em">#️⃣</span>185f8d…</div><div class="lane"><span class="pkt red">✖ no way back</span></div><div class="node bad"><span class="em">❓</span>???</div></div>
+          </div>
+        </div>
+        <div class="step-cap"></div>
+        <div class="step-ctl"><button class="btn-sm" data-a="prev">◀</button><button class="btn-sm" data-a="play">▶ Play</button><button class="btn-sm" data-a="next">▶|</button><span class="dots"></span></div>
+      </div>
+
+      <h3>SHA-256</h3>
+      <p><strong>SHA = Secure Hash Algorithm</strong><br>SHA-256 generates a:</p>
+      <p><strong>256-bit hash</strong></p>
+      <p>It is commonly used for:</p>
+      <ul>
+        <li>integrity checking</li>
+        <li>digital signatures as part of signature schemes</li>
+        <li>certificates and fingerprints</li>
+        <li>software/file verification</li>
+        <li>blockchain-related applications</li>
+      </ul>
+      <p><strong>Important:</strong></p>
+      <p>SHA-256 is a hash function, not an encryption algorithm.</p>
+      <p>While SHA-256 is highly secure for checking file integrity or locking down blockchain transactions, it is dangerous to use for passwords because it is too fast.</p>
+      <p>If a hacker steals a database of SHA-256 hashes, they can use powerful computer graphics cards (GPUs) to guess and check billions of passwords every second, easily cracking common passwords almost instantly. Password-specific hashes (like Bcrypt) are intentionally designed to be slow to block these automated attacks.</p>
+
+      <div class="demo" id="hashDemo">
+        <div class="demo-title">Live demo · the avalanche effect (real SHA-256)</div>
+        <label for="hA">Input A</label>
+        <input type="text" id="hA" value="hello" maxlength="60" autocomplete="off">
+        <label for="hB">Input B (change just one letter)</label>
+        <input type="text" id="hB" value="hellp" maxlength="60" autocomplete="off">
+        <label>SHA-256 of A</label><div class="out" id="hOutA"></div>
+        <label>SHA-256 of B</label>
+        <div class="out" id="hOutB"></div>
+        <div class="note-sm" id="hNote"></div>
+      </div>
+
+      <div class="mem-box"><span class="mem-tag">🧠 MEMORY TRICK</span>
+        <strong>Hash = fingerprint, not a lock.</strong> Same finger → same print. One tiny change → a completely different print. And you can't rebuild a finger from a print.
+      </div>
+    </div>
+
+    <!-- ── 03 Salts ── -->
+    <div class="topic-section" id="salts">
+      <div class="s-head"><span class="s-num">03</span><h2>SALTS (PREVENT RAINBOW TABLES)</h2><span class="s-badge s-badge-warn">Passwords</span></div>
+      <p><strong>The problem:</strong> the same input always gives the same hash.</p>
+      <pre>User A: "password123" ──SHA-256──&gt; ef92b778...
+User B: "password123" ──SHA-256──&gt; ef92b778... (identical!)</pre>
+      <p>If an attacker steals the database, they can see that A and B share a password. They can also use a rainbow table, a huge precomputed list of password → hash pairs, and look the hash up instantly.</p>
+      <p>The fix is a salt: a unique random value generated per user and added before hashing.</p>
+      <pre>User A: "password123" + salt "k8Zq1" ──hash──&gt; 91ab03...
+User B: "password123" + salt "Xp7mW" ──hash──&gt; c47e5d... (different!)</pre>
+      <p><strong>What’s stored in the database:</strong></p>
+      <pre>User table
+├── username
+├── salt (random, unique per user)
+└── password_hash</pre>
+      <p><strong>Important points:</strong></p>
+      <ul>
+        <li>A salt is not secret. It’s stored next to the hash.</li>
+        <li>Its job is to make precomputed tables useless and make identical passwords look different.</li>
+        <li>A pepper is an extra secret value stored outside the database (for example in a KMS). It’s optional.</li>
+      </ul>
+
+      <div class="demo" id="saltDemo">
+        <div class="demo-title">Live demo · what the attacker sees in a stolen database</div>
+        <label for="pwA">User A password</label>
+        <input type="text" id="pwA" value="password123" autocomplete="off">
+        <label for="pwB">User B password</label>
+        <input type="text" id="pwB" value="password123" autocomplete="off">
+        <button class="btn-sm" id="saltOff">Without salt</button>
+        <button class="btn-sm on" id="saltOn">With salt</button>
+        <button class="btn-sm" id="saltNew">🎲 New random salts</button>
+        <table style="margin-top:12px">
+          <thead><tr><th>user</th><th>salt</th><th>stored hash (SHA-256 for the demo)</th></tr></thead>
+          <tbody>
+            <tr><td>A</td><td id="sA">—</td><td id="hAout" style="font-family:'JetBrains Mono',monospace;font-size:.75rem;word-break:break-all"></td></tr>
+            <tr><td>B</td><td id="sB">—</td><td id="hBout" style="font-family:'JetBrains Mono',monospace;font-size:.75rem;word-break:break-all"></td></tr>
+          </tbody>
+        </table>
+        <div class="out" id="saltVerdict" style="margin-top:10px"></div>
+        <div class="note-sm">The demo uses plain SHA-256 only to show the effect of salting. Real systems use bcrypt / Argon2id (below).</div>
+      </div>
+
+      <h3>Which algorithm to use</h3>
+      <pre>SHA-256 ──&gt; too fast, bad for passwords
+bcrypt ──&gt; slow on purpose, salt built in, adjustable "cost"
+scrypt ──&gt; slow, memory-hungry
+Argon2id ──&gt; memory-hard, currently the top recommendation</pre>
+      <p><strong>Remember:</strong></p>
+      <pre>Passwords → Salt + slow hash (bcrypt / Argon2id)
+Files → SHA-256</pre>
+
+      <div class="img-block">
+        <img src="images/crypto/hash-families.png" alt="Hash family comparison: SHA-256/512, Argon2/Bcrypt, MD5/SHA-1" loading="lazy">
+        <div class="img-caption">📊 Hash families compared by use case, security level and speed</div>
+      </div>
+
+      <div class="mem-box"><span class="mem-tag">🧠 MEMORY TRICK</span>
+        <strong>Salt = a pinch of random per user.</strong> Fast hash for <em>files</em> (you want speed), slow hash for <em>passwords</em> (you want the attacker slow). “Files fast, passwords slow.”
+      </div>
+    </div>
+
+    <!-- ── 04 Key management ── -->
+    <div class="topic-section" id="keys">
+      <div class="s-head"><span class="s-num">04</span><h2>KEY MANAGEMENT</h2><span class="s-badge s-badge-red">Critical</span></div>
+      <p>Encryption is only as strong as the protection of the key. AES-256 is useless if the key is lying in your source code.</p>
+      <p><strong>Things to make note of :</strong></p>
+      <p>Bad:</p>
+      <pre>SECRET_KEY = "mySuperSecretKey123" # hardcoded, ends up in Git</pre>
+      <p>Better:</p>
+      <pre>import os
+SECRET_KEY = os.environ["SECRET_KEY"] # injected at runtime</pre>
+      <p>Best for production: a secrets manager or KMS (AWS KMS, Azure Key Vault, HashiCorp Vault).</p>
+      <pre>Level 1: hardcoded in code ❌
+Level 2: environment variables ✅ baseline
+Level 3: secrets manager / KMS ✅✅ recommended</pre>
+
+      <div class="ladder" id="ladder">
+        <div class="rung"><span class="lv">Level 1</span><div><div>Hardcoded in code</div><div class="meter"><i data-w="12" style="background:var(--danger)"></i></div></div><span class="verdict" style="color:var(--danger)">❌ Unsafe</span></div>
+        <div class="rung"><span class="lv">Level 2</span><div><div>Environment variables</div><div class="meter"><i data-w="55" style="background:var(--warning)"></i></div></div><span class="verdict" style="color:var(--warning)">✅ Baseline</span></div>
+        <div class="rung"><span class="lv">Level 3</span><div><div>Secrets manager / KMS</div><div class="meter"><i data-w="95" style="background:#22c55e"></i></div></div><span class="verdict" style="color:#22c55e">✅✅ Best</span></div>
+      </div>
+
+      <p><strong>Good practices:</strong></p>
+      <ul>
+        <li>Never commit keys to Git (scanners like gitleaks and trufflehog look for this).</li>
+        <li>Rotate keys regularly.</li>
+        <li>Keep keys separate from the data they protect.</li>
+        <li>Give access to as few people and services as possible.</li>
+      </ul>
+
+      <div class="mem-box"><span class="mem-tag">🧠 MEMORY TRICK</span>
+        <strong>Never leave the key under the doormat.</strong> A strong lock (AES-256) with the key taped to the door (hardcoded) is no lock at all. Four habits: <strong>No Git · Rotate · Separate · Least access.</strong>
+      </div>
+    </div>
+
+    <!-- ── 05 Algorithms ── -->
+    <div class="topic-section" id="algorithms">
+      <div class="s-head"><span class="s-num">05</span><h2>Common Algorithms: Symmetric vs Asymmetric</h2><span class="s-badge s-badge-purple">Reference</span></div>
+      <p>You already know AES (symmetric, same key both ways). The other type is asymmetric.</p>
+      <p>RSA uses a key pair:</p>
+      <pre>Public key → can be shared with everyone
+Private key → kept secret</pre>
+      <p><strong>Encryption(Asymmetric) :</strong></p>
+      <pre>Plaintext ── (public key) ──&gt; Ciphertext ── (private key) ──&gt; Plaintext</pre>
+      <p><strong>Digital signature (the reverse direction):</strong></p>
+      <pre>Message ──(private key signs)──&gt; Signature ──(public key verifies)──&gt; ✔ authentic</pre>
+      <p>Why use both? Asymmetric crypto is slow, and symmetric crypto is fast. TLS combines them:</p>
+      <pre>1. Asymmetric crypto (RSA / ECDHE) → safely agree on a secret key
+2. Symmetric crypto (AES) → encrypt the actual data fast</pre>
+
+      <div class="stepper" id="asymSteps">
+        <div class="demo-title">Animation · asymmetric encryption with a key pair</div>
+        <div class="stage">
+          <div class="frame" data-cap="Ravi owns a key pair. The PUBLIC key is shared with everyone. The PRIVATE key never leaves Ravi.">
+            <div class="flow"><div class="node"><span class="em">🙋</span>Ravi</div><div class="lane"><span class="pkt both">🔓 public key shared with all</span></div><div class="node"><span class="em">👩</span>Asha</div></div>
+          </div>
+          <div class="frame" data-cap="Asha locks the message with RAVI'S PUBLIC key. Now only Ravi's private key can open it.">
+            <div class="flow"><div class="node"><span class="em">🙋</span>Ravi</div><div class="lane"><span class="pkt l enc">🔒 ciphertext</span></div><div class="node hl"><span class="em">👩</span>Asha<br>encrypts with<br>Ravi's public key</div></div>
+          </div>
+          <div class="frame" data-cap="Even if a spy copies the ciphertext and has Ravi's public key, he still cannot open it.">
+            <div class="flow"><div class="node"><span class="em">🙋</span>Ravi</div><div class="lane"><span class="pkt l enc">🔒 ciphertext</span></div><div class="node bad"><span class="em">🕵️</span>Spy<br>has only public key ✖</div></div>
+          </div>
+          <div class="frame" data-cap="Ravi opens it with his PRIVATE key. Plaintext restored.">
+            <div class="flow"><div class="node hl"><span class="em">🙋</span>Ravi<br>decrypts with<br>private key 🔑</div><div class="lane"><span class="pkt both">📝 plaintext</span></div><div class="node"><span class="em">👩</span>Asha</div></div>
+          </div>
+        </div>
+        <div class="step-cap"></div>
+        <div class="step-ctl"><button class="btn-sm" data-a="prev">◀</button><button class="btn-sm" data-a="play">▶ Play</button><button class="btn-sm" data-a="next">▶|</button><span class="dots"></span></div>
+      </div>
+
+      <table>
+        <thead><tr><th>Algorithm</th><th>Type</th><th>Used for</th></tr></thead>
+        <tbody>
+          <tr><td>AES</td><td>Symmetric</td><td>Bulk data encryption</td></tr>
+          <tr><td>RSA (2048+ bit)</td><td>Asymmetric</td><td>Key exchange, signatures</td></tr>
+          <tr><td>ECC</td><td>Asymmetric</td><td>Same as RSA, smaller keys</td></tr>
+          <tr><td>SHA-256</td><td>Hash</td><td>Integrity, fingerprints</td></tr>
+          <tr><td>bcrypt / Argon2id</td><td>Password hash</td><td>Storing passwords</td></tr>
+        </tbody>
+      </table>
+
+      <div class="mem-box"><span class="mem-tag">🧠 MEMORY TRICK</span>
+        <strong>Public = padlock, Private = its only key.</strong> Anyone can snap a padlock shut (encrypt with the public key), only the owner has the key to open it. And: <strong>Asymmetric to agree, symmetric to talk.</strong>
+      </div>
+
+      <h3>Digital Signatures</h3>
+      <p>A digital signature is the electronic equivalent of a handwritten signature, but much harder to forge. It proves three things about a message or file.</p>
+      <pre>Digital Signature
+│
+├── Authenticity → who created/sent it
+├── Integrity → it wasn't changed after signing
+└── Non-repudiation → the signer can't later deny signing it</pre>
+      <p>Note what it does not provide: confidentiality. A signed message can still be readable by everyone. Signing is about trust, not secrecy.</p>
+
+      <h4>The key idea: the direction is reversed</h4>
+      <p>Encryption and signing both use a key pair, but the keys are used in opposite roles.</p>
+      <p><strong>Encryption (confidentiality):</strong><br>Sender uses RECEIVER'S PUBLIC key → only the receiver's PRIVATE key can open it</p>
+      <p><strong>Signing (authenticity):</strong><br>Sender uses THEIR OWN PRIVATE key → anyone with the sender's PUBLIC key can verify it</p>
+      <p>Only you hold your private key, so only you can produce a valid signature. Everyone has your public key, so everyone can check it.</p>
+
+      <h4>How signing works, step by step</h4>
+      <p><strong>Signing (done by the sender):</strong></p>
+      <pre>Message: "Transfer ₹5000 to Ravi"
+│
+▼
+Hash (SHA-256)
+│
+▼
+Digest: 9f2c1a...
+│
+▼
+Sign digest with SENDER'S PRIVATE KEY
+│
+▼
+Signature: 7b3e...
+Send: Message + Signature</pre>
+
+      <div class="stepper" id="signSteps">
+        <div class="demo-title">Animation · signing and verifying</div>
+        <div class="stage">
+          <div class="frame" data-cap="1. Sender writes the message.">
+            <div class="flow"><div class="node hl"><span class="em">📝</span>Message<br>“Transfer ₹5000 to Ravi”</div></div>
+          </div>
+          <div class="frame" data-cap="2. The message is hashed with SHA-256 into a short digest.">
+            <div class="flow"><div class="node"><span class="em">📝</span>Message</div><div class="lane"><span class="pkt r">SHA-256 →</span></div><div class="node hl"><span class="em">#️⃣</span>Digest<br>9f2c1a…</div></div>
+          </div>
+          <div class="frame" data-cap="3. The digest is signed with the SENDER'S PRIVATE key. Result: the signature.">
+            <div class="flow"><div class="node"><span class="em">#️⃣</span>Digest</div><div class="lane"><span class="pkt r">🔑 private key →</span></div><div class="node hl"><span class="em">✍️</span>Signature<br>7b3e…</div></div>
+          </div>
+          <div class="frame" data-cap="4. Sender sends Message + Signature together.">
+            <div class="flow"><div class="node"><span class="em">🙋</span>Sender</div><div class="lane"><span class="pkt r">Message + Signature</span></div><div class="node"><span class="em">🏦</span>Receiver</div></div>
+          </div>
+          <div class="frame" data-cap="5. Receiver hashes the message again AND uses the sender's PUBLIC key to open the signature. The two digests are compared.">
+            <div class="flow"><div class="node hl-c"><span class="em">#️⃣</span>own hash<br>9f2c1a…</div><div class="lane"><span class="pkt both">= ?</span></div><div class="node hl-c"><span class="em">🔓</span>from signature<br>9f2c1a…</div></div>
+          </div>
+          <div class="frame" data-cap="6. They match → authentic ✔ and untouched. If even one letter had changed, the digests would differ and verification would fail.">
+            <div class="flow"><div class="node hl"><span class="em">✅</span>Authentic<br>Integrity OK<br>Can't deny</div></div>
+          </div>
+        </div>
+        <div class="step-cap"></div>
+        <div class="step-ctl"><button class="btn-sm" data-a="prev">◀</button><button class="btn-sm" data-a="play">▶ Play</button><button class="btn-sm" data-a="next">▶|</button><span class="dots"></span></div>
+      </div>
+
+      <div class="demo" id="sigDemo">
+        <div class="demo-title">Try it · tamper with a signed message (simplified simulation)</div>
+        <label for="sigMsg">Sender's message (gets signed)</label>
+        <input type="text" id="sigMsg" value="Transfer ₹5000 to Ravi" maxlength="80" autocomplete="off">
+        <label>Signature (digest signed with sender's private key)</label>
+        <div class="out" id="sigVal"></div>
+        <label for="sigRecv">What the receiver actually gets (edit this to simulate an attacker)</label>
+        <input type="text" id="sigRecv" value="Transfer ₹5000 to Ravi" maxlength="80" autocomplete="off">
+        <label>Receiver's verification</label>
+        <div class="out" id="sigRes"></div>
+        <div class="note-sm">Simplified: the “signature” here is just the SHA-256 digest. A real signature (RSA / ECDSA) also locks that digest with the private key, so nobody else can create it.</div>
+      </div>
+
+      <div class="mem-box"><span class="mem-tag">🧠 MEMORY TRICK</span>
+        <strong>Signature = Seal, not Secret.</strong> A wax seal proves who sent the letter and that it wasn't opened, but anyone can still read an open letter. The three things: <strong>Authenticity · Integrity · Non-repudiation</strong> (A-I-N).
+        <br><strong>Directions:</strong> Encrypt → receiver's <em>public</em>. Sign → my own <em>private</em>.
+      </div>
+    </div>
+
+    <!-- ── 06 Weak crypto ── -->
+    <div class="topic-section" id="weak">
+      <div class="s-head"><span class="s-num">06</span><h2>Weak Crypto (Avoid)</h2><span class="s-badge s-badge-red">Avoid</span></div>
+      <pre>MD5 → collisions can be created practically; broken
+SHA-1 → collisions demonstrated; deprecated
+DES → 56-bit key, brute-forced easily
+3DES → small 64-bit blocks; deprecated
+RC4 → biased output; banned in TLS
+ECB mode → same plaintext block = same ciphertext block (leaks patterns)</pre>
+
+      <div class="weak">
+        <div><b>MD5</b><span>collisions can be created practically; broken</span></div>
+        <div><b>SHA-1</b><span>collisions demonstrated; deprecated</span></div>
+        <div><b>DES</b><span>56-bit key, brute-forced easily</span></div>
+        <div><b>3DES</b><span>small 64-bit blocks; deprecated</span></div>
+        <div><b>RC4</b><span>biased output; banned in TLS</span></div>
+        <div><b>ECB mode</b><span>same plaintext block = same ciphertext block (leaks patterns)</span></div>
+      </div>
+
+      <p>ECB is why the famous “encrypted penguin” image still looks like a penguin. Use AES-GCM instead.</p>
+
+      <div class="demo" id="ecbDemo">
+        <div class="demo-title">Live demo · why ECB leaks patterns (a padlock instead of a penguin)</div>
+        <div class="px-row">
+          <figure><canvas class="px" id="cvPlain" width="16" height="16"></canvas><figcaption>Original image</figcaption></figure>
+          <figure><canvas class="px" id="cvEcb" width="16" height="16"></canvas><figcaption>“Encrypted” with ECB<br>(same block → same colour)</figcaption></figure>
+          <figure><canvas class="px" id="cvGcm" width="16" height="16"></canvas><figcaption>Encrypted with AES-GCM<br>(looks like noise)</figcaption></figure>
+        </div>
+        <button class="btn-sm" id="ecbNew">🎲 Encrypt again with new keys</button>
+        <div class="note-sm">In ECB the colours changed but the shape is still easy to see. That is the leak. Good modes hide the shape completely.</div>
+      </div>
+
+      <p><strong>Rule: never invent your own crypto. Use a well-tested library.</strong></p>
+
+      <div class="mem-box"><span class="mem-tag">🧠 MEMORY TRICK</span>
+        <strong>“Old and Broken: MD5, SHA-1, DES, 3DES, RC4, ECB.”</strong> Think <em>M-S-D-3-R-E</em> = “<strong>M</strong>any <strong>S</strong>ecurity <strong>D</strong>isasters <strong>3</strong> <strong>R</strong>ead <strong>E</strong>mails”. If it's on this list, replace it: SHA-256 for hashing, AES-GCM for encryption.
+      </div>
+    </div>
+
+    <!-- ── 07 Certificates ── -->
+    <div class="topic-section" id="certs">
+      <div class="s-head"><span class="s-num">07</span><h2>CERTIFICATES (SSL/TLS)</h2><span class="s-badge s-badge-cyan">Trust</span></div>
+      <h3>The problem :</h3>
+      <p>How do I know the public key I received really belongs to bank.com?</p>
+      <p>What if a hacker gives you his own public key and says “Hi, I’m bank.com”? You would send your password to the hacker.</p>
+      <pre>You ──"Give me bank.com's key"──&gt; Internet
+│
+Hacker replies: "Here is bank.com's key" (but it's the hacker's!)</pre>
+      <p>We need someone trustworthy to confirm: “Yes, this key really belongs to bank.com.”</p>
+
+      <h3>The solution: a certificate</h3>
+      <p>A certificate is like a government ID card for a website.</p>
+      <p>Think about your Aadhaar or passport:</p>
+      <table>
+        <thead><tr><th>Passport</th><th>Website certificate</th></tr></thead>
+        <tbody>
+          <tr><td>Your name</td><td>Domain name (bank.com)</td></tr>
+          <tr><td>Your photo</td><td>Website’s public key</td></tr>
+          <tr><td>Valid till date</td><td>Validity dates</td></tr>
+          <tr><td>Stamp from the government</td><td>Signature from a CA</td></tr>
+        </tbody>
+      </table>
+      <p>You trust a passport because the government issued it, not because the person says “I’m Vishu.”</p>
+      <p>In the same way, you trust a certificate because a Certificate Authority (CA) signed it.</p>
+      <pre>Certificate
+├── Domain name (bank.com) → "who am I"
+├── Server's public key → "here is my key"
+├── Validity dates → "valid from ... to ..."
+└── Signature from a CA → "a trusted authority confirms this"</pre>
+      <p>The CA’s signature is the same digital signature you just learned about. The CA uses its private key to stamp the certificate.</p>
+      <p>Examples of CAs: Let’s Encrypt, DigiCert, Sectigo, GlobalSign.</p>
+      <p>Your browser can’t know every website, but it knows a small list of very trusted organizations (Root CAs). Their details come pre-installed in your browser and operating system.</p>
+      <p>Root CAs are too valuable to use every day, so they authorize helpers (Intermediate CAs). The helpers sign the actual website certificates.</p>
+      <pre>Root CA (pre-installed in your browser, super trusted)
+│ signs
+▼
+Intermediate CA (helper, trusted because Root signed it)
+│ signs
+▼
+bank.com certificate</pre>
+
+      <h4>Easy example: a company</h4>
+      <ul>
+        <li>Root CA = the CEO (everyone trusts the CEO)</li>
+        <li>Intermediate CA = a manager (trusted because the CEO appointed them)</li>
+        <li>Website certificate = an employee ID card (valid because the manager signed it)</li>
+      </ul>
+      <p>The browser follows the chain upward: “bank.com was signed by the manager, the manager was signed by the CEO, and I trust the CEO. OK!”</p>
+
+      <div class="stepper" id="chainSteps">
+        <div class="demo-title">Animation · the browser walks the chain of trust upward</div>
+        <div class="stage">
+          <div class="frame" data-cap="The browser receives bank.com's certificate. Who vouches for it?">
+            <div class="chain"><div class="cert">👑 Root CA<small>pre-installed, super trusted</small></div><div class="link"><span>signs</span></div><div class="cert">🧑‍💼 Intermediate CA<small>the helper</small></div><div class="link"><span>signs</span></div><div class="cert hl">🏦 bank.com certificate<small>domain · public key · dates · CA signature</small></div></div>
+          </div>
+          <div class="frame" data-cap="It was signed by the Intermediate CA (the manager). Does the browser trust the manager? Not by itself, so it goes up.">
+            <div class="chain"><div class="cert">👑 Root CA<small>pre-installed, super trusted</small></div><div class="link"><span>signs</span></div><div class="cert hl">🧑‍💼 Intermediate CA<small>the helper</small></div><div class="link hl"><span>signs ↑</span></div><div class="cert">🏦 bank.com certificate<small>domain · public key · dates · CA signature</small></div></div>
+          </div>
+          <div class="frame" data-cap="The Intermediate was signed by the Root CA (the CEO), and the Root is already inside the browser. Trusted!">
+            <div class="chain"><div class="cert hl">👑 Root CA<small>pre-installed, super trusted</small></div><div class="link hl"><span>signs ↑</span></div><div class="cert">🧑‍💼 Intermediate CA<small>the helper</small></div><div class="link"><span>signs</span></div><div class="cert">🏦 bank.com certificate<small>domain · public key · dates · CA signature</small></div></div>
+          </div>
+          <div class="frame" data-cap="Whole chain valid ✔ (the browser also checks the domain name, dates and revocation). The 🔒 appears.">
+            <div class="chain"><div class="cert ok">👑 Root CA ✔</div><div class="link hl"></div><div class="cert ok">🧑‍💼 Intermediate CA ✔</div><div class="link hl"></div><div class="cert ok">🏦 bank.com ✔ 🔒</div></div>
+          </div>
+        </div>
+        <div class="step-cap"></div>
+        <div class="step-ctl"><button class="btn-sm" data-a="prev">◀</button><button class="btn-sm" data-a="play">▶ Play</button><button class="btn-sm" data-a="next">▶|</button><span class="dots"></span></div>
+      </div>
+
+      <h3>Everything in one story</h3>
+      <p>You open bank.com on your phone:</p>
+      <ol>
+        <li>Browser asks for the certificate: “Show me your ID.”</li>
+        <li>Browser checks the chain of trust, domain, dates and revocation.</li>
+        <li>ID is good, so the server proves it owns the key using a digital signature.</li>
+        <li>Both sides agree on a fresh secret using ECDHE (this gives PFS).</li>
+        <li>All data is then encrypted with fast AES.</li>
+        <li>The 🔒 appears. The password you typed is safe on the way.</li>
+      </ol>
+
+      <div class="stepper" id="tlsSteps">
+        <div class="demo-title">Animation · a full HTTPS connection, message by message</div>
+        <div class="stage">
+          <div class="frame" data-cap="Browser asks for the certificate: “Show me your ID.”">
+            <div class="flow"><div class="node hl"><span class="em">📱</span>Browser</div><div class="lane"><span class="pkt r">ClientHello</span></div><div class="node"><span class="em">🏦</span>bank.com</div></div>
+          </div>
+          <div class="frame" data-cap="The server sends its certificate: domain, public key, dates, CA signature.">
+            <div class="flow"><div class="node"><span class="em">📱</span>Browser</div><div class="lane"><span class="pkt l">📜 Certificate</span></div><div class="node hl"><span class="em">🏦</span>bank.com</div></div>
+          </div>
+          <div class="frame" data-cap="Browser checks the chain of trust, domain name, validity dates and revocation.">
+            <div class="flow"><div class="node hl-c"><span class="em">🔍</span>Browser checks<br>chain · domain<br>dates · revocation</div><div class="lane"><span class="pkt both">✔ valid</span></div><div class="node"><span class="em">🏦</span>bank.com</div></div>
+          </div>
+          <div class="frame" data-cap="ID is good, so the server proves it owns the key using a digital signature.">
+            <div class="flow"><div class="node"><span class="em">📱</span>Browser</div><div class="lane"><span class="pkt l">✍️ signature</span></div><div class="node hl"><span class="em">🏦</span>bank.com<br>signs with<br>private key</div></div>
+          </div>
+          <div class="frame" data-cap="Both sides agree on a fresh, temporary secret using ECDHE. This is what gives PFS.">
+            <div class="flow"><div class="node hl"><span class="em">📱</span>Browser</div><div class="lane"><span class="pkt both">ECDHE → shared secret</span></div><div class="node hl"><span class="em">🏦</span>bank.com</div></div>
+          </div>
+          <div class="frame" data-cap="All data is now encrypted with fast AES. The 🔒 appears. The password you typed is safe on the way.">
+            <div class="flow"><div class="node hl"><span class="em">📱</span>Browser 🔒</div><div class="lane"><span class="pkt r enc">AES: 8fA9x…</span></div><div class="node hl"><span class="em">🏦</span>bank.com 🔒</div></div>
+          </div>
+        </div>
+        <div class="step-cap"></div>
+        <div class="step-ctl"><button class="btn-sm" data-a="prev">◀</button><button class="btn-sm" data-a="play">▶ Play</button><button class="btn-sm" data-a="next">▶|</button><span class="dots"></span></div>
+      </div>
+
+      <div class="mem-box"><span class="mem-tag">🧠 MEMORY TRICK</span>
+        <strong>Certificate = passport.</strong> Name (domain) · Photo (public key) · Expiry (dates) · Government stamp (CA signature). Trust flows <strong>Root (CEO) → Intermediate (manager) → Website (employee ID)</strong>. In the handshake order: <strong>ID → Check → Prove → Agree → Encrypt.</strong>
+      </div>
+    </div>
+
+    <!-- ── 08 PFS ── -->
+    <div class="topic-section" id="pfs">
+      <div class="s-head"><span class="s-num">08</span><h2>PERFECT FORWARD SECRECY (PFS)</h2><span class="s-badge s-badge-green">Advanced</span></div>
+      <h3>The scenario</h3>
+      <p>Imagine a spy is recording all your encrypted traffic. He can’t read it today because it’s encrypted. He just saves it and waits.</p>
+      <p>One year later, he steals the server’s private key.</p>
+      <p><strong>Question: can he now open all the old recordings?</strong></p>
+
+      <h3>→ Without PFS: the master key problem</h3>
+      <p>In the old method, the session keys are protected using the server’s one long-term key.</p>
+      <p>Think of a hotel with one master key:</p>
+      <ul>
+        <li>Every room’s lock depends on the master key</li>
+        <li>If someone steals the master key later, they can open every old room</li>
+      </ul>
+      <pre>Server's long-term key protects ALL sessions
+↓
+Spy steals that key a year later
+↓
+Opens ALL recorded traffic ❌</pre>
+
+      <h3>→ With PFS: a new key every time</h3>
+      <p>With PFS, each conversation uses a fresh, temporary key, made just for that session and thrown away after.</p>
+      <p>Think of a hotel where every guest gets a new lock that is destroyed after checkout:</p>
+      <ul>
+        <li>No master key exists</li>
+        <li>Even if you steal the hotel’s main key today, old rooms are already gone</li>
+      </ul>
+      <pre>Session 1 → temporary key A → thrown away
+Session 2 → temporary key B → thrown away
+Session 3 → temporary key C → thrown away
+Spy steals long-term key later → can't recover A, B or C ✅</pre>
+      <p>The long-term key is then used only to prove identity (signing), not to protect the session keys.</p>
+
+      <div class="demo" id="pfsDemo">
+        <div class="demo-title">Live demo · the spy steals the server's long-term key</div>
+        <button class="btn-sm on" data-pfs="off">Without PFS (master key)</button>
+        <button class="btn-sm" data-pfs="on">With PFS (new key each time)</button>
+        <div class="sessions">
+          <div class="sess"><span class="lock">🔒</span>Session 1<span class="keytag"></span></div>
+          <div class="sess"><span class="lock">🔒</span>Session 2<span class="keytag"></span></div>
+          <div class="sess"><span class="lock">🔒</span>Session 3<span class="keytag"></span></div>
+        </div>
+        <button class="btn-sm red" id="pfsSteal">🕵️ One year later: steal the server's long-term key</button>
+        <button class="btn-sm" id="pfsReset">↺ Reset</button>
+        <div class="out" id="pfsMsg" style="margin-top:10px">Recorded traffic is safe for now. Pick a mode, then steal the key.</div>
+      </div>
+
+      <h3>How to get PFS</h3>
+      <ul>
+        <li>ECDHE / DHE are the key exchange methods that make temporary keys. The “E” stands for Ephemeral, which means short-lived.</li>
+        <li>TLS 1.3 has PFS built in, so you can’t turn it off.</li>
+        <li>In TLS 1.2, you must choose cipher suites that start with ECDHE.</li>
+      </ul>
+
+      <div class="mem-box"><span class="mem-tag">🧠 MEMORY TRICK</span>
+        <strong>PFS = hotel key cards that self-destruct.</strong> The “E” in ECDHE = <strong>E</strong>phemeral = <strong>E</strong>xpires quickly. Stolen master key today → yesterday's rooms already gone.
+      </div>
+    </div>
+
+    <!-- ── 09 Recap ── -->
+    <div class="topic-section" id="recap">
+      <div class="s-head"><span class="s-num">09</span><h2>Recap &amp; Quiz</h2><span class="s-badge s-badge-purple">Revise</span></div>
+      <h3>One-page cheat sheet</h3>
+      <table>
+        <thead><tr><th>Need</th><th>Tool</th><th>Remember</th></tr></thead>
+        <tbody>
+          <tr><td>Hide stored data</td><td>AES-256 (encryption at rest)</td><td>Same key both ways</td></tr>
+          <tr><td>Hide data on the wire</td><td>TLS / HTTPS</td><td>Confidentiality · Integrity · Authentication</td></tr>
+          <tr><td>Check a file wasn't changed</td><td>SHA-256</td><td>Fingerprint, one-way</td></tr>
+          <tr><td>Store passwords</td><td>Salt + bcrypt / Argon2id</td><td>Slow on purpose</td></tr>
+          <tr><td>Protect keys</td><td>Secrets manager / KMS</td><td>Never in Git</td></tr>
+          <tr><td>Prove who sent it</td><td>Digital signature</td><td>Sign with private, verify with public</td></tr>
+          <tr><td>Trust a website's key</td><td>Certificate chain</td><td>Root → Intermediate → Site</td></tr>
+          <tr><td>Old traffic stays safe</td><td>PFS (ECDHE)</td><td>New temporary key per session</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Test yourself</h3>
+      <div id="quiz"></div>
+      <div class="score" id="quizScore"></div>
+    </div>
+
+    <!-- COMPLETE BUTTON -->
+    <div class="complete-wrap">
+      <button class="complete-btn" id="completeBtn" onclick="completeModule('cryptography')">✓ Mark Course as Completed</button>
+    </div>
+
+  </div><!-- /content -->
+
+  <footer>
+    © 2026 HackProof Notes · Created by <a href="mailto:ligerharry44@gmail.com">Liger44</a> · Built for ethical cyber security learning only.
+  </footer>
+
+</main>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+
+function completeModule(moduleName) {
+  const btn = document.getElementById('completeBtn');
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) { alert("❌ Please login first"); return; }
+    try {
+      await db.collection("users").doc(user.uid).set({
+        coursesCompleted: firebase.firestore.FieldValue.increment(1),
+        [`progress.${moduleName}`]: firebase.firestore.FieldValue.increment(10)
+      }, { merge: true });
+      btn.textContent = "✅ Course Completed!";
+      btn.classList.add('done');
+      btn.disabled = true;
+    } catch(e) {
+      console.error(e);
+      alert("❌ Error updating data");
+    }
+  });
+}
+
+/* Reading progress bar */
+const indicator = document.getElementById('readIndicator');
+window.addEventListener('scroll', () => {
+  const el = document.documentElement;
+  indicator.style.transform = `scaleX(${el.scrollTop / (el.scrollHeight - el.clientHeight)})`;
+});
+
+/* Active TOC on scroll */
+const sections = document.querySelectorAll('.topic-section[id]');
+const tocLinks  = document.querySelectorAll('.toc-link');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      tocLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + id));
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+sections.forEach(s => observer.observe(s));
+
+/* Smooth scroll */
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const t = document.querySelector(a.getAttribute('href'));
+    if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+
+/* ═══════════ Cryptography demos ═══════════ */
+const $ = id => document.getElementById(id);
+const enc = new TextEncoder(), dec = new TextDecoder();
+const hex = buf => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+const hasCrypto = !!(window.crypto && crypto.subtle);
+const sha256 = async s => hex(await crypto.subtle.digest('SHA-256', enc.encode(s)));
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const randStr = (n, chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789') =>
+  [...crypto.getRandomValues(new Uint8Array(n))].map(b => chars[b % chars.length]).join('');
+const NO_CRYPTO = 'Live demos need a secure page (https:// or localhost).';
+
+/* ── Generic step-by-step animations ── */
+document.querySelectorAll('.stepper').forEach(st => {
+  const frames = [...st.querySelectorAll('.frame')];
+  const cap = st.querySelector('.step-cap');
+  const dots = st.querySelector('.dots');
+  const playBtn = st.querySelector('[data-a=play]');
+  let i = 0, timer = null;
+  frames.forEach(() => dots.appendChild(document.createElement('i')));
+  const show = n => {
+    i = (n + frames.length) % frames.length;
+    frames.forEach((f, k) => f.classList.toggle('show', k === i));
+    [...dots.children].forEach((d, k) => d.classList.toggle('on', k === i));
+    cap.textContent = frames[i].dataset.cap;
+  };
+  const stop = () => { clearInterval(timer); timer = null; playBtn.textContent = '▶ Play'; };
+  st.querySelector('[data-a=prev]').onclick = () => { stop(); show(i - 1); };
+  st.querySelector('[data-a=next]').onclick = () => { stop(); show(i + 1); };
+  playBtn.onclick = () => {
+    if (timer) return stop();
+    playBtn.textContent = '⏸ Pause';
+    timer = setInterval(() => show(i + 1), 2800);
+  };
+  show(0);
+});
+
+/* ── AES-256-GCM encrypt / decrypt ── */
+(() => {
+  let key, iv, ct;
+  const out = $('aesRes');
+  if (!hasCrypto) { out.textContent = NO_CRYPTO; return; }
+  $('aesEnc').onclick = async () => {
+    key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
+    iv = crypto.getRandomValues(new Uint8Array(12));
+    ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode($('aesIn').value));
+    $('aesKey').textContent = hex(await crypto.subtle.exportKey('raw', key));
+    $('aesCt').textContent = hex(ct);
+    out.className = 'out'; out.textContent = 'Encrypted. The plaintext is no longer visible.';
+    $('aesDec').disabled = $('aesBad').disabled = false;
+  };
+  $('aesDec').onclick = async () => {
+    const p = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+    out.className = 'out good'; out.textContent = '✅ Same key → decrypted: "' + dec.decode(p) + '"';
+  };
+  $('aesBad').onclick = async () => {
+    const wrong = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+    try { await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, wrong, ct); }
+    catch (e) { out.className = 'out bad'; out.textContent = '❌ Wrong key → decryption failed. Nothing readable comes out.'; }
+  };
+})();
+
+/* ── HTTP vs HTTPS: what the attacker sees ── */
+(() => {
+  const pkt = $('httpPkt'), spy = $('httpSpy');
+  const set = mode => {
+    document.querySelectorAll('#httpDemo [data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === mode));
+    if (mode === 'http') {
+      pkt.textContent = 'password=Vishu@123'; pkt.classList.remove('enc');
+      spy.className = 'out bad'; spy.textContent = 'POST /login  username=vishu&password=Vishu@123';
+    } else {
+      const junk = hasCrypto ? randStr(26, 'abcdef0123456789ABCDEF#$%&') : '8fA9x#Kq2…';
+      pkt.textContent = '🔒 ' + junk.slice(0, 10) + '…'; pkt.classList.add('enc');
+      spy.className = 'out good'; spy.textContent = junk + junk.split('').reverse().join('');
+    }
+    pkt.style.animation = 'none'; void pkt.offsetWidth; pkt.style.animation = '';
+  };
+  document.querySelectorAll('#httpDemo [data-mode]').forEach(b => b.onclick = () => set(b.dataset.mode));
+})();
+
+/* ── SHA-256 avalanche ── */
+(() => {
+  const note = $('hNote');
+  if (!hasCrypto) { note.textContent = NO_CRYPTO; return; }
+  const run = async () => {
+    const a = await sha256($('hA').value), b = await sha256($('hB').value);
+    let diffHex = 0, html = '';
+    for (let k = 0; k < 64; k++) {
+      const d = a[k] !== b[k]; if (d) diffHex++;
+      html += d ? '<span class="diff">' + b[k] + '</span>' : b[k];
+    }
+    $('hOutA').textContent = a; $('hOutB').innerHTML = html;
+    note.textContent = $('hA').value === $('hB').value
+      ? 'Same input → identical hash, every time.'
+      : diffHex + ' of 64 characters differ (highlighted), and the length is always 64 hex chars = 256 bits, whatever the input size.';
+  };
+  $('hA').oninput = $('hB').oninput = run; run();
+})();
+
+/* ── Salt demo ── */
+(() => {
+  if (!hasCrypto) { $('saltVerdict').textContent = NO_CRYPTO; return; }
+  let salted = true, sA = randStr(5), sB = randStr(5);
+  const run = async () => {
+    const A = salted ? sA : '', B = salted ? sB : '';
+    $('sA').textContent = salted ? sA : '(none)'; $('sB').textContent = salted ? sB : '(none)';
+    const ha = await sha256(A + $('pwA').value), hb = await sha256(B + $('pwB').value);
+    $('hAout').textContent = ha; $('hBout').textContent = hb;
+    const v = $('saltVerdict');
+    if (ha === hb) { v.className = 'out bad'; v.textContent = '⚠ Identical hashes → attacker sees A and B share a password, and can look it up in a rainbow table.'; }
+    else if (salted) { v.className = 'out good'; v.textContent = '✅ Different hashes even for the same password → shared passwords hidden, precomputed tables useless.'; }
+    else { v.className = 'out'; v.textContent = 'Different passwords give different hashes.'; }
+  };
+  const mode = s => { salted = s; $('saltOn').classList.toggle('on', s); $('saltOff').classList.toggle('on', !s); run(); };
+  $('saltOn').onclick = () => mode(true);
+  $('saltOff').onclick = () => mode(false);
+  $('saltNew').onclick = () => { sA = randStr(5); sB = randStr(5); mode(true); };
+  $('pwA').oninput = $('pwB').oninput = run; run();
+})();
+
+/* ── Key-management meters animate in ── */
+(() => {
+  const l = $('ladder');
+  new IntersectionObserver((e, o) => {
+    if (e[0].isIntersecting) { l.querySelectorAll('.meter i').forEach(i => i.style.width = i.dataset.w + '%'); o.disconnect(); }
+  }, { threshold: 0.4 }).observe(l);
+})();
+
+/* ── Signature tamper demo (simplified) ── */
+(() => {
+  if (!hasCrypto) { $('sigRes').textContent = NO_CRYPTO; return; }
+  let sig = '';
+  const sign = async () => { sig = await sha256($('sigMsg').value); $('sigVal').textContent = '✍️ ' + sig.slice(0, 32) + '…'; verify(); };
+  const verify = async () => {
+    const r = $('sigRes'), now = await sha256($('sigRecv').value);
+    if (now === sig) { r.className = 'out good'; r.textContent = '✔ Authentic and unchanged: hash of received message matches the signed digest.'; }
+    else { r.className = 'out bad'; r.textContent = '✘ Verification FAILED: message was altered after signing (digests differ).'; }
+  };
+  $('sigMsg').oninput = () => { $('sigRecv').value = $('sigMsg').value; sign(); };
+  $('sigRecv').oninput = verify; sign();
+})();
+
+/* ── ECB vs GCM pixel demo ── */
+(() => {
+  const art = [
+    '................', '.....######.....', '....##....##....', '....#......#....', '....#......#....',
+    '....#......#....', '..############..', '..############..', '..####....####..', '..####.##.####..',
+    '..####.##.####..', '..####.##.####..', '..############..', '..############..', '..############..', '................'];
+  const draw = (id, fn) => {
+    const c = $(id).getContext('2d');
+    art.forEach((row, y) => [...row].forEach((ch, x) => { c.fillStyle = fn(ch); c.fillRect(x, y, 1, 1); }));
+  };
+  const rnd = () => `hsl(${Math.random() * 360},${50 + Math.random() * 40}%,${35 + Math.random() * 35}%)`;
+  const run = () => {
+    draw('cvPlain', ch => ch === '#' ? '#c4ff00' : '#0d1422');
+    const map = { '#': rnd(), '.': rnd() };
+    draw('cvEcb', ch => map[ch]);
+    draw('cvGcm', () => rnd());
+  };
+  $('ecbNew').onclick = run; run();
+})();
+
+/* ── PFS demo ── */
+(() => {
+  let pfs = false, stolen = false;
+  const sess = [...document.querySelectorAll('#pfsDemo .sess')];
+  const msg = $('pfsMsg');
+  const reset = () => {
+    stolen = false;
+    sess.forEach((s, k) => {
+      s.className = 'sess'; s.querySelector('.lock').textContent = '🔒';
+      s.querySelector('.keytag').textContent = pfs ? 'temp key ' + 'ABC'[k] : 'master key';
+    });
+    msg.className = 'out';
+    msg.textContent = pfs
+      ? 'Each session made its own temporary key, then threw it away. Now steal the long-term key.'
+      : 'All sessions depend on the one long-term key. Now steal it.';
+  };
+  document.querySelectorAll('#pfsDemo [data-pfs]').forEach(b => b.onclick = () => {
+    pfs = b.dataset.pfs === 'on';
+    document.querySelectorAll('#pfsDemo [data-pfs]').forEach(x => x.classList.toggle('on', x === b));
+    reset();
+  });
+  $('pfsReset').onclick = reset;
+  $('pfsSteal').onclick = () => {
+    if (stolen) return; stolen = true;
+    sess.forEach((s, k) => setTimeout(() => {
+      if (pfs) { s.classList.add('safe'); s.querySelector('.keytag').textContent = 'key already destroyed 🗑'; }
+      else { s.classList.add('open'); s.querySelector('.lock').textContent = '🔓'; }
+    }, 350 * (k + 1)));
+    setTimeout(() => {
+      msg.className = pfs ? 'out good' : 'out bad';
+      msg.textContent = pfs
+        ? '✅ With PFS the spy cannot recover keys A, B or C. Old recordings stay unreadable.'
+        : '❌ Without PFS the spy opens ALL recorded traffic with one stolen key.';
+    }, 1500);
+  };
+  reset();
+})();
+
+/* ── Quiz ── */
+(() => {
+  const qs = [
+    ['Which property does a digital signature NOT provide?', ['Authenticity', 'Integrity', 'Confidentiality', 'Non-repudiation'], 2, 'Signing is about trust, not secrecy. A signed message can still be readable by everyone.'],
+    ['Best way to store user passwords?', ['SHA-256 only', 'Salt + bcrypt / Argon2id', 'AES-256 with a hardcoded key', 'MD5 with a pepper'], 1, 'Use a unique salt and a deliberately slow password hash. SHA-256 is too fast; MD5 is broken.'],
+    ['To send Ravi a secret only he can read, you encrypt with…', ['Your private key', 'Your public key', "Ravi's public key", "Ravi's private key"], 2, "Encrypt with the receiver's public key; only the receiver's private key opens it."],
+    ['Why is ECB mode bad?', ['It is too slow', 'Same plaintext block gives the same ciphertext block', 'The key is too short', 'It needs a certificate'], 1, 'Patterns leak, which is why the “encrypted penguin” still looks like a penguin. Use AES-GCM.'],
+    ['What makes PFS work?', ['One long-term master key', 'Ephemeral (temporary) keys per session', 'Longer passwords', 'Disabling TLS'], 1, 'ECDHE/DHE make a new short-lived key for every session, then discard it.'],
+    ['Why does the browser trust bank.com’s certificate?', ['bank.com says so', 'It is signed by a CA whose chain leads to a pre-installed Root CA', 'It uses port 443', 'It uses AES'], 1, 'Trust flows Root CA → Intermediate CA → website certificate, like CEO → manager → employee ID.'],
+  ];
+  const box = $('quiz'); let score = 0, answered = 0;
+  qs.forEach(([q, opts, ans, why]) => {
+    const d = document.createElement('div'); d.className = 'q';
+    d.innerHTML = '<p>' + esc(q) + '</p>';
+    opts.forEach((o, k) => {
+      const b = document.createElement('button'); b.textContent = o;
+      b.onclick = () => {
+        if (d.classList.contains('done')) return;
+        d.classList.add('done'); answered++;
+        if (k === ans) { score++; b.classList.add('right'); } else { b.classList.add('wrong'); d.querySelectorAll('button')[ans].classList.add('right'); }
+        if (answered === qs.length) $('quizScore').textContent = 'Score: ' + score + ' / ' + qs.length + (score === qs.length ? ' 🏆 Perfect!' : ' · read the explanations and try again');
+      };
+      d.appendChild(b);
+    });
+    const w = document.createElement('div'); w.className = 'why'; w.textContent = '💡 ' + why; d.appendChild(w);
+    box.appendChild(d);
+  });
+})();
+</script>
+</body>
+</html>
